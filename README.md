@@ -1,4 +1,4 @@
-# 'React 완벽 가이드 with Redux, Next.js, TypeScript' Wiki
+# ✍🏻 React with Redux, Next.js, TypeScript - Wiki
 
 > Udemy의 [React 완벽 가이드 with Redux, Next.js, TypeScript]를 베이스로 한 스터디 기록입니다.
 

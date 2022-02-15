@@ -3,9 +3,11 @@
 ## 목차
 
 1. [JavaScript vs React](#왜_React인가?)
-2. [두번째 제목](#두번째_제목)
+2. [React와 SPA](#React와_SPA)
+3. [React의 대안 - Angular와 Vue.js ](#React의_대안을_탐색해보기)
+4.
 
-## 왜\_React인가?
+## 왜 React인가?
 
 ### javascript
 
@@ -21,7 +23,30 @@
 - 더욱 복잡해지는 오늘 날의 사용자 인터페이스를 쉽게 만들 수 있게 된다.
 - 컴포넌트 분리를 통해 재사용성을 높일 수 있게 된다.
 
-## 두번째 제목
+## React와 SPA
 
--
--
+- React는 SPA(Single-Page-Application)이다.
+- 하나의 HTML 파일로 화면에 렌더되는 내용으로 업데이트된다.
+
+## React의 대안을 탐색해보기
+
+## React.js
+
+- React는 현재 가장 인기있는 프론트엔드 프레임워크이자 라이브러리이다.
+- React는 컴포넌트 기반의 UI 라이브러리이다.
+- React로 작업을 하면 때때로 서드 파티 라이브러리가 필요하다. => 리액트는 컴포넌트가 핵심이기 때문.
+
+### Angular
+
+- React의 대안으로는 더 많은 기능을 가진 Angular가 있다.
+- Angular는 완전한 컴포넌트 기반의 UI 프레임워크이며, React와 핵심은 동일하나 더 많은 기능을 가지고 있다.
+- 초기부터 Typescript를 내장했으며, 작은 프로젝트를 오버킬 할수도 있다. 이처럼 리액트보다 더 많은 기능을 내장하고 있다.
+- 더 많은 기능이 내장되어 있기 때문에 커뮤니티에 의지하지 않아도 된다.
+
+### Vue.js
+
+- React의 또 다른 대안으로는 Angular와 React를 반반 섞어놓은 Vue가 있다.
+- Vue.js 역시 완전한 컴포넌트 기반의 UI 프레임워크이며, React보다는 많은 기능을 가지고 있지만 Angular보다는 적은 기능을 가지고 있다.
+- Vue.js는 핵심 기능인 라우팅을 내장하고 있다.
+- React처럼 커뮤니티에 의지할 필요성이 없으며, 또한 Angular에서 발생할 수 있는 과부하에 대한 걱정은 덜 수 있게 만들어준다.
+- [참조](https://academind.com/tutorials/angular-vs-react-vs-vue-my-thoughts)
