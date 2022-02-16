@@ -1,11 +1,12 @@
-## 시작하기
+# Getting Started
 
 ## 목차
 
 - [JavaScript vs React](#왜_React인가?)
 - [React와 SPA](#React와_SPA)
 - [React의 또 다른 대안 - Angular와 Vue.js](#React의_대안을_탐색해보기)
-  </br>
+
+</br>
 
 ## 왜 React인가?
 
