@@ -2,8 +2,9 @@
 
 ## 목차
 
-- [let & const](#let_&_const)
-- [Arrow Functions](#Arrow_Functions_화살표_함수)
+- [let & const](#let-&-const)
+- [Arrow Functions](#Arrow-Functions-화살표_함수)
+- [Exports and Imports(Modules)](#Exports와-Imports)
 
 </br>
 
@@ -102,7 +103,90 @@ console.log(multiply(2)); // 4
 - 한줄로 생략할 수 있으며, return도 생략이 가능해진다.
 
 ```js
-const multiply = number => number * 2;
+const multiply = (number) => number * 2;
 
 console.log(multiply(2)); // 4
 ```
+
+</br>
+
+## Exports와 Imports
+
+- 차세대 자바스크립트는 모듈식 코드 작성이 가능하다.
+
+### Exports
+
+- default 명령어를 통해파일을 내보내기 할 수 있게 만들어준다.
+
+person.js
+
+```js
+const person = {
+  name: "Teasan",
+};
+
+export default person;
+```
+
+- 여러파일 내보낼 때는 이렇게 작성할 수 있다.
+
+utilty.js
+
+```js
+
+export const clean = () => { ...}
+export const baseData = 10;
+```
+
+### Imports
+
+- person.js와 utilty.js를 import 해보자.
+
+app.js
+
+```js
+// "default" 명령어를 사용하여 내보낸 person.js를 가져올 때
+import person from "./person.js";
+import pss from "./poerson.js";
+```
+
+- person.js는 default를 사용하여 export 하였다. 파일을 가져올 때, 다른 이름을 설정하여 가져올 수 있도록 만들어주는 역할을 한다. 즉, 한 번 default로 지정해놓으면 언제나 참조할 수 있게 되는 것이다.
+
+```js
+// utility.js를 가져올 때
+import { clean } from "./utility.js";
+import { baseData } from "./utility.js";
+```
+
+- 반면, default를 사용하지 않고 export를 한 utility.js를 가져올 때는 두 가지 상수를 가져왔으므로 구문을 가져올 떄 중괄호를 사용한다. 파일에 있는 특정한 콘텐츠를 대상으로 하기 때문이다. utility.js는 clean과 baseData를 이름을 통해 내보냈기 때문에 '이름으로 내보내기'라고 부른다.
+- 두 가지의 상수를 하나의 파일에서 가져오기 떄문에, 중괄호를 감싼 명령문 하나로 사용해도 된다.
+
+```js
+import { clean, baseData } from "./utility.js";
+```
+
+- JavaScript가 문제 없이 동작하기 위해서는 '이름'을 정확하게 입력하여 받아와야 할 것이다.
+
+### 기본 내보내기를 할 때 다르게 작성해보기 (변형 구문)
+
+- default export
+
+```js
+import person from "./person.js";
+import prs from "./person.js";
+```
+
+- named export
+
+```js
+// 이름으로 가져오기 * 가장 흔히 사용하는 방법
+import { clean } from "./utility.js";
+
+// 이름을 변경하여 가져오기
+import { clean as Clean } from "./utility.js";
+
+// utility에서 정의된 모든 상수들을 전부 가져오기
+import * as bundled from "./utility.js";
+```
+
+- 파일 속성으로 각각 내보낼 때는 `bundled.baseData` 혹은 `bundled.clean` 으로 내보내면 된다.
