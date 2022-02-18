@@ -3,8 +3,9 @@
 ## 목차
 
 - [let & const](#let-&-const)
-- [Arrow Functions](#Arrow-Functions-화살표_함수)
+- [Arrow Functions](#Arrow-Functions-화살표-함수)
 - [Exports and Imports(Modules)](#Exports와-Imports)
+- [Understanding Classes](#클래스를-이해하기)
 
 </br>
 
@@ -118,7 +119,7 @@ console.log(multiply(2)); // 4
 
 - default 명령어를 통해파일을 내보내기 할 수 있게 만들어준다.
 
-person.js
+#### person.js
 
 ```js
 const person = {
@@ -130,7 +131,7 @@ export default person;
 
 - 여러파일 내보낼 때는 이렇게 작성할 수 있다.
 
-utilty.js
+#### utilty.js
 
 ```js
 
@@ -142,7 +143,7 @@ export const baseData = 10;
 
 - person.js와 utilty.js를 import 해보자.
 
-app.js
+#### app.js
 
 ```js
 // "default" 명령어를 사용하여 내보낸 person.js를 가져올 때
@@ -158,7 +159,7 @@ import { clean } from "./utility.js";
 import { baseData } from "./utility.js";
 ```
 
-- 반면, default를 사용하지 않고 export를 한 utility.js를 가져올 때는 두 가지 상수를 가져왔으므로 구문을 가져올 떄 중괄호를 사용한다. 파일에 있는 특정한 콘텐츠를 대상으로 하기 때문이다. utility.js는 clean과 baseData를 이름을 통해 내보냈기 때문에 '이름으로 내보내기'라고 부른다.
+- 반면, default를 사용하지 않고 export를 한 utility.js를 가져올 때는 두 가지 상수를 가져왔으므로 구문을 가져올 때 중괄호를 사용한다. 파일에 있는 특정한 콘텐츠를 대상으로 하기 때문이다. utility.js는 clean과 baseData를 이름을 통해 내보냈기 때문에 '이름으로 내보내기'라고 부른다.
 - 두 가지의 상수를 하나의 파일에서 가져오기 떄문에, 중괄호를 감싼 명령문 하나로 사용해도 된다.
 
 ```js
@@ -190,3 +191,196 @@ import * as bundled from "./utility.js";
 ```
 
 - 파일 속성으로 각각 내보낼 때는 `bundled.baseData` 혹은 `bundled.clean` 으로 내보내면 된다.
+
+</br>
+
+## 클래스를 이해하기
+
+- 클래스는 개체를 위한 청사진이다.
+- 클래스는 class를 통해 생성할 수 있다.
+
+```js
+class Person {
+  name = "Teasan"; // Property 속성, 클래스의 변수
+  call = () => {...} // Method, 클래스의 함수
+}
+
+```
+
+- Property나 Method를 추가할 때 Class는 '인스턴스'화 된다.
+
+```js
+const myPerson = newPerson();
+myPerson.call();
+console.log(myPerson.name);
+```
+
+- Class는 생성자 함수를 만드는 간단한 방법이라고 보면 된다.
+- Class 청사진으로 JavaScript 개체를 만드는 것이다.
+- Class는 상속도 가능하다.
+
+```js
+
+class Person extends Master;
+
+```
+
+- 다른 Class를 상속하면 해당하는 클래스의 모든 속성과 메서드를 그대로 가져올 수 있다. 또한, 새로운 속성과 메서드도 추가할 수 있게 된다.
+
+### constuctor 생성자
+
+- 생성자 메서드로 속성을 추가한다. 모든 클래스에 추가할 수 있으며, 언제든지 클래스를 인스턴스화하면 실행된다.
+
+```js
+class Person {
+  constructor() {
+    this.name = "Teasan";
+  }
+
+  printMyName() {
+    // 메서드 함수 추가
+    console.log(this.name);
+  }
+}
+
+// 상수로 클래스를 인스턴스로 저장하기
+const person = new Person();
+
+person.printMyName(); // "Teasan"
+```
+
+- 물론 이 Class도 상속이 가능하다.
+
+```js
+class Human {
+  consturctor() {
+    this.gender = "female";
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+```
+
+- 이 Human 클래스를 Person에 상속해서 사용해보자.
+
+```js
+class Human {
+  consturctor() {
+    this.gender = "female";
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Person extends Human {
+  constructor() {
+    this.name = "Teasan";
+  }
+
+  printMyName() {
+    console.log(this.name);
+  }
+}
+
+const person = new Person();
+person.printGeander(); // error!!!
+person.printMyName(); // error!!!
+```
+
+- 에러가 나는 이유 : 파생 클래스에는 반드시 `super` 생성자가 필요하다.
+
+```js
+class Human {
+  constructor() {
+    this.gender = "female";
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Person extends Human {
+  constructor() {
+    super();
+    this.name = "Teasan";
+  }
+
+  printMyName() {
+    console.log(this.name);
+  }
+}
+
+const person = new Person();
+person.printGender(); // error!!!
+person.printMyName(); // error!!!
+```
+
+- 다른 클래스를 확장하려고 생성자를 구현하고 있기 때문에 생성자에 super 메서드를 추가해야 정상적으로 동작한다.
+- 이렇게 작성해주면 부모 생성자를 실행해주고, 동시에 부모 클래스를 초기화할 수 있게 된다.
+
+```js
+class Human {
+  constructor() {
+    this.gender = "female";
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Person extends Human {
+  constructor() {
+    // 파생 클래스에는 반드시 super() 메서드를 추가해야 한다.
+    super();
+    this.name = "Teasan";
+  }
+
+  printMyName() {
+    console.log(this.name);
+  }
+}
+
+// 상수로 클래스를 인스턴스로 저장하기
+const person = new Person();
+person.printGender(); // "female"
+person.printMyName(); // "Teasan"
+```
+
+- 파생 클래스에서는 상속 받은 부모 클래스의 속성을 새롭게 추가할 수도 있을 것이다.
+
+```js
+class Human {
+  constructor() {
+    this.gender = "female";
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Person extends Human {
+  constructor() {
+    super();
+    this.name = "Teasan";
+    this.gender = "male";
+  }
+
+  printMyName() {
+    console.log(this.name);
+  }
+}
+
+// 상수로 클래스를 인스턴스로 저장하기
+const person = new Person();
+person.printGender(); // "male"
+person.printMyName(); // "Teasan"
+```
+
+- 클래스는 리액트 구성 요소를 만들 때 사용한다.
