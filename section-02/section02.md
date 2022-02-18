@@ -6,6 +6,8 @@
 - [Arrow Functions](#Arrow-Functions-화살표-함수)
 - [Exports and Imports(Modules)](#Exports와-Imports)
 - [Understanding Classes](#클래스를-이해하기)
+- [Classes, Properties and Methods](#클래스의-속성-및-메서드)
+
 
 </br>
 
@@ -293,6 +295,8 @@ person.printMyName(); // error!!!
 
 - 에러가 나는 이유 : 파생 클래스에는 반드시 `super` 생성자가 필요하다.
 
+### super 파생 클래스 확장을 위한 super 메서드
+
 ```js
 class Human {
   constructor() {
@@ -384,3 +388,110 @@ person.printMyName(); // "Teasan"
 ```
 
 - 클래스는 리액트 구성 요소를 만들 때 사용한다.
+
+</br>
+
+## 클래스의 속성 및 메서드
+
+- 새로운 JavaScript 는 속성, 메서드를 초기화하는 다양한 구문을 지원한다.
+
+### ES6 | Property
+
+```js
+constructor() {
+  this.myProperty = 'value';
+}
+
+```
+
+### ES7 | Property
+
+```js
+myProperty = "value";
+```
+
+- 최신 JS에서는 this 없이 클래스에 바로 속성을 할당할 수 있게 되었다.
+- 또한, constructor 생성자 함수 호출도 필요하지 않게 되었다.
+
+### ES6 | Methods
+
+```js
+
+myMethod() { ... };
+
+```
+
+### ES7 | Methods
+
+```js
+
+myMethod = () => { ... };
+
+```
+
+- 최신 JS에서는 속성을 설정하는 왼쪽 구문을 사용한다.
+- 메서드는 함수를 값으로 저장하는 속성이라고 보면 된다.
+- 최신 JS에서의 클래스 메서드는 화살표 함수를 속성 값으로 쓰기 때문에, this를 문제없이 사용할 수 있게 된다.
+
+### ES6 | Example
+
+```js
+class Human {
+  constructor() {
+    this.gender = "female";
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Person extends Human {
+  constructor() {
+    super();
+    this.name = "Teasan";
+    this.gender = "male";
+  }
+
+  printMyName() {
+    console.log(this.name);
+  }
+}
+
+const person = new Person();
+person.printGender(); // "male"
+person.printMyName(); // "Teasan"
+```
+
+### ES7 | Example
+
+```js
+class Human {
+  // constructor : 생성자 함수 생략
+  gender = "female"; // this 생략
+
+  printGender = () => {
+    // 화살표 함수 사용
+    console.log(this.gender);
+  };
+}
+
+class Person extends Human {
+  // constructor 생성자 함수 생략
+  // super() : 파생 클래스에 추가해야하는 super도 생략
+  name = "Teasan";
+  gender = "male";
+
+  printMyName = () => {
+    // 화살표 함수 사용
+    console.log(this.name);
+  };
+}
+
+const person = new Person();
+person.printGender(); // "male"
+person.printMyName(); // "Teasan"
+```
+
+</br>
+
