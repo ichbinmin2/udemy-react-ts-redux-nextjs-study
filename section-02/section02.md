@@ -7,7 +7,7 @@
 - [Exports and Imports(Modules)](#Exports와-Imports)
 - [Understanding Classes](#클래스를-이해하기)
 - [Classes, Properties and Methods](#클래스의-속성-및-메서드)
-
+- [The Spread & Rest Operator](#스프레드-및-나머지-연산자)
 
 </br>
 
@@ -495,3 +495,4 @@ person.printMyName(); // "Teasan"
 
 </br>
 
+## 스프레드 및 나머지 연산자
