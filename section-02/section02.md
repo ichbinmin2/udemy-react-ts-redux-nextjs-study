@@ -8,6 +8,7 @@
 - [Understanding Classes](#클래스를-이해하기)
 - [Classes, Properties and Methods](#클래스의-속성-및-메서드)
 - [The Spread & Rest Operator](#스프레드-및-나머지-연산자)
+- [Destructuring](#구조분해할당)
 
 </br>
 
@@ -569,3 +570,51 @@ const filter = (...args) => {
 
 console.log(filter(1, 2, 3)); // [1]
 ```
+
+</br>
+
+## Destructuring 구조분해할당
+
+- 구조 분해(Destructuring)는 배열 요소나 객체 속성을 추출해서 변수로 저장하는 역할을 한다.
+- 전개 연산자(Spread Operator)는 모든 요소와 속성을 새 배열이나 새 객체에 분배하는 반면, 구조 분해(Destructuring)는 하나의 요소나 속성만을 배열이나 객체를 위한 변수로 저장한다.
+- 구조 분해(Destructuring)는 배열에서 사용하는 Array Destructuring(배열 구조 분해)과 객체에서 사용하는 Object Destructuring(객체 구조 분해)로 나뉜다.
+- Array Destructuring(배열 구조 분해)에서는 순서가 어떤 속성을 취할지 정했다면, Object Destructuring(객체 구조 분해)에서는 속성의 이름이 정한다.
+
+### Array Destructuring 배열 구조분해할당
+
+```js
+[a, b] = ["Hello", "Teasan"];
+console.log(a); // Hello
+console.log(b); // Teasan
+```
+
+- 변수 a와 b를 "Hello"와 "Teasan"에 순서대로 할당해주고 있다.
+
+```js
+const numbers = [1, 2, 3];
+[num1, num2] = numbers;
+console.log(num1, num2);
+// 1
+// 2
+```
+
+```js
+const numbers = [1, 2, 3];
+[num1, , num3] = numbers;
+console.log(num1, num3);
+// 1
+// 3
+```
+
+### Object Destructuring 객체 구조분해할당
+
+```js
+
+{name} = {name: "Teasan", age: 28};
+console.log(name); // Teasan
+console.log(age); // undefined
+
+```
+
+- 객체 구조 분해에서는 속성의 이름이 어떤 속성을 취할지를 정하기 때문에, 왼쪽에 있는 중괄호가 오른쪽에 있는 속성을 지정하고 값을 추출하는 방식이다.
+- 따라서, 왼쪽 중괄호 안에 있는 이름이 두번째 속성 `age`를 취하고 있지 않기 때문에 `age`의 값이 정의되지 않았다(`undefined`)고 나오는 것이다. 즉, 변수가 `age`라는 객체를 추출하지 않았다는 뜻과 동일하다.
