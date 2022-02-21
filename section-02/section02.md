@@ -496,3 +496,76 @@ person.printMyName(); // "Teasan"
 </br>
 
 ## 스프레드 및 나머지 연산자
+
+- 전개 연산자 및 나머지 연산자는 최신 JavaScript에서 사용할 수 있게 되었다.
+- 연산자 하나에 점 세개 `...`로 표기할 수 있다.
+- 연산자는 어디에서 사용하는지에 따라 전개 연산자(Spread Operator)와 나머지 연산자(Rest Operator)로 나뉜다.
+
+### Spread Operator 전개 연산자
+
+- Spread Operator(전개 연산자)는 '배열' 요소나 '객체' 속성을 나누는 데 사용된다.
+- 예를 들어, 예전 배열(혹은 객체)의 모든 요소를 새로운 배열(혹은 객체)에 추가하고 싶을 때 사용할 수 있다.
+
+```js
+// array
+const newAray = [...oldArray, 1, 2];
+// object
+const newObject = { ...oldObject, newProp: 5 };
+```
+
+- Spread Operator를 사용하지 않고 새로운 배열을 생성했을 때
+
+```js
+const numbers = [1, 2, 3];
+const newNumber = [numbers, 4];
+
+console.log(newNumber); // [[1, 2, 3], 4] <= 새 배열 안에 예전 요소가 배열로 추가되고 있다.
+```
+
+- Spread Operator를 사용해서 새로운 배열을 생성했을 때
+
+```js
+const numbers = [1, 2, 3];
+const newNumber = [...numbers, 4];
+
+console.log(newNumber); // [1, 2, 3, 4]
+```
+
+- Spread Operator를 사용해서 새로운 객체를 생성했을 때
+
+```js
+const person = {
+  name: "Teasan",
+};
+
+const newPerson = {
+  ...person,
+  age: 28,
+};
+
+console.log(newPerson); // [object Object] {age: 28, name: "Teasan"}
+```
+
+- Spread Operator는 배열을 편리하게 복사하거나, 예전 객체를 복사하면서 객체에 속성을 추가할 때 사용된다.
+
+### Rest Operator 나머지 연산자
+
+- 매개변수 리스트를 배열로 통합하는 연산자. 전개 연산자와 하는 일이 다르다.
+
+```js
+function sortArgs(...args) {
+  return args.sort();
+}
+```
+
+- 예시의 `sortArgs`는 매개변수를 무한정 받는다.
+- 매개변수가 몇 개인지는 상관이 없다. 하나 이상의 매개변수를 받고 그것을 배열로 합쳐준다.
+- 따라서, 배열 방법을 매개변수 리스트에 적용하거나, 기존의 매개변수에 뭐든지 할 수 있게 된다.
+
+```js
+const filter = (...args) => {
+  return args.filter((el) => el === 1);
+};
+
+console.log(filter(1, 2, 3)); // [1]
+```
