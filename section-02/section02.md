@@ -10,6 +10,7 @@
 - [The Spread & Rest Operator](#스프레드-및-나머지-연산자)
 - [Destructuring](#Destructuring-구조분해할당)
 - [Reference and Primitive Types Refresher](#참조형-및-원시형-데이터타입)
+- [Refreshing Array Functions](#Array-functions)
 
 </br>
 
@@ -686,3 +687,25 @@ console.log(secondPerson); // const person = { name: "Teasan" };
 - Spread Operator 전개 연산자를 통해 `secondPerson` 객체 안에서 `person`을 복사하면, 객체의 속성과 값을 추출하고 새로 만들어진 `secondPerson` 객체에 추가가 된다.
 - Spread Operator 전개 연산자를 사용하면 `person.name`으로 지정한 값인 `Min`이 아니라, 앞서 복사한 값인 `person`의 값인 `Teasan`이 출력됨을 확인할 수 있다.
 - 이처럼 객체와 배열은 참조형 타입이며 객체와 배열을 재할당하게 됐을 시, 값이 아니라 포인터를 복사하게 됨을 명심해야 한다. (따라서, 완전히 객체와 배열을 복사해야한다면, 새 객체를 만들고 전개 연산자를 통해 속성만 복사하는 방식을 사용해야 한다.)
+
+</br>
+
+## Array functions
+
+### 배열함수 map()
+
+- 배열 안에 있는 모든 요소(숫자)가 두배가 되는 배열로 만들고 싶을 때
+
+```js
+const number = [1, 2, 3];
+const doubleNumber = number.map((num) => {
+  return num * 2;
+});
+
+console.log(number); // [1, 2, 3]
+console.log(doubleNumber); // [2, 4, 6]
+```
+
+- 이처럼, 배열에 `map`을 사용하면 배열 안의 각 요소에 곱하기 2를 한 값을 새로운 배열에 넣어주는 형식으로 사용할 수 있다.
+
+</br>
