@@ -9,6 +9,7 @@
 - [Classes, Properties and Methods](#클래스의-속성-및-메서드)
 - [The Spread & Rest Operator](#스프레드-및-나머지-연산자)
 - [Destructuring](#Destructuring-구조분해할당)
+- [Reference and Primitive Types Refresher](#참조형-및-원시형-데이터타입)
 
 </br>
 
@@ -573,7 +574,7 @@ console.log(filter(1, 2, 3)); // [1]
 
 </br>
 
-## Destructuring 구조분해할당
+## 구조분해할당
 
 - 구조 분해(Destructuring)는 배열 요소나 객체 속성을 추출해서 변수로 저장하는 역할을 한다.
 - 전개 연산자(Spread Operator)는 모든 요소와 속성을 새 배열이나 새 객체에 분배하는 반면, 구조 분해(Destructuring)는 하나의 요소나 속성만을 배열이나 객체를 위한 변수로 저장한다.
@@ -618,3 +619,70 @@ console.log(age); // undefined
 
 - 객체 구조 분해에서는 속성의 이름이 어떤 속성을 취할지를 정하기 때문에, 왼쪽에 있는 중괄호가 오른쪽에 있는 속성을 지정하고 값을 추출하는 방식이다.
 - 따라서, 왼쪽 중괄호 안에 있는 이름이 두번째 속성 `age`를 취하고 있지 않기 때문에 `age`의 값이 정의되지 않았다(`undefined`)고 나오는 것이다. 즉, 변수가 `age`라는 객체를 추출하지 않았다는 뜻과 동일하다.
+
+</br>
+
+## 참조형 및 원시형 데이터타입
+
+- JavaScript에는 원시형 타입과 참조형 타입으로 나뉜다.
+
+### Primitive Type 원시형 타입
+
+```js
+const number = 1;
+const num2 = number;
+
+console.log(num2); // 1
+```
+
+- `number` 값인 1을 `num2`가 복사했기 때문에 `num2`의 값은 1이 나온다.
+- 숫자, 문자, boolean 등이 원시형 타입의 종류라고 할 수 있다.
+- 원시형 타입은 언제든 다른 변수에 변수를 재할당하고 저장할 수 있다.
+
+### Reference Type 참조형 타입
+
+- 객체와 배열은 참조형 타입이다.
+
+```js
+const person = {
+  name: "Teasan",
+};
+
+const secondPerson = person;
+console.log(secondPerson); // const person = { name: "Teasan" };
+```
+
+- 실행하면 `secondPerson`은 `person`과 같은 결과값을 출력한다. 하지만 `person` 자체를 복사하지는 않았다.
+- 객체인 `person`은 메모리에 저장되고, 상수인 `person`은 메모리에 포인터를 저장한다. 그리고 `person`을 `secondPerson`에 할당하면 포인터가 복사될 것이다.
+
+```js
+const person = {
+  name: "Teasan",
+};
+
+const secondPerson = person;
+person.name = "Min";
+console.log(secondPerson); // const person = { name: "Min" };
+```
+
+- `person`을 복사했기 때문에 `Teasan`이 나올 것이라는 예상과는 달리, `Min`이라는 값이 출력됐다.
+- 왜냐하면, 포인터를 복사해서 메모리에 있는 같은 객체를 지정했기 때문이다. 따라서 `person`의 `name`이 바뀌면 자동으로 `secondPerson`의 이름 역시 바뀌게 되는 것을 확인할 수 있다.
+- 이렇게 객체나 배열을 복사하면 하나의 장소에서 컨트롤 할 수 있게 된다.
+- 따라서 원하지 않는 방식으로 객체 혹은 배열의 변화를 방지하기 위해 복사하는 방법을 이해하며 사용해야 할 것이다. 즉, 포인터가 아니라 객체를 완전히 복사하는 방식으로 이루어져야 한다는 의미이다.
+
+```js
+const person = {
+  name: "Teasan",
+};
+
+const secondPerson = {
+  ...person,
+};
+
+person.name = "Min";
+console.log(secondPerson); // const person = { name: "Teasan" };
+```
+
+- Spread Operator 전개 연산자를 통해 `secondPerson` 객체 안에서 `person`을 복사하면, 객체의 속성과 값을 추출하고 새로 만들어진 `secondPerson` 객체에 추가가 된다.
+- Spread Operator 전개 연산자를 사용하면 `person.name`으로 지정한 값인 `Min`이 아니라, 앞서 복사한 값인 `person`의 값인 `Teasan`이 출력됨을 확인할 수 있다.
+- 이처럼 객체와 배열은 참조형 타입이며 객체와 배열을 재할당하게 됐을 시, 값이 아니라 포인터를 복사하게 됨을 명심해야 한다. (따라서, 완전히 객체와 배열을 복사해야한다면, 새 객체를 만들고 전개 연산자를 통해 속성만 복사하는 방식을 사용해야 한다.)
