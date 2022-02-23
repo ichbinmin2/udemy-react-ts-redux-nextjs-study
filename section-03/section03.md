@@ -7,6 +7,7 @@
 - [Creating a new React Project](#새로운-리액트-프로젝트-생성하기)
 - [Analyzing a Standard React Project](#표준-리액트-프로젝트-분석하기)
 - [Introducing JSX](#JSX-소개)
+- [How React Works](#리액트의-작동-방식)
 
 </br>
 
@@ -92,11 +93,14 @@ yarn start
 - 페이지가 로드되면 가장 첫번째로 실행되는 코드 파일이다.
 - 브라우저에 전송되기 전에 작성된 코드들을 변형해주는 역할을 해준다.
 - `index.js`에서는 서드파티 라이브러리인 `ReactDOM`을 import한다.
+
   - React와 ReactDOM은 두개의 분리된 패키지지만 리액트 라이브러리로 여긴다. 다른 책임을 맡고 있는 두개의 패키지이지만 리액트돔과 리액트는 결국 리액트 라이브러리인 것이다. 따라서, 리액트와 리액트돔에서 무언가를 import 했다면, 리액트와 리액트 특성을 모두 이용하고 있다는 의미다.
   - ReactDOM은 `render` 라는 메소드를 호출하며, `render` 메소드는 두개의 매개변수가 있다.
-  ```js
-  ReactDOM.render(<App />, document.getElementById("root"));
-  ```
+
+    ```js
+    ReactDOM.render(<App />, document.getElementById("root"));
+    ```
+
   - 첫번째 매개변수는 `App`이라는 Component이다.
   - 두번째 매개변수는 default JavaScript DOM API 이다.
     - `global document object`에서는 JavaScript를 JavaScript 브라우저에 혼합한다.
@@ -147,6 +151,80 @@ export default App;
 
 - JSX 코드는 변형(JavaScript로) 과정이 있었기 때문에 브라우저에서 작동하게 되며, 이러한 과정 덕분에 여러 브라우저에서 사용할 수 있게 되었다.
 - 변형된 코드는 개발자 도구-소스 탭에서 확인 할 수 있는데, 우리가 개발하며 작성한 코드와는 다른 것을 확인할 수 있다.
+
+<img width="826" alt="스크린샷 2022-02-23 오후 5 33 15" src="https://user-images.githubusercontent.com/53133662/155284659-40117856-a368-4285-99b7-95ecd18a2322.png">
+
 - 개발자 도구-소스 탭의 `static/js` 폴더 내의 `bundle.js`를 살펴보면, 우리가 작성한 소스 코드는 포함하고 있지 않으며 전체 React 라이브러리 소스 코드와 전체 ReactDOM 라이브러리 소스 코드를 포함하고 있을 뿐이다.
 - 개발자 도구-소스 탭의 `static/js` 폴더 내의 `main.chunk.js`를 살펴보면, `App`이라는 이름의 함수를 발견할 수 있다. 이는 우리가 `App`에서 작성한 소스 코드와는 다름을 확인할 수 있다. 이는 변형된 코드로 브라우저에서 실행되고 있음을 말해준다.
 - JSX 이라는 특별한 구문을 사용하면서, 우리가 작성한 소스 코드가 브라우저에서 실행되기 전에 브라우저가 이해할 수 있는 코드로 자동 변환이 되며 이는 개발자가 코드를 조금 더 편하게 작성할 수 있도록 만들어준다.
+
+</br>
+
+## 리액트의 작동 방식
+
+```js
+function App() {
+  return (
+    <div>
+      <h2>Let's get started!</h2>
+    </div>
+  );
+}
+
+export default App;
+```
+
+- `App` 함수 안에 HTML 코드가 있다. `App` 은 하나의 컴포넌트(Component)이고 컴포넌트는 전용 HTML 요소이기 때문이다.
+- 선언 접근 방식(Declarative Approach)을 살펴보자.
+  - 선언 접근 방식(Declarative Approach)이란, 리액트의 타겟 state를 정한 뒤에 실제 돔 지시를 생성하고 실행하는 것을 의미한다.
+
+```js
+<div>
+  <h2>Let's get started!</h2>
+</div>
+```
+
+- `<h2>` 태그로 `div`를 만들고 있다. 즉, `<h2>` 태그 안 넣어준 문구 "Let's get started!" 가 화면 상에서 나타나도록 하겠다는 의미이다.
+- 그렇다면, `App.js` 에서 선언한 함수에서 HTML 블록에 `<p>` 태그로 새로운 구문을 추가한다면 어떨까?
+
+### 일반적으로 JavaScript 에서 하던 방식
+
+- 일반적으로 JavaScript에서는 페이지의 요소를 선택하고 `innerHTML`로 문장을 직접 넣어주는 방식을 사용했다.
+
+```js
+document.getElementById("root").innerHTML = "This is also visible!";
+```
+
+- 혹은 Element를 생성하고, `textContent`로 문장을 할당한 뒤 자식으로 넣어주는 방식을 사용하기도 했다.
+
+```js
+const para = document.createElement("p");
+para.textContent = "This is also visible!";
+document.getElementById("root").append(para);
+```
+
+- 앞서 보여준 예시와 같은 일반적으로 JavaScript에서 하던 방식은 명령형 접근 방식(Imperative Approach)을 따른 것이다.
+- 명령형 접근 방식(Imperative Approach)은 확실한 단계별 지시를 통해 작동되는 방식을 의미한다. 이는, 요소가 아주 많은 복잡한 사용자 인터페이스를 다루기엔 다소 성가실 수 있는 방법이다. 매번 모든 지시를 일일이 작성하여 업데이트 해야되기 때문이다.
+- 이러한 성가신 작업 과정들은 리액트의 선언 접근 방식(Declarative Approach)으로 최종 상태를 정의하는 방식으로 단순화할 수 있게 되었다.
+
+### 리액트 jsx의 방식
+
+```js
+<div>
+  <h2>Let's get started!</h2>
+  <p>This is also visible!</p>
+</div>
+```
+
+- `<p>` 태그로 새로운 구문을 추가하고 파일을 저장하고 개발 서버가 실행되도록 하면, React가 자동으로 변화를 감지하여 브라우저 페이지를 업데이트 해줄 것이다.
+
+```js
+<div>
+  <h2>Let's get started!</h2>
+  <p>This is also visible!</p>
+</div>
+```
+
+- React는 컴포넌트(Component)라는 개념을 가지고 있다. 그리고 첫번째 컴포넌트라고 할 수 있는 `App`이 존재한다. 이 `App`은 `index.js`에서 전용 HTML 요소(Element)처럼 사용되는 컴포넌트(Component)이다.
+
+</br>
