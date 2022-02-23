@@ -8,6 +8,7 @@
 - [Analyzing a Standard React Project](#표준-리액트-프로젝트-분석하기)
 - [Introducing JSX](#JSX-소개)
 - [How React Works](#리액트의-작동-방식)
+- [Building a First Custom Component](#리액트의-작동-방식)
 
 </br>
 
@@ -228,3 +229,45 @@ document.getElementById("root").append(para);
 - React는 컴포넌트(Component)라는 개념을 가지고 있다. 그리고 첫번째 컴포넌트라고 할 수 있는 `App`이 존재한다. 이 `App`은 `index.js`에서 전용 HTML 요소(Element)처럼 사용되는 컴포넌트(Component)이다.
 
 </br>
+
+## 첫 번째 사용자 지정 컴포넌트 만들기
+
+- `src` 폴더에 `components` 폴더를 생성하고, 새로운 컴포넌트(component) 파일을 생성한다.
+- 컴포넌트(component) 하나 당 하나의 파일을 생성하는 게 좋다.
+- 모든 컴포넌트(component)는 `App.js` 함수 안에 포함되거나 다른 컴포넌트(component)에 포함될 것이다.
+- 컴포넌트 트리(component tree) 안에는 최상위 컴포넌트인 `<App/>`이 있고 그 안에 커스텀 HTML Element가 있을 것이다. 그리고 이 커스텀 컴포넌트 안에는 사용자 인터페이스를 담당하는 것들이 존재한다.
+- 프로젝트 앱이 커질 수록 이 컴포넌트 트리도 복잡하고 커지게 된다.
+- 가장 최상 위에 위치하고 있는 `App.js` 같은 컴포넌트(component)만이 ReactDOM render의 지시를 통해 HTML 페이지에 직접 만들어진다.
+- 컴포넌트(component) 이름은 대문자로 시작하는 것이 보편적이며, 여러 단어를 섞어서 쓸 때는 각 단어를 대문자로 시작하는 카멜 케이스를 사용한다.
+- 컴포넌트가 어떻게 React에서 사용되는 것일까? React에서 컴포넌트는 자바스크립트 함수일 뿐이다.(중요)
+- React에서는 특별한 함수, 특별한 리턴 그리고 특별한 코드를 리턴하지만 그럼에도 여전히 HTML 코드를 리턴하는 JavaScript 함수일 뿐임을 기억해야 한다.
+
+- `ExpenseItem` 이라는 커스텀 컴포넌트 파일(`ExpenseItem.js`)을 생성해보자.
+
+```js
+import React from "react";
+
+const ExpenseItem = () => {
+  return <h2>Expense Item</h2>;
+};
+export default ExpenseItem;
+```
+
+- `App.js`에서 import 하여 `ExpenseItem` 컴포넌트를 가져와서 사용한다.
+
+```js
+import ExpenseItem from "./components/ExpenseItem";
+
+function App() {
+  return (
+    <div>
+      <h2>Let's get started!</h2>
+      <ExpenseItem />
+    </div>
+  );
+}
+
+export default App;
+```
+
+- `App`에서 return 해주고 있는 일반적인 HTML Element와 `ExpenseItem` 컴포넌트(component)의 차이점이라면 컴포넌트는 소문자로 시작하는 HTML Element와는 달리 대문자로 시작하는 것이다. JSX의 이러한 규칙에 따라서 React가 이러한 커스텀 컴포넌트(component)를 감지할 수 있게 만들어준다.
