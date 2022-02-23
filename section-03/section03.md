@@ -8,7 +8,8 @@
 - [Analyzing a Standard React Project](#표준-리액트-프로젝트-분석하기)
 - [Introducing JSX](#JSX-소개)
 - [How React Works](#리액트의-작동-방식)
-- [Building a First Custom Component](#리액트의-작동-방식)
+- [Building a First Custom Component](#첫-번째-사용자-지정-컴포넌트-만들기)
+- [Writing More Complex JSX Code](#더-복잡한-JSX-코드-작성하기)
 
 </br>
 
@@ -271,3 +272,44 @@ export default App;
 ```
 
 - `App`에서 return 해주고 있는 일반적인 HTML Element와 `ExpenseItem` 컴포넌트(component)의 차이점이라면 컴포넌트는 소문자로 시작하는 HTML Element와는 달리 대문자로 시작하는 것이다. JSX의 이러한 규칙에 따라서 React가 이러한 커스텀 컴포넌트(component)를 감지할 수 있게 만들어준다.
+
+</br>
+
+## 더 복잡한 JSX 코드 작성하기
+
+- 기존에 생성한 `ExpenseItem` 컴포넌트에 날짜, 제목, 비용의 총량까지 더해 표기하기 위해서 조금 더 복잡한 HTML 코드를 작성해보자.
+
+```js
+const ExpenseItem = () => {
+  return (
+      <div>Date</div>
+      <div>
+        <h2>Title</h2>
+        <div>Amount</div>
+      </div>
+  );
+};
+```
+
+- 하지만 이렇게 작성하였을 때, 유효하지 않은 코드라는 error가 출력된다. 왜냐하면, React 컴포넌트(component)에는 아주 중요한 규칙을 지키지 않았기 때문이다. (이는 HTML과 return한 JSX 코드와 컴포넌트에 관한 문제이다.)
+- React 컴포넌트(component)에서는 작성된 HTML 코드가 하나의 최상위 요소(element)로 감싸져있어야 한다는 규칙이 있다. 즉, 하나의 return 명령어 당 하나의 요소(element)만 가져야 한다는 뜻이며, 또는 하나의 JSX 코드 당 하나의 요소(element)만 가져야 한다는 뜻이기도 하다. 그렇기에 현재 작성된 HTML 코드에서는 `div`라는 두개의 최상위 태그를 가지고 있기 때문에 error가 발생한 것이다.
+
+```js
+const ExpenseItem = () => {
+  return (
+    <div>
+      <div>Date</div>
+      <div>
+        <h2>Title</h2>
+        <div>Amount</div>
+      </div>
+    </div>
+  );
+};
+```
+
+![image](https://user-images.githubusercontent.com/53133662/155303587-475ce15c-8f7e-45fe-b52c-37c1289c32ee.png)
+
+- 현재 작성된 HTML 코드에 `div`를 최상위 태그로 감싸주면 다시 유효하게 작동됨을 확인할 수 있다.
+
+</br>
