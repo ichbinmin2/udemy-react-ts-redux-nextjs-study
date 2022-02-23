@@ -4,7 +4,8 @@
 
 - [What Are Components?](#컴포넌트란-무엇인가)
 - [React Code Is Written In A "Declarative Way"!](#리액트-코드는-선언적-방식으로-작성되었습니다)
-- [Creating a new React Project](#리액트-코드는-선언적-방식으로-작성되었습니다)
+- [Creating a new React Project](#새로운-리액트-프로젝트-생성하기)
+- [Analyzing a Standard React Project](#표준-리액트-프로젝트-분석하기)
 
 </br>
 
@@ -64,8 +65,8 @@
 
 ### 초기 세팅
 
-- CRA(Create React App)를 설치하기 위해서는 비교적 최신 버전의 `Node.js`가 필요하다. 만약 `Node.js`가 설치되어 있지 않다면, 먼저 개개인의 사용자 환경에 맞는 버전으로 먼저 설치를 해주어야 한다. 리액트 앱 프로젝트는 `Node.js`를 이용해서 미리보기 서버를 만들 예정이다.
-- `Node.js`는 최적화 과정을 위해서 그리고 앱을 만들기 위해서 반드시 필요하다.
+- CRA(Create React App)를 설치하기 위해서는 비교적 최신 버전의 `Node.js`가 필요하다. 만약 `Node.js`가 설치되어 있지 않다면, 먼저 개개인의 사용자 환경에 맞는 버전으로 먼저 설치를 해주어야 한다.
+- 리액트 앱 프로젝트는 `Node.js`를 이용해서 미리보기 서버를 만들 예정이다. `Node.js`는 최적화 과정을 위해서 그리고 앱을 만들기 위해서 반드시 필요하다.
 - [Node.js](https://nodejs.org/ko/)
 - [Create React App](https://create-react-app.dev/docs/getting-started)
 
@@ -77,3 +78,50 @@ yarn start
 
 - package.json 은 프로젝트와 관련된 개발 사항들이 버전별로 저장되어있다.
 - node_modules 는 로컬 시스템에 다운된 서브 파트 패키지다.
+
+</br>
+
+## 표준 리액트 프로젝트 분석하기
+
+- React 코드는 일반 JavaScript 코드이다.
+- React를 사용하고, React의 특별한 구문도 사용할 것이지만, 결국은 모두 JavaScript이다.
+
+### `src/index.js`
+
+- 페이지가 로드되면 가장 첫번째로 실행되는 코드 파일이다.
+- 브라우저에 전송되기 전에 작성된 코드들을 변형해주는 역할을 해준다.
+- `index.js`에서는 서드파티 라이브러리인 `ReactDOM`을 import한다.
+  - React와 ReactDOM은 두개의 분리된 패키지지만 리액트 라이브러리로 여긴다. 다른 책임을 맡고 있는 두개의 패키지이지만 리액트돔과 리액트는 결국 리액트 라이브러리인 것이다. 따라서, 리액트와 리액트돔에서 무언가를 import 했다면, 리액트와 리액트 특성을 모두 이용하고 있다는 의미다.
+  - ReactDOM은 `render` 라는 메소드를 호출하며, `render` 메소드는 두개의 매개변수가 있다. 
+  ```js
+  ReactDOM.render(<App />, document.getElementById('root'));
+  ```
+  - 첫번째 매개변수는 `App`이라는 Component이다.
+  - 두번째 매개변수는 default JavaScript DOM API 이다. 
+    - `global document object`에서는 JavaScript를 JavaScript 브라우저에 혼합한다. 
+    - `getElementById` 메소드로 요소를 얻어서 `id`로 특정 DOM HTML 요소를 선택한다. 
+
+### `public/index.html`
+
+- 브라우저에서 로드되는 싱글 HTML 파일. 
+- React는 싱글 페이지 앱을 만들기 때문에 사용되는 파일.
+- 하나의 HTML 파일만이 브라우저에 전달되고, 브라우저에 의해 호스트 된다.
+- 하지만 싱글 파일에서는 완성된 React 앱 코드를 가져오지만, 시작코드 라고 말할 수는 없다. 그저, 스크린에서 무엇을 보여줄지 업데이트하는 역할을 할 뿐이다.
+- 하나의 HTML 파일만이 브라우저에 전달되지만, 리액트라는 라이브러리 덕분에 스크린에서 보는 내용은 계속 업데이트 된다.
+
+```js
+<div id="root"></div>
+```
+
+- `root` 라는 `id` 값을 가지고 있는 `<div>`는 `index.html`의 body 중에서 유일한 HTML 요소이다.
+- 이 `div`는 `index.js`의 `render` 메소드 안에서 두번째로 호출되는 매개변수에서 `root`라는 `id`로 타겟하여 선택된 것이다.
+- 이 `div`라는 빈 콘텐츠는 `render` 메소드 안에서 첫번째로 호출되는 매개변수인 `<App/>`으로 대체된다.
+
+### `src/App.js`
+
+- `index.js`에서 ReactDOM이 호출한 `render` 메소드 안에서 첫번째로 호출되는 매개변수이다.
+- `App`도 결국에는 Component이다.
+- `App`에서 함수가 정의된 것을 export하고 `index.js`에서 import 하여 가져오게 된다.
+- `App` 이라는 함수는 무언가를 return 하는 역할을 한다.
+- React에서 개발하고 도입한 특별 구문인 jsx 라는 특성 때문에 JavaScript 파일에서도 작동하게 된다. (변형 과정 덕에 가능)
+
