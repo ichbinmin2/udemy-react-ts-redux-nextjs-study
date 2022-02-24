@@ -10,6 +10,7 @@
 - [How React Works](#리액트의-작동-방식)
 - [Building a First Custom Component](#첫-번째-사용자-지정-컴포넌트-만들기)
 - [Writing More Complex JSX Code](#더-복잡한-JSX-코드-작성하기)
+- [Adding Basic CSS Styling](#기본-CSS-스타일-추가하기)
 
 </br>
 
@@ -313,3 +314,11 @@ const ExpenseItem = () => {
 - 현재 작성된 HTML 코드에 `div`를 최상위 태그로 감싸주면 다시 유효하게 작동됨을 확인할 수 있다.
 
 </br>
+
+## 기본 CSS 스타일 추가하기
+
+- React 구문에서는 `class`가 아니라 `className`으로 사용한다.
+- 적용하고자 하는 css 파일은 적용할 JavaScript 파일 옆에 추가하면 된다.
+- 적용하고자 하는 css 파일은 적용할 JavaScript 파일에서 `import "./style.css"`로 import를 해와서 적용한다.
+
+
