@@ -12,6 +12,7 @@
 - [Writing More Complex JSX Code](#더-복잡한-JSX-코드-작성하기)
 - [Adding Basic CSS Styling](#기본-CSS-스타일-추가하기)
 - [Outputting Dynamic Data & Working with Expressions in JSX](#JSX에서-동적-데이터-출력-및-표현식-작업하기)
+- [Passing Data via "props"](#props를-통해-데이터-전달하기)
 
 </br>
 
@@ -369,7 +370,8 @@ const expenseAmount = 294.67;
 
 - 상수로 선언한 `expenseDate`(날짜)도 넣어주자.
   - `new Date()`로 가져온 `expenseDate`의 상수 값은 객체이므로 중괄호 안에 바로 `expenseDate`를 넣어주지 않고, `toISOString()` 메소드를 통해 변환해준다.
-    > `toISOString()`은 주어진 날짜를 국제표준시 기준 ISO 8601 형식으로 표현한 문자열을 반환해주는 메소드이다. [MDN 문서 참조: toISOString()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+    > `toISOString()`은 주어진 날짜를 국제표준시 기준 ISO 8601 형식으로 표현한 문자열을 반환해주는 메소드이다.
+    > [MDN 문서 참조: toISOString()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
 
 ### (after) ExpenseItem
 
@@ -387,5 +389,114 @@ return (
   </div>
 );
 ```
+
+</br>
+
+## props를 통해 데이터 전달하기
+
+- 생성한 컴포넌트를 `App.js`에서 반복하여 재사용해보자.
+
+### App.js
+
+```js
+return (
+  <div>
+    <h2>Let's get started!</h2>
+    <ExpenseItem />
+    <ExpenseItem />
+    <ExpenseItem />
+    <ExpenseItem />
+  </div>
+);
+```
+
+- `ExpenseItem`라는 컴포넌트(component)를 네번 추가했다.
+- `yarn start`로 확인해보면, 동일한 데잍러를 가진 `ExpenseItem` 컴포넌트 블럭이 4개 추가됐음을 확인할 수 있다. 이렇듯, 원하는 만큼 컴포넌트를 추가해서 재사용하면 된다.
+- 근본적으로 동일한 데이터를 가진 `ExpenseItem` 컴포넌트를 사용했기 때문에, 컴포넌트를 재사용했다고는 볼 수 없을 것이다. 이를 해결하기 위해, 리액트에서는 `props`라는 개념을 이용한다.
+
+### props
+
+- `props`는 프로퍼티를 뜻한다.
+- 우리는 `props`라는 개념을 이용해서 최상위 컴포넌트에서 지정한 데이터를 커스텀 컴포넌트에 전달할 수 있다.
+
+- 이제 `ExpenseItem` 컴포넌트에서 각기 다른 데이터를 받아오기 위해 `App.js`에서 커스텀 컴포넌트에 전달할 데이터를 배열로 담아준다.
+
+```js
+const expenses = [
+  {
+    id: "e1",
+    title: "Toilet Paper",
+    amount: 94.12,
+    date: new Date(2020, 7, 14),
+  },
+  { id: "e2", title: "New TV", amount: 799.49, date: new Date(2021, 2, 12) },
+  {
+    id: "e3",
+    title: "Car Insurance",
+    amount: 294.67,
+    date: new Date(2021, 2, 28),
+  },
+  {
+    id: "e4",
+    title: "New Desk (Wooden)",
+    amount: 450,
+    date: new Date(2021, 5, 12),
+  },
+];
+```
+
+- 기본적으로 데이터는 내부에 저장되어 있으면 안되며, 외부에서 유입되어야 한다. 이러한 규칙을 지키기 위해 사용하는 게 바로 `props`라는 개념이다.
+- 이제 `App.js` 에서 지정한 데이터인 `expenses`배열을 `ExpenseItem` 컴포넌트에 속성으로 전달해줘야 한다.
+
+```js
+      <ExpenseItem
+        title={expenses[0].title}
+        amount={expenses[0].amount}
+        date={expenses[0].date}
+      />
+      <ExpenseItem
+        title={expenses[1].title}
+        amount={expenses[1].amount}
+        date={expenses[1].date}
+      />
+      <ExpenseItem
+        title={expenses[2].title}
+        amount={expenses[2].amount}
+        date={expenses[2].date}
+      />
+      <ExpenseItem
+        title={expenses[3].title}
+        amount={expenses[3].amount}
+        date={expenses[3].date}
+      />
+```
+
+- `ExpenseItem` 컴포넌트에서 해당 데이터 값을 사용하기 위해서는 전달받은 속성을 매개변수로 받아와야 한다.
+
+```js
+const ExpenseItem = (title, amount, date) => {...}
+```
+
+- 하나하나 속성 값을 매개변수로 받아올 수도 있지만, `props`로 하나의 매개변수를 받아올 수도 있다. React는 하나의 매개변수를 모든 컴포넌트에서 사용할 수 있도록 하기 때문이다. 이 하나의 매개변수는 모든 속성을 받은 객체가 된다. 그리고 이 모든 과정을 통틀어 `props`라고 할 수 있다.
+
+```js
+const ExpenseItem = (props) => {...}
+```
+
+- `props` 객체에는 `key`와 `value` 의 쌍이 존재한다. `App.js` 에서 `ExpenseItem` 컴포넌트로 보내는 매개변수는 `props` 객체로 받아오며, 이 객체 안에서 `key`는 속성의 이름을 정의하고 `value`는 전달하는 데이터 값을 의미한다.
+
+```js
+<div className="expense-item">
+  <div>{props.date.toISOString()}</div>
+  <div className="expense-item__description">
+    <h2>{props.title}</h2>
+    <div className="expense-item__price">${props.amount}</div>
+  </div>
+</div>
+```
+
+- `props`로 받은 매개변수를 사용할 때는 앞서 `App.js`에서 데이터를 보낼 때 정의한 `key` 값으로 접근하여 사용하면 된다.
+- `props` 이름이나, 속성의 이름(`key`)은 직관적으로 정의하도록 해야 한다.
+- React는 `props` 라는 개념을 이용하면서 React 컴포넌트 간에 데이터를 동적으로 공유할 수 있도록 하였다. 즉, 컴포넌트를 재사용할 수 있게 되는 것이다.
 
 </br>
