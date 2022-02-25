@@ -11,6 +11,7 @@
 - [Building a First Custom Component](#첫-번째-사용자-지정-컴포넌트-만들기)
 - [Writing More Complex JSX Code](#더-복잡한-JSX-코드-작성하기)
 - [Adding Basic CSS Styling](#기본-CSS-스타일-추가하기)
+- [Outputting Dynamic Data & Working with Expressions in JSX](#JSX에서-동적-데이터-출력-및-표현식-작업하기)
 
 </br>
 
@@ -321,4 +322,70 @@ const ExpenseItem = () => {
 - 적용하고자 하는 css 파일은 적용할 JavaScript 파일 옆에 추가하면 된다.
 - 적용하고자 하는 css 파일은 적용할 JavaScript 파일에서 `import "./style.css"`로 import를 해와서 적용한다.
 
+</br>
 
+## JSX에서 동적 데이터 출력 및 표현식 작업하기
+
+- 컴포넌트(component)는 단순히 분리의 문제가 아니라, 재사용성에 관한 문제이다.
+- 컴포넌트(component)를 생성한 뒤 그것을 재사용하길 원한다면 하드 코드가 아니라, 동적으로 데이터를 출력할 수 있도록 수정하는 작업이 필요하다.
+- 하드 코드로 입력한 `ExpenseItem` 컴포넌트(component)를 동적으로 데이터를 출력할 수 있도록 수정해보자.
+
+### (before) ExpenseItem
+
+```js
+return (
+  <div className="expense-item">
+    <div>March 28th 2022</div>
+    <div className="expense-item__description">
+      <h2>Car Insurance</h2>
+      <div className="expense-item__price">$294.67</div>
+    </div>
+  </div>
+);
+```
+
+- React의 컴포넌트(component)는 함수라는 사실을 잊지 말자. 컴포넌트라는 건 HTML과 CSS, JavaScript로 구성되어 있으며, JavaScript는 컴포넌트 함수가 return 하기 전에 추가해야 한다.
+
+```js
+const expenseDate = new Date(2022, 2, 28); // 날짜 객체
+const expenseTitle = "Car Insurance";
+const expenseAmount = 294.67;
+```
+
+- 먼저, 동적으로 데이터를 입력받을 수 있는 상수값(날짜, 제목, 비용)들을 추가했다.
+
+```js
+ <h2>{expenseTitle}</h2>
+ <div className="expense-item__price">${expenseAmount}</div>
+```
+
+- 상수로 선언한 `expenseTitle`과 `expenseAmount`를 해당 표기하고자 하는 JSX 코드 블럭(HTML 태그 사이) 안에 중괄호를 사용해서 넣어주었다.
+  - 하드 코드 데이터는 JSX 코드 블럭 안에서 여닫는 중괄호를 사용하여 표기해준다.
+  - JSX 코드 블럭의 중괄호 안에서는 기본적으로 JavaScript를 작성할 수 있다.
+
+```js
+<div>{expenseDate.toISOString()}</div>
+```
+
+- 상수로 선언한 `expenseDate`(날짜)도 넣어주자.
+  - `new Date()`로 가져온 `expenseDate`의 상수 값은 객체이므로 중괄호 안에 바로 `expenseDate`를 넣어주지 않고, `toISOString()` 메소드를 통해 변환해준다.
+    > `toISOString()`은 주어진 날짜를 국제표준시 기준 ISO 8601 형식으로 표현한 문자열을 반환해주는 메소드이다. [MDN 문서 참조: toISOString()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+
+### (after) ExpenseItem
+
+```js
+const expenseDate = new Date(2022, 2, 28);
+const expenseTitle = "Car Insurance";
+const expenseAmount = 294.67;
+return (
+  <div className="expense-item">
+    <div>{expenseDate.toISOString()}</div>
+    <div className="expense-item__description">
+      <h2>{expenseTitle}</h2>
+      <div className="expense-item__price">${expenseAmount}</div>
+    </div>
+  </div>
+);
+```
+
+</br>
