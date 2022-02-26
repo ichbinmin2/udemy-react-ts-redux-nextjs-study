@@ -13,6 +13,7 @@
 - [Adding Basic CSS Styling](#기본-CSS-스타일-추가하기)
 - [Outputting Dynamic Data & Working with Expressions in JSX](#JSX에서-동적-데이터-출력-및-표현식-작업하기)
 - [Passing Data via "props"](#props를-통해-데이터-전달하기)
+- [Adding "normal" JavaScript Logic to Components](#컴포넌트에-일반-JavaScript-논리-추가하기)
 
 </br>
 
@@ -498,5 +499,69 @@ const ExpenseItem = (props) => {...}
 - `props`로 받은 매개변수를 사용할 때는 앞서 `App.js`에서 데이터를 보낼 때 정의한 `key` 값으로 접근하여 사용하면 된다.
 - `props` 이름이나, 속성의 이름(`key`)은 직관적으로 정의하도록 해야 한다.
 - React는 `props` 라는 개념을 이용하면서 React 컴포넌트 간에 데이터를 동적으로 공유할 수 있도록 하였다. 즉, 컴포넌트를 재사용할 수 있게 되는 것이다.
+
+</br>
+
+## 컴포넌트에 일반 JavaScript 논리 추가하기
+
+- `props`는 유동적으로 `value`를 설정하는 데에만 국한되어 있지 않다.
+- `props`은 단지 데이터를 컴포넌트로 보내고, 설정하고, 재사용할 뿐이다.
+
+- 날짜 부분 코드 수정
+
+```js
+<div>
+  <div>Month</div>
+  <div>Year</div>
+  <div>Day</div>
+</div>
+```
+
+- 복잡한 로직 변수나 상수로 따로 분리하기
+
+```js
+const month = props.date.toLocaleString("en-US", { month: "long" });
+const day = props.date.toLocaleString("en-US", { day: "2-digit" });
+const year = props.date.getFullYear();
+```
+
+- 중괄호로 태그 안에 값(변수/상수) 넣어주기
+
+```js
+<div>
+  <div>{month}</div>
+  <div>{year}</div>
+  <div>{day}</div>
+</div>
+```
+
+### toLocaleString()
+
+- toLocaleString 메서드는 배열의 요소를 나타내는 문자열을 반환합니다. 요소는 toLocaleString 메서드를 사용하여 문자열로 변환되고 이 문자열은 locale 고유 문자열(가령 쉼표 “,”)에 의해 분리됩니다.
+- [MDN 문서 참조: Array.prototype.toLocaleString()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/toLocaleString)
+
+> arr.toLocaleString([locales[, options]]);
+
+```js
+var number = 1337;
+var date = new Date();
+var myArr = [number, date, "foo"];
+
+var str = myArr.toLocaleString();
+console.log(str);
+// '1337,6.12.2013 19:37:35,foo' 출력(log)
+```
+
+### getFullYear()
+
+- getFullYear() 메서드는 주어진 날짜의 현지 시간 기준 연도를 반환합니다.
+- [MDN 문서 참조: Date.prototype.getFullYear()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear)
+
+  > dateObj.getFullYear()
+
+```js
+var today = new Date();
+var year = today.getFullYear();
+```
 
 </br>
