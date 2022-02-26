@@ -15,6 +15,7 @@
 - [Passing Data via "props"](#props를-통해-데이터-전달하기)
 - [Adding "normal" JavaScript Logic to Components](#컴포넌트에-일반-JavaScript-논리-추가하기)
 - [Splitting Components Into Multiple Components](#컴포넌트를-여러-컴포넌트로-분할하기)
+- [Time to Practice: React & Component Basics](#연습-리액트-및-컴포넌트-기본-사항)
 
 </br>
 
