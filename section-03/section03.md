@@ -14,6 +14,7 @@
 - [Outputting Dynamic Data & Working with Expressions in JSX](#JSX에서-동적-데이터-출력-및-표현식-작업하기)
 - [Passing Data via "props"](#props를-통해-데이터-전달하기)
 - [Adding "normal" JavaScript Logic to Components](#컴포넌트에-일반-JavaScript-논리-추가하기)
+- [Splitting Components Into Multiple Components](#컴포넌트를-여러-컴포넌트로-분할하기)
 
 </br>
 
@@ -563,5 +564,12 @@ console.log(str);
 var today = new Date();
 var year = today.getFullYear();
 ```
+
+</br>
+
+## 컴포넌트를 여러 컴포넌트로 분할하기
+
+- 모든 빌딩 블록, 모든 컴포넌트는 단 하나의 핵심 기능에 집중해야 한다.
+- 앱이 커질 수록 필연적으로 컴포넌트는 길어지거나 커질 수 밖에 없기 때문에, 컴포넌트를 더 작게 쪼개면서 결과적으로는 유지하고 관리하기 수월해지도록 분리하는 것이 좋다.
 
 </br>
