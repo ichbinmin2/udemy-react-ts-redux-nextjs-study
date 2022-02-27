@@ -16,6 +16,7 @@
 - [Adding "normal" JavaScript Logic to Components](#컴포넌트에-일반-JavaScript-논리-추가하기)
 - [Splitting Components Into Multiple Components](#컴포넌트를-여러-컴포넌트로-분할하기)
 - [Time to Practice: React & Component Basics](#연습-리액트-및-컴포넌트-기본-사항)
+- [The Concept of "Composition" ("children props")](#컴포지션의-개념-children-prop)
 
 </br>
 
@@ -572,5 +573,67 @@ var year = today.getFullYear();
 
 - 모든 빌딩 블록, 모든 컴포넌트는 단 하나의 핵심 기능에 집중해야 한다.
 - 앱이 커질 수록 필연적으로 컴포넌트는 길어지거나 커질 수 밖에 없기 때문에, 컴포넌트를 더 작게 쪼개면서 결과적으로는 유지하고 관리하기 수월해지도록 분리하는 것이 좋다.
+
+</br>
+
+## 컴포지션의 개념 children prop
+
+- 작은 빌딩 블록을 모아서 사용자 인터페이스를 만드는 것을 바로 컴포지션 이라고 한다.
+- 컴포넌트는 `props`로 설정되는데, 가끔은 `props`로 설정되지 않는 컴포넌트도 필요하다.
+
+### props.children
+
+- `children`이란 지정된 이름이며, 리액트에서 내장되어 있는 기능이다. 모든 컴포넌트가 받을 수 있다.
+- `children` props의 value는 항상 콘텐츠가 될 것이다. 이 컨텐츠는 warpper로 감싸줄 커스텀 컴포넌트의 오프닝 태그와 클로징 태그 사이에 있는 것을 의미한다.
+
+```js
+const Card = (props) => {
+  return <div className="card">{props.children}</div>;
+};
+```
+
+- `Card.js` 같은 커스텀 컴포넌트를 wrapper로 사용하기 위해서는 해당 컴포넌트의 HTML 태그 안에 중괄호로 `props.children`을 넣어주면 된다.
+
+```css
+.card {
+  border-radius: 12px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+}
+```
+
+- 기존의 `Expense`와 `ExpenseItem` 컴포넌트에서 동일하게 사용했던 css 설정 값을 삭제하고 `Card.js`의 div 태그에 `className`으로 설정한 css 값으로 넣어준다.
+
+```js
+const ExpenseItem = (props) => {
+  return (
+    <Card className="expense-item">
+      <ExpenseDate date={props.date} />
+      <div className="expense-item__description">
+        <h2>{props.title}</h2>
+        <div className="expense-item__price">${props.amount}</div>
+      </div>
+    </Card>
+  );
+};
+```
+
+- `ExpenseItem`에 가장 최상위 태그로 `Card` 컴포넌트르 설정하고 감싸준다. 하지만, `ExpenseItem`에서 `className`으로 지정한 css는 적용되지 않는다.
+- 이때 `Card` 컴포넌트에서 `props`로 `className`을 받아올 수 있도록 작업을 해주어야 한다.
+
+```js
+const classes = "card " + props.className;
+```
+
+- 외부에서 받은 모든 `className`이 문자열에 추가가 되었다. 이제 div 태그의 `className`에 상수값으로 지정해보자.
+
+```js
+const Card = (props) => {
+  const classes = "card " + props.className;
+  return <div className={classes}>{props.children}</div>;
+};
+```
+
+- div 태그에 `className`에 설정된 value가 `className` 문자열에 추가가 되었다.
+- 이제 `Card` 컴포넌트로 커스텀 컴포넌트를 wrapper 해줄 수 있게 되었다. 동시에 `Card` 컴포넌트는 재사용이 가능한 warpper 컴포넌트가 되었음을 확인 할 수 있을 것이다.
 
 </br>
