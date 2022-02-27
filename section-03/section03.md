@@ -17,6 +17,7 @@
 - [Splitting Components Into Multiple Components](#컴포넌트를-여러-컴포넌트로-분할하기)
 - [Time to Practice: React & Component Basics](#연습-리액트-및-컴포넌트-기본-사항)
 - [The Concept of "Composition" ("children props")](#컴포지션의-개념-children-prop)
+- [A First Summary](#React-Basics-요약)
 
 </br>
 
@@ -635,5 +636,12 @@ const Card = (props) => {
 
 - div 태그에 `className`에 설정된 value가 `className` 문자열에 추가가 되었다.
 - 이제 `Card` 컴포넌트로 커스텀 컴포넌트를 wrapper 해줄 수 있게 되었다. 동시에 `Card` 컴포넌트는 재사용이 가능한 warpper 컴포넌트가 되었음을 확인 할 수 있을 것이다.
+
+</br>
+
+## React Basics 요약
+
+- 사용자 지정 컴포넌트들은 실제로 화면에 보이게 되는 HTML 요소가 아니라 단순히 React 코드, JSX 코드에서 사용하게 된다. 결국 화면에 나타나는 건 HTML 요소들인데, 그 이유는 우리가 만든 사용자 지정 컴포넌트들은 내장된 HTML 요소들을 사용하거나, 다른 컴포넌트를 사용하기 때문이다. 우리가 컴포넌트들을 계속하여 사용하다보면 어느 시점부터는 이러한 내장된 요소들을 사용하게 된다.
+- React에서 작업할 때 알아두어야 하는 가장 중요한 개념은 바로 `component`와 `props` 이다.
 
 </br>
