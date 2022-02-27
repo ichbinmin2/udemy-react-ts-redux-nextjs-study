@@ -20,6 +20,7 @@
 - [A First Summary](#React-Basics-요약)
 - [A Closer Look At JSX](#JSX-자세히-보기)
 - [Organizing Component Files](#컴포넌트-파일-구성하기)
+- [An Alternative Function Syntax](#대체-함수-문법-syntax)
 
 </br>
 
@@ -729,3 +730,7 @@ return (
 - 하위 폴더를 정리하는 방식은 선택에 따른 것이지만, 팀과 함께 작업을 해야 한다면 개인과 팀원 모두가 일하기 편한 방식으로 파일을 정리하는 게 가장 좋을 것이다.
 
 </br>
+
+## 대체 함수 문법 syntax
+
+- [MDN 문서 참조: Arrow function expressions](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
