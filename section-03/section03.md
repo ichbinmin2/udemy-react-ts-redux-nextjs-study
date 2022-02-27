@@ -18,6 +18,7 @@
 - [Time to Practice: React & Component Basics](#연습-리액트-및-컴포넌트-기본-사항)
 - [The Concept of "Composition" ("children props")](#컴포지션의-개념-children-prop)
 - [A First Summary](#React-Basics-요약)
+- [A Closer Look At JSX](#JSX-자세히-보기)
 
 </br>
 
@@ -584,8 +585,8 @@ var year = today.getFullYear();
 
 ### props.children
 
-- `children`이란 지정된 이름이며, 리액트에서 내장되어 있는 기능이다. 모든 컴포넌트가 받을 수 있다.
-- `children` props의 value는 항상 콘텐츠가 될 것이다. 이 컨텐츠는 warpper로 감싸줄 커스텀 컴포넌트의 오프닝 태그와 클로징 태그 사이에 있는 것을 의미한다.
+- `children`이란 지정된 이름이며, 리액트에서 내장되어 있는 기능이다. 모든 컴포넌트에서 받을 수 있다.
+- `children` props의 value는 항상 콘텐츠가 될 것이다. warpper로 감싸줄 커스텀 컴포넌트의 오프닝 태그와 클로징 태그 사이에 있는 컨텐츠를 의미한다.
 
 ```js
 const Card = (props) => {
@@ -645,3 +646,78 @@ const Card = (props) => {
 - React에서 작업할 때 알아두어야 하는 가장 중요한 개념은 바로 `component`와 `props` 이다.
 
 </br>
+
+## JSX 자세히 보기
+
+- 브라우저에서는 JSX 문법을 지원하지 않기 때문에 변환 과정이 필요하다.
+- 과거 React 프로젝트는 JSX 문법을 사용한 모든 파일에서 일일이 React를 import 해야만 했다. 하지만 최신 React setup 에서는 자동으로 처리해주기 때문에 일일이 React를 import 하지 않아도 된다.
+
+### JSX 문법을 사용하고도 브라우저가 읽을 수 있는 이유는 무엇일까?
+
+- 기존의 JSX 문법으로 작성된 코드
+
+```js
+return (
+  <div>
+    <h2>Let's get started!</h2>
+    <Expense items={expenses} />
+  </div>
+);
+```
+
+- 개발자는 편리하게 JSX 문법으로 코드를 작성하지만, JSX 문법을 지원하지 않는 브라우저는 변환된 JSX 코드가 필요하다.
+- 이때 React는 브라우저가 읽을 수 있는 코드로, JSX 문법으로 작성된 코드를 브라우저가 지원하는 코드로 변환을 해주어야 한다.
+- 어떤 식으로 React가 JSX 문법으로 작성된 코드를 변환하는지 확인해보자.
+
+### JSX 문법은 어떻게 숨겨진 코드로 변형되는 걸까?
+
+- 먼저 return 하는 첫번째 값으로 `<div>` 태그를 생성해주자. 이때 React를 import 해야하며, `createElement()`라는 React 내장 메소드를 사용한다.
+
+```js
+return React.createElement();
+```
+
+- `createElement()`에는 세 가지 매개변수가 존재한다.
+- 첫 번째 매개변수는 생성되어야 하는 root element(여기서는 `<div>`) 이다.
+
+```js
+return React.createElement("div");
+```
+
+- 두 번째 매개변수는 element를 설정하는 객체이며, 정확히 말하자면 이러한 element 들의 모든 속성을 설정하는 객체이다.
+- 현재의 `<div>` 태그에는 속성이 없으므로 빈 객체를 넣어준다.
+
+```js
+return React.createElement("div", {});
+```
+
+- 세 번째 매개변수는 `<div>`의 여닫는 태그 사이에 있는 컨텐츠, 즉 내용이다.
+- JSX 문법으로 작성된 코드를 보면 `<div>` 태그 사이에 `<h2>` 태그와 `<Expense>` 컴포넌트가 존재하므로 다시 한번, `React.createElement()`를 사용하여 이 두가지 태그를 앞서서 사용한 매개변수 순서대로 전부 넣어주면 된다.
+
+- JSX 문법으로 코드를 작성하지 않았을 때 코드(변환 코드)
+
+```js
+return React.createElement(
+  "div",
+  {},
+  React.createElement("h2", {}, "Let's get started!"),
+  React.createElement(Expense, { items: expenses })
+);
+```
+
+- 기존의 JSX 문법으로 작성된 코드
+
+```js
+return (
+  <div>
+    <h2>Let's get started!</h2>
+    <Expense items={expenses} />
+  </div>
+);
+```
+
+### 정리
+
+- 두 가지 코드를 비교해보면 JSX 문법으로 코드를 작성하지 않아도 동일한 화면을 구현할 수 있지만 확실히 JSX 문법으로 사용해서 코드를 작성할 때보다 좀 더 복잡하고 번거롭게 읽히는 것을 확인할 수 있다.
+- 이처럼 우리가 JSX 문법으로 코드를 작성하면 JSX 문법을 지원하지 않는 브라우저에서 읽히지 못하므로, JSX 코드로 작성을 하면 React 프로젝트 setup에서 자동으로 변형되어 브라우저에게 읽히게 된다.
+- 그리고 과거의 React 프로젝트 setup에서는 JSX 문법을 사용하는 모든 컴포넌트에 React를 import 해야하는 번거로움이 있었지만 최신 React 프로젝트 setup 에서는 React를 import를 일일이 하지 않고서도 자동으로 변형이 가능하도록 업데이트 되었다.
