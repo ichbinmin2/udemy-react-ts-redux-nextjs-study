@@ -11,6 +11,7 @@
 - [Practice | Working with Multiple States](#여러-State-다루기)
 - [Practice | Using One State Instead (And What's Better)](#State-대신-사용하기-그리고-더-나은-방법을-찾기))
 - [Practice | Updating State That Depends On The Previous State](#이전-State에-의존하는-State-업데이트))
+- [Practice | Handling Form Submission](#양식-제출-처리하기))
 
 </br>
 
@@ -325,5 +326,53 @@ setState((prevState) => {
 ```
 
 - 이전 상태에 따라 상태(state)가 업데이트 된다면 위의 함수 구문을 사용해야 한다는 것을 잊지 말아야 할 것이다.
+
+</br>
+
+## 양식 제출 처리하기
+
+```js
+<button type="submit" onClick={submitHandler}>
+
+```
+
+- 해당 `<form>` 태그 내에서 작성한 `<button>` 의 listener로 이벤트를 처리할 수도 있지만, 그다지 좋은 방법은 아니다. 브라우저에 내장된 기본 동작이 있고 웹페이지에 내장된 `form` 이 있기 때문이다. 만약, `<button>`이 `submit`을 typing 했을 때 `form` 대신에 클릭 된다면 전체 `form` 요소가 우리가 listen 할 수 있는 event를 emit 해줄 것이다.
+
+```js
+<form onSubmit={}>
+```
+
+- `<button>` 대신에 `<form>` 태그에 onSubmit 이벤트를 처리할 수 있도록 해주고, onSubmit을 처리해줄 이벤트 함수인 `submitHandler`를 할당해준다.
+
+```js
+const submitHandler = () => {};
+```
+
+- 그러나 기본 브라우저 동작에서는 form 이 제출되면 자동으로 서버에 다시 요청을 보내게 되기 때문에, 이를 방지하기 위해서 `event.preventDefault()`를 사용핧 수 있다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+};
+```
+
+- `event.preventDefault()`는 자바스크립트에 내장된 것으로 구체적으로 React 하지 않게 만들어준다. `event.preventDefault()`를 사용함으로써 기본 브라우저 동작에서 form 이 제출될 때 자동으로 서버에 다시 요청을 보낼 수 없게 방지해주는 것이다.
+
+### 객체로 데이터 결합하기
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  const expenseData = {
+    title: enteredTitle,
+    amount: enteredAmount,
+    date: new Date(enteredDate),
+  };
+};
+```
+
+- 세가지의 상태(state)를 객체 내부의 `property`의 value 값으로 지정하고 각각의 `property` 이름을 설정해준다. `date` 의 경우, `new Date()` 를 사용해서 날짜를 구축했다. 이는 `enteredDate`를 pass 해서 날짜 문자열을 parse 한 뒤, 날짜 객체로 변환되게 만든 것이다.
+- 이제 `<button>` 을 click 하면 `<form>`에서 `expenseData` 이라는 이벤트 함수가 자동으로 실행되면서 `expenseData` 객체 내부에 세가지의 상태(state)가 `property`로 저장되는 것을 확인할 수 있다.
 
 </br>
