@@ -10,6 +10,7 @@
 - [Practice | Listening to User Input](#사용자-입력-리스닝)
 - [Practice | Working with Multiple States](#여러-State-다루기)
 - [Practice | Using One State Instead (And What's Better)](#State-대신-사용하기-그리고-더-나은-방법을-찾기))
+- [Practice | Updating State That Depends On The Previous State](#이전-State에-의존하는-State-업데이트))
 
 </br>
 
@@ -271,5 +272,58 @@ const titleChangeHandler = (event) => {
 ### 결론
 
 - 세가지의 상태(state)를 각각 관리하는 것과 하나의 상태(state)로 관리하는 것 모두 궁국적으로는 괜찮은 방법이니, 선택적으로 사용하면 될 것이다.
+
+</br>
+
+## 이전 State에 의존하는 State 업데이트
+
+```js
+const [userInput, setUserInput] = useState({
+  enteredTitle: "",
+  enteredAmount: "",
+  enteredDate: "",
+});
+
+cost titleChangeHandler = (event) => {
+  const values = event.target.value;
+  setUserInput({ ...userInput, enteredTitle: values });
+};
+```
+
+- 앞서 `Spread operator` 를 사용해서 이전 상태(state)를 안전하게 복사하고 업데이트 될 상태(state)를 가져와 새로운 객체로 업데이트하는 방법으로 상태(state)를 관리했다. 하지만 이런 방식으로 업데이트를 하는 것은 그다지 썩 좋은 방법은 아니다. 이전 상태(state)에 의지해서 상태(state)를 업데이트 하고 있기 때문이다. (즉, 이전 상태의 snapshot에 의존해서 기본 값에 복사하고 새로운 값으로 값을 겹쳐 쓰고 있는 방식이다.) 이러한 방식은 상태(state)를 '업데이트할 때마다' 이전 상태에 의존해야 한다는 단점이 있다. 이런 단점을 보완하기 위해 우리는 다른 방법을 사용할 수 있다.
+
+```js
+const [userInput, setUserInput] = useState({
+  enteredTitle: "",
+  enteredAmount: "",
+  enteredDate: "",
+});
+
+const titleChangeHandler = (event) => {
+  const values = event.target.value;
+
+  setUserInput((prev) => {
+    return { ...prev, enteredTitle: values };
+  });
+};
+```
+
+- 동일하게 `setUserInput`를 불러오되 함수를 다시 pass 하는 방식을 취하고 있다. 이때 `setUserInput`으로 pass 한 함수는 React에 의해 '자동'으로 실행되게 된다. 그리고 업데이트 함수를 불러온 상태(state)의 이전 상태 snapshot을 받게 된다. (지금의 경우에는 객체의 상태(state)를 의미) 이전 상태 snapshot을 받은 뒤에, 새로운 상태 snapshot을 return 한다. 즉, 상태(state) 업데이트 함수를 pass 한 함수 대신에 새로운 상태(state)를 return 하는 것이다.
+
+### 왜 이런 방식을 사용해야 할까?
+
+- 실은 두가지 방법 다 모두 잘 작동된다. 하지만 언급했듯이 React는 상태(state) 업데이트를 계획하는 경우가 있으며, 이것은 즉시 실행되지 않는다. 그렇다면 첫번째 코드의 예시의 경우처럼 이론적으로 동시에 많은 상태(state) 업데이트를 React가 계획하고 있다면 오래된 상태(state)이거나, 잘못된 상태(state)인 snapshot에 의존할 수 있는 가능성이 있다. 대신 두번째 코드의 예시를 사용한다면 해당 inner function(내부 함수) 내에서 제공하는 상태(state) snapshot이 항상 최신 상태의 snapshot이라는 것을 React가 보장할 수 있게 된다. 앞서 말했듯 React는 계획이 되어있는 모든 상태(state) 업데이트를 전부 기억하고 있기 때문이다.
+
+### 결론
+
+- 이 방법은 항상 최신의 상태(state) snapshot에 기반해서 실행한다는 전제를 보장받을 수 있기 때문에 조금 더 안전하다. 따라서 이전 상태(state)에 따라 상태가 업데이트할 때마다 이런 형식의 함수 구문을 사용해야 한다.
+
+```js
+setState((prevState) => {
+  return { ...prevState, updateState: updateValue };
+});
+```
+
+- 이전 상태에 따라 상태(state)가 업데이트 된다면 위의 함수 구문을 사용해야 한다는 것을 잊지 말아야 할 것이다.
 
 </br>
