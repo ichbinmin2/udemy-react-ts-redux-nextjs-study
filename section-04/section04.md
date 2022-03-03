@@ -8,6 +8,7 @@
 - [A Closer Look at the "useState" Hook](#useState-hook-자세히-살펴보기)
 - [Practice | Adding Form Inputs](#양식-입력-추가하기)
 - [Practice | Listening to User Input](#사용자-입력-리스닝)
+- [Practice | Working with Multiple States](#여러-State-다루기)
 
 </br>
 
@@ -219,3 +220,8 @@ const clickHandler = () => {
 - 상태(state)는 어플리케이션에 reactivity를 더하며, 이 상태(state)가 없다면 사용자 인터페이스는 절대로 변하지 않을 것이며, 화면에 시각적인 변화도 없을 것이다. 따라서 상태(state)는 매우 중요한 개념이다.
 
 </br>
+
+## 여러 State 다루기
+
+- 기본적으로 `input`에 대한 change 이벤트를 수신할 때마다 `input` element의 값을 읽는다면 그건 언제나 늘 문자열이 된다. 숫자 값을 저장한다고 해도 문자열로서 숫자를 저장하는 것이고, 날짜의 경우에도 동일하다.
+- 컴포넌트는 각각의 state를 가질 수 있으며, 동시에 이것들을 모두 각각 업데이트하고 관리할 수 있다. 이것은 React의 state 에서 가장 중요한 개념에 속한다.
