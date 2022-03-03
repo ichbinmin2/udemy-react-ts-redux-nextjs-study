@@ -9,6 +9,7 @@
 - [Practice | Adding Form Inputs](#양식-입력-추가하기)
 - [Practice | Listening to User Input](#사용자-입력-리스닝)
 - [Practice | Working with Multiple States](#여러-State-다루기)
+- [Practice | Using One State Instead (And What's Better)](#State-대신-사용하기-그리고-더-나은-방법을-찾기))
 
 </br>
 
@@ -225,3 +226,50 @@ const clickHandler = () => {
 
 - 기본적으로 `input`에 대한 change 이벤트를 수신할 때마다 `input` element의 값을 읽는다면 그건 언제나 늘 문자열이 된다. 숫자 값을 저장한다고 해도 문자열로서 숫자를 저장하는 것이고, 날짜의 경우에도 동일하다.
 - 컴포넌트는 각각의 state를 가질 수 있으며, 동시에 이것들을 모두 각각 업데이트하고 관리할 수 있다. 이것은 React의 state 에서 가장 중요한 개념에 속한다.
+
+</br>
+
+## State 대신 사용하기 그리고 더 나은 방법을 찾기
+
+```js
+const [enteredTitle, setEnteredTitle] = useState("");
+const [enteredAmount, setEnteredAmount] = useState("");
+const [enteredDate, setEnteredDate] = useState("");
+```
+
+- 세가지의 상태(state)가 각각 따로 관리되고 있다. 이는 같은 개념이 세 번 반복된 것이나 다름 없다. 따라서 세가지로 관리하지 않고, 하나의 상태(state)로 관리하는 방법을 고려해볼 수 있을 것이다.
+
+```js
+const [userInput, setUserInput] = useState({
+  enteredTitle: "",
+  enteredAmount: "",
+  enteredDate: "",
+});
+```
+
+- 세가지의 상태(state) 대신 하나의 상태(state)로 관리해주기 위해서 `useState`를 하나만 불러오고 값으로 객체를 넣어준다. 이 객체 안에는 key와 value 형식으로 지정될 텐데, key는 앞서 설정했던 각각의 state 이름을 넣어주고 value 값으로는 초기화 했던 빈 문자열을 넣어주었다.
+- 이 두가지 방식에서의 차이점은 하나의 상태(state)로 관리할 경우, 이 상태(state)를 업데이트할 때 하나의 `property`가 아니라 세 개의 `property`를 모두 업데이트 해야한다는 특이점이 있다.
+
+```js
+const titleChangeHandler = (event) => {
+  const values = event.target.value;
+  setUserInput({ enteredTitle: values });
+};
+```
+
+- 만약 `setUserInput`에 `enteredTitle: event.target.value`를 업데이트 한다면, 나머지 두개의 `property` 역시 잃어버리지 않도록 보장해야 한다. 왜냐하면 이러한 방식으로 객체에 새로운 상태(state)를 설정한다면 다른 key 들은 버려지는데, 상태(state)를 업데이트 했을 때 React가 예전 상태와 병합하지 않기 때문이다.(단순히 예전 상태(state)를 새것으로 대체하기만 할 뿐이다.) 만약 새것이 하나의 key 값 페어를 가진 객체라면 예전 상태(state)는 대체되기만 하고 다른 두 가지 key 값 페어는 사라지게 된다. 따라서 하나의 상태(state) 접근을 사용해서 객체를 관리해야 한다면, 다른 데이터가 사라지지 않도록 이 나머지 key 값 페어를 책임져야 한다. 그러기 위해서는 업데이트하지 않는 다른 값들을 수동으로 복사해주어야 한다.
+
+```js
+const titleChangeHandler = (event) => {
+  const values = event.target.value;
+  setUserInput({ ...userInput, enteredTitle: values });
+};
+```
+
+- 이때 사용하는 것이 바로 `Spread operator` 이다. `Spread operator`를 사용해서 업데이트하지 않는 나머지 값을 포함한 "모든 key 값의 페어"를 뺴내고, 업데이트할 key의 값을 따로 할당하여 새로운 객체에 추가한다. 이로써 업데이트 되지 않는 다른 값들이 버려지지 않도록 안전하게 보호하고 동시에 새로운 상태(state)의 부분도 같이 가져갈 수 있게 된다.
+
+### 결론
+
+- 세가지의 상태(state)를 각각 관리하는 것과 하나의 상태(state)로 관리하는 것 모두 궁국적으로는 괜찮은 방법이니, 선택적으로 사용하면 될 것이다.
+
+</br>
