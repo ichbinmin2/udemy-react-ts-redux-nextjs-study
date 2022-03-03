@@ -7,6 +7,7 @@
 - [Working with "State"](#State와-함께-일하기)
 - [A Closer Look at the "useState" Hook](#useState-hook-자세히-살펴보기)
 - [Practice | Adding Form Inputs](#양식-입력-추가하기)
+- [Practice | Listening to User Input](#사용자-입력-리스닝)
 
 </br>
 
