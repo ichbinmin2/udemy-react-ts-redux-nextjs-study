@@ -6,6 +6,7 @@
 - [How Component Functions Are Executed](#컴포넌트-기능이-실행되는-방법)
 - [Working with "State"](#State와-함께-일하기)
 - [A Closer Look at the "useState" Hook](#useState-hook-자세히-살펴보기)
+- [Practice | Adding Form Inputs](#양식-입력-추가하기)
 
 </br>
 
@@ -215,3 +216,5 @@ const clickHandler = () => {
 - `useState`로 상태(state)를 등록하면 항상 두 가지 값(값 자체, 업데이트 함수)을 돌려 받는다. 그리고 업데이트 함수가 불려지며 상태값을 사용할 때마다 첫 번째 요소를 사용하게 된다. JSX 코드에서 이를 출력하는 것처럼 말이다. 그런 후에는 React가 나머지를 알아서 처리해준다. React는 상태(state)가 변할 때마다 컴포넌트 함수를 리렌더링 시키고, JSX 코드도 재실행 한다.
 - 상태(state)가 컴포넌트 함수 내부에서 어떻게 작동하는지를 이해하는 것이 정말 중요하다. 이를 이해하지 못했을 경우 더 복잡한 React 어플리케이션에서 상태(state) 값을 통제하지 못하고 어플리케이션을 실시간으로 업데이트 하는데 어려움을 겪을 수 있기 때문이다.
 - 상태(state)는 어플리케이션에 reactivity를 더하며, 이 상태(state)가 없다면 사용자 인터페이스는 절대로 변하지 않을 것이며, 화면에 시각적인 변화도 없을 것이다. 따라서 상태(state)는 매우 중요한 개념이다.
+
+</br>
