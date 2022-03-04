@@ -13,6 +13,7 @@
 - [Practice | Updating State That Depends On The Previous State](#이전-State에-의존하는-State-업데이트)
 - [Practice | Handling Form Submission](#양식-제출-처리하기)
 - [Practice | Adding Two-Way Binding](#양방향-바인딩-추가하기)
+- [Practice | Child-to-Parent Component Communication(Bottom-up)](#자식-대-부모-컴포넌트-상향식-통신)
 
 </br>
 
@@ -40,7 +41,7 @@
 </button>
 ```
 
-- 이벤트 핸들러 `props`는 함수를 값으로 필요로 하며, `onClick`을 값으로 pass하는 함수를 포함한 모든 ` on``props `는 그 이벤트가 발생하면 실행되는 방식으로 이뤄진다.
+- 이벤트 핸들러 `props`는 함수를 값으로 필요로 하며, `onClick`을 값으로 pass하는 함수를 포함한 모든 `on`+`props `는 그 이벤트가 발생하면 실행되는 방식으로 이뤄진다.
 - `onClick` 이벤트의 값으로 즉시 실행 함수를 넣어도 되지만, 보통 JSX 블록 즉 JSX 코드 안에 코드를 많이 작성하는 것은 그다지 좋은 방법이 아니다.
 - `onClick` 이벤트의 값으로 즉시 실행 함수를 넣어주는 대신 return 하기 전에 동일한 실행 결과를 얻는 함수를 정의해주고,
 
@@ -269,7 +270,7 @@ const titleChangeHandler = (event) => {
 };
 ```
 
-- 이때 사용하는 것이 바로 `Spread operator` 이다. `Spread operator`를 사용해서 업데이트하지 않는 나머지 값을 포함한 "모든 key 값의 페어"를 뺴내고, 업데이트할 key의 값을 따로 할당하여 새로운 객체에 추가한다. 이로써 업데이트 되지 않는 다른 값들이 버려지지 않도록 안전하게 보호하고 동시에 새로운 상태(state)의 부분도 같이 가져갈 수 있게 된다.
+- 이때 사용하는 것이 바로 `Spread operator` 이다. `Spread operator`를 사용해서 업데이트하지 않는 나머지 값을 포함한 "모든 key 값의 페어"를 빼내고, 업데이트할 key의 값을 따로 할당하여 새로운 객체에 추가한다. 이로써 업데이트 되지 않는 다른 값들이 버려지지 않도록 안전하게 보호하고 동시에 새로운 상태(state)의 부분도 같이 가져갈 수 있게 된다.
 
 ### 결론
 
@@ -349,7 +350,7 @@ setState((prevState) => {
 const submitHandler = () => {};
 ```
 
-- 그러나 기본 브라우저 동작에서는 form 이 제출되면 자동으로 서버에 다시 요청을 보내게 되기 때문에, 이를 방지하기 위해서 `event.preventDefault()`를 사용핧 수 있다.
+- 그러나 기본 브라우저 동작에서는 form 이 제출되면 자동으로 서버에 다시 요청을 보내게 되기 때문에, 이를 방지하기 위해서 `event.preventDefault()`를 사용할 수 있다.
 
 ```js
 const submitHandler = (event) => {
@@ -416,3 +417,119 @@ const submitHandler = (event) => {
 - `<form>`이 제출되면 `expenseData` 객체로 데이터가 수집되어 저장되고 그 이후로 `<input>` 값들이 초기화될 수 있도록 상태(state) 업데이트 함수에 빈 배열을 넣어주었다. 이렇게 하면 `<form>`의 데이터가 제공되고 나서 사용자가 입력한 값을 빈 배열로 덮어쓰게 된다. 그렇게 `<input>`의 `value`를 초기화시킬 수 있는 것이다.
 
 </br>
+
+## 자식 대 부모 컴포넌트 상향식 통신
+
+- 결국 우리의 목표는 사용자가 입력한 `NewExpense`를 기존 `Expense` 목록에 추가하고 `id`로 조금 더 풍부하게 관리하고자 하는 것이다. 따라서 `ExpenseForm`에서 생성하고 수집하는 데이터를 `App.js` 컴포넌트로 pass 해야 한다. 즉, 지금까지는 부모에서 자식으로 데이터를 물려주는 방법만 사용했다면, 자식에서 부모로 데이터를 상향식으로 통신하는 방법이 필요하다는 이야기다.
+
+```js
+const expenseData = {
+  title: enteredTitle,
+  amount: enteredAmount,
+  data: new Date(enteredDate),
+};
+```
+
+- 먼저 `ExpenseForm` 컴포넌트 내에서 수집한 `expenseData`를 `NewExpense` 컴포넌트로 pass 해보자. 컴포넌트를 중간 컴포넌트를 뛰어넘을 수는 없기 때문에 `ExpenseForm`의 바로 위 부모 컴포넌트인 `NewExpense` 컴포넌트부터 시작할 것이다. 이는 궁극적으로는 `App` 컴포넌트에 해당 데이터가 도달해야 하는 것을 목적으로 둔 시도이다.
+
+```js
+const NewExpense = () => {
+  ...
+  return (
+  ...
+    <ExpenseForm onSaveExpenseData={} />
+  ...
+  );
+}
+```
+
+- 먼저 `ExpenseForm`에 전달할 함수를 담을 props를 추가한다.
+
+> 보통 props 이름이 `on~`으로 시작하는 경우 해당 props가 함수이며, 컴포넌트 내에서 어떤 일이 일어날 때 결국 어떤 값을 촉발하는 함수임을 알려주기 위한 것이다. 이것은 보통의 컨벤션을 따른 것이며, 선택적으로 작명을 해도 무방하다.
+
+```js
+const NewExpense = () => {
+  const onSaveExpenseDataHandler = (enteredExpenseData) => {};
+
+  return (
+    ...
+      <ExpenseForm onSaveExpenseData={onSaveExpenseDataHandler} />
+    ...
+  );
+};
+```
+
+- `NewExpense`에서 `onSaveExpenseData`라는 이름으로 props를 내려줄 함수(`onSaveExpenseDataHandler`)를 작성한다. 이때 이 함수는 매개변수로 `enteredExpenseData` 라는 값을 받는데, `ExpenseForm`에서 수집한 data를 해당 함수에서 받을 것이라는 것을 예측할 수 있는 네이밍으로 작성했다.
+
+```js
+const onSaveExpenseDataHandler = (enteredExpenseData) => {
+  const expenseData = {
+    ...enteredExpenseData,
+    id: Math.random().toString(),
+  };
+
+  console.log(expenseData);
+};
+```
+
+- `onSaveExpenseDataHandler` 함수 내에서는 또 다른 객체인 `expenseData`를 생성하고 `ExpenseForm`에서 수집한 data를 매개변수로 받은 `enteredExpenseData`를 복사해서 넣어준다. 데이터를 더 용이하게 관리할 수 있도록 id도 `Math.random().toString()`로 추가하고 문자열로 변환하여 넣어주었다. 또한 마지막으로 `console.log(expenseData)`로 정상적으로 `ExpenseForm`에서 데이터를 받아오고 있는지 확인 할 수 있도록 했다.
+
+```js
+const ExpenseForm = (props) => {};
+```
+
+- 이제 `NewExpense`에서 props로 내려준 함수 `onSaveExpenseData`를 `ExpenseForm`에서 받을 수 있도록 props를 매개변수로 설정했다. 이제 `onSaveExpenseData`에 수집한 데이터를 넣어줄 차례다.
+
+```js
+const submitHandler = (event) => {
+  ...
+  const expenseData = {
+    title: enteredTitle,
+    amount: enteredAmount,
+    data: new Date(enteredDate),
+  };
+
+  props.onSaveExpenseData(expenseData);
+  ...
+};
+```
+
+- 데이터를 수집하는 `submitHandler` 함수에서 props로 `onSaveExpenseData` 함수를 불러오고, 매개변수로 데이터를 수집한 객체인 `expenseData`를 넣어주면 된다. 이로써 `ExpenseForm`에서 수집한 데이터를 `NewExpense`에서 받아와 관리할 수 있는 상향식 통신이 가능해졌다. 이것이 바로 컴포넌트 사이에서 소통하는 방법이자, 상향식으로 소통하는 방법이다. 이제 `NewExpense` 컴포넌트의 바로 위 부모 컴포넌트인 `App` 컴포넌트에도 동일한 작업을 해주자.
+
+```js
+const addExpenseHandler = (expense) => {
+  console.log("In App.js");
+  console.log(expense);
+};
+
+return (
+  ...
+    <NewExpense onAddExpense={addExpenseHandler} />
+  ...
+);
+```
+
+- `NewExpense` 컴포넌트에서도 앞서 했던 방식으로 props를 받아와 데이터를 `App` 컴포넌트로 pass 할 수 있도록 처리해주자.
+
+```js
+const NewExpense = (props) => {
+  const onSaveExpenseDataHandler = (enteredExpenseData) => {
+    const expenseData = {
+      ...enteredExpenseData,
+      id: Math.random().toString(),
+    };
+
+    props.onAddExpense(expenseData);
+  };
+};
+```
+
+![console](https://user-images.githubusercontent.com/53133662/156762928-37d97d71-9fe2-4503-b4e2-6d16272e8c29.png)
+
+-`console`을 확인해보면 `App` 컴포넌트에서 정상적으로 데이터를 받아오고 있음을 확인할 수 있다.
+
+- 우리가 의도하여 상향식 통신의 순서(`ExpenseForm` => `NewExpense` => `App`)대로 처리되었으며, 최종적으로 `ExpenseForm`에서 수집한 데이터를 `App` 컴포넌트에서 관리할 수 있게 되었다.
+
+</br>
+
+
