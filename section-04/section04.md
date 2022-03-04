@@ -16,6 +16,7 @@
 - [Practice | Child-to-Parent Component Communication(Bottom-up)](#자식-대-부모-컴포넌트-상향식-통신)
 - [Practice | Lifting The State Up](#State-끌어올리기)
 - [Practice | Time to Practice: Working with Events & State](#이벤트-및-State-작업하기)
+- [Controlled vs Uncontrolled Components & Stateless vs Stateful Components](#제어된-컴포넌트와-제어되지-않은-컴포넌트-및-Stateless-컴포넌트와-Stateful-컴포넌트)
 
 </br>
 
@@ -539,3 +540,13 @@ const NewExpense = (props) => {
 - 결국 '상태(State) 끌어올리기'는 자식 컴포넌트로부터 부모 컴포넌트로 데이터를 이동하는 것이라 이해하면 될 것이다.
 
 </br>
+
+## 제어된 컴포넌트와 제어되지 않은 컴포넌트 및 Stateless 컴포넌트와 Stateful 컴포넌트
+
+### 제어된 컴포넌트와 제어되지 않은 컴포넌트
+
+- 양방향 바인딩을 쓰는 것은 컴포넌트를 제어하는 것과 마찬가지이다. 하지만 custom 컴포넌트까지 제어하는 것은 아니다. 이것은 무슨 의미일까? 이는 양방향 바인딩을 할 때 자식 컴포넌트에서 사용한 값이 props를 통해서 부모 컴포넌트로 pass up 했고 부모 컴포넌트로부터 받은 것이라는 의미이다. 앞서 작성한 `ExpensesFilter`로 예를 들어보자면 이 컴포넌트에서 사용한 것은 모두 설정 값이며, `ExpensesFilter` 컴포넌트의 일부가 아니다. `ExpensesFilter` 컴포넌트는 그냥 일반적인 컴포넌트로 `DUI`(dropdown)를 나타내고 listener나 prop, 두 가지를 첨부할 뿐이다. 하지만 실제 로직은 `ExpensesFilter`의 부모 컴포넌트인 `Expenses` 내에서 나열하고 그것이 `ExpensesFilter`를 제어된 컴포넌트로 변하게 만든다. 즉, `ExpensesFilter`는 계속 일반 컴포넌트일 뿐이다. 그리고 `제어된 컴포넌트`란 용어는 앞서 설명한 것들을 확인할 때 붙이는 특별한 용어이다. 이는 `ExpensesFilter` 같은 자식 컴포넌트 자체 안에서 다루는 것이 아니라 부모 컴포넌트(`Expenses`) 내에서 다룬다. 즉, `Expenses` 컴포넌트는 `ExpensesFilter` 컴포넌트를 제어한다고 말할 수 있다. 물론 이것은 우리가 신중하게 사용해야 할 용어이기도 하다.
+
+### Stateless 컴포넌트와 Stateful 컴포넌트
+
+- 이런 용어의 존재는 기본적으로 우리가 구축하는 모든 React 앱에서 상태(state)를 manage 하는 컴포넌트가 있을 것이라는 의미이다. Stateful 컴포넌트를 예를 들어보자면, filter 상태(state)를 manage 하는 `Expenses` 컴포넌트나 input 상태(state)를 manage 하는 `ExpenseForm` 컴포넌트를 생각해보면 이해가 될 것이다. 반면 상태(state)를 manage 하지 않는 컴포넌트도 존재한다. 이렇게 상태(state)를 관리하고 저장하지 않는 컴포넌트를 상태(state) 비저장 컴포넌트 즉, Stateless 컴포넌트라고 하는데, 보통은 "프레젠테이션" 컴포넌트나 "dumb" 컴포넌트라고 부르기도 한다. 왜냐하면 컴포넌트 내부에 상태(state)가 아예 존재하지 않고 데이터를 출력하기 위해서만 존재하기 때문이다. 그리고 대부분의 React 어플리케이션에서는 "smart" 컴포넌트("dumb" 컴포넌트와 반대되는 개념)와 Stateful 컴포넌트보다 "프레젠테이션" 컴포넌트, "dumb" 컴포넌트가 훨씬 더 많을 것이다. 물론 "dumb" 컴포넌트 라는 말이 부정적으로 들리거나 Stateful 컴포넌트보다 안 좋을 것이라는 편견이 있지만 실제로는 그렇지 않다. 이것은 그저 용어일 뿐이다. 또한 보통의 React 어플리케이션에서는 Stateful 컴포넌트를 Stateless 컴포넌트보다 덜 가지게 되는 것도 기억해야 한다. 왜냐하면 어플리케이션을 최대한 작게 쪼개서 재사용할 수 있는 조각으로 나누기 때문이다. 이런 과정에서 많은 컴포넌트들은 오직 무언가를 출력하는 데에만 초점을 맞추게 된다. JSX 코드만을 출력한다던가, 변형 로직을 가진다거나, css 코드를 가지거나 하는 식으로 말이다. 단지 두어 개의 컴포넌트 만이 상태(state)를 manage 하며, 이 상태(state)가 다른 컴포넌트로 뻗어나가서 마지막에 props를 통해 pass 한다.
