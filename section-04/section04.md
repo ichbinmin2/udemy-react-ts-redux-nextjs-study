@@ -9,9 +9,10 @@
 - [Practice | Adding Form Inputs](#양식-입력-추가하기)
 - [Practice | Listening to User Input](#사용자-입력-리스닝)
 - [Practice | Working with Multiple States](#여러-State-다루기)
-- [Practice | Using One State Instead (And What's Better)](#State-대신-사용하기-그리고-더-나은-방법을-찾기))
-- [Practice | Updating State That Depends On The Previous State](#이전-State에-의존하는-State-업데이트))
-- [Practice | Handling Form Submission](#양식-제출-처리하기))
+- [Practice | Using One State Instead (And What's Better)](#State-대신-사용하기-그리고-더-나은-방법을-찾기)
+- [Practice | Updating State That Depends On The Previous State](#이전-State에-의존하는-State-업데이트)
+- [Practice | Handling Form Submission](#양식-제출-처리하기)
+- [Practice | Adding Two-Way Binding](#양방향-바인딩-추가하기)
 
 </br>
 
@@ -374,5 +375,44 @@ const submitHandler = (event) => {
 
 - 세가지의 상태(state)를 객체 내부의 `property`의 value 값으로 지정하고 각각의 `property` 이름을 설정해준다. `date` 의 경우, `new Date()` 를 사용해서 날짜를 구축했다. 이는 `enteredDate`를 pass 해서 날짜 문자열을 parse 한 뒤, 날짜 객체로 변환되게 만든 것이다.
 - 이제 `<button>` 을 click 하면 `<form>`에서 `expenseData` 이라는 이벤트 함수가 자동으로 실행되면서 `expenseData` 객체 내부에 세가지의 상태(state)가 `property`로 저장되는 것을 확인할 수 있다.
+
+</br>
+
+## 양방향 바인딩 추가하기
+
+- 우리는 양방향 바인딩을 사용할 수 있다. 간단히 말하자면 입력값에서 업데이트되는 것만 listen 하는 것이 아니라, 입력값으로 돌아오는 새로운 값도 pass 할 수 있다는 뜻이다. 따라서 재시작하거나 입력값을 프로그램에 따라 변화시킬 수 있다.
+
+```js
+<input type="text" onChange={titleChangeHandler} value="" />
+```
+
+- `<input>` 태그에 기본 속성인 `value`를 추가한다. 이는 `<input>` 요소가 가진 내부 값 property를 설정해주는 것이다.
+
+```js
+<input type="text" onChange={titleChangeHandler} value={enteredTitle} />
+```
+
+- 그리고 이 `value` 값으로 해당 상태(state)인 `enteredTitle`로 bind 해준다. 이것이 바로 "양방향 바인딩"이다. `<input>`에서 단순히 변화만 listen 하고 상태(state)를 업데이트 하는 것이 아니라 상태(state)를 `<input>`으로 다시 피드백해주기 때문이다. 따라서 상태(state)를 변화할 때 `<input>`도 변화시키게 된다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  const expenseData = {
+    title: enteredTitle,
+    amount: enteredAmount,
+    data: new Date(enteredDate),
+  };
+
+  console.log(expenseData);
+
+  // 초기화
+  setEnteredTitle("");
+  setEnteredAmount("");
+  setEnteredDate("");
+};
+```
+
+- `<form>`이 제출되면 `expenseData` 객체로 데이터가 수집되어 저장되고 그 이후로 `<input>` 값들이 초기화될 수 있도록 상태(state) 업데이트 함수에 빈 배열을 넣어주었다. 이렇게 하면 `<form>`의 데이터가 제공되고 나서 사용자가 입력한 값을 빈 배열로 덮어쓰게 된다. 그렇게 `<input>`의 `value`를 초기화시킬 수 있는 것이다.
 
 </br>
