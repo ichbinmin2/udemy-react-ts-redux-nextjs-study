@@ -14,6 +14,7 @@
 - [Practice | Handling Form Submission](#양식-제출-처리하기)
 - [Practice | Adding Two-Way Binding](#양방향-바인딩-추가하기)
 - [Practice | Child-to-Parent Component Communication(Bottom-up)](#자식-대-부모-컴포넌트-상향식-통신)
+- [Practice | Lifting The State Up](#State-끌어올리기)
 
 </br>
 
@@ -526,10 +527,14 @@ const NewExpense = (props) => {
 
 ![console](https://user-images.githubusercontent.com/53133662/156762928-37d97d71-9fe2-4503-b4e2-6d16272e8c29.png)
 
--`console`을 확인해보면 `App` 컴포넌트에서 정상적으로 데이터를 받아오고 있음을 확인할 수 있다.
-
+- `console`을 확인해보면 `App` 컴포넌트에서 정상적으로 데이터를 받아오고 있음을 확인할 수 있다.
 - 우리가 의도하여 상향식 통신의 순서(`ExpenseForm` => `NewExpense` => `App`)대로 처리되었으며, 최종적으로 `ExpenseForm`에서 수집한 데이터를 `App` 컴포넌트에서 관리할 수 있게 되었다.
 
 </br>
 
+## State 끌어올리기
 
+- 만약 같은 위치에 있는 형제 컴포넌트끼리 데이터를 주고 받아야 한다면, 연관된 컴포넌트 두개와 동시에 직접/간접적으로 연결된 가장 가까운 부모 컴포넌트를 이용해서 데이터를 주고 받을 수 있다. 상태(state)를 가장 가까운 컴포넌트에 저장할 수 있기 때문에 두 연관 컴포넌트 모두 다 접근할 수 있는 이 부모 컴포넌트에서 상태(state)를 끌어올릴 수 있다. 즉, 생성된 상태(state) 데이터를 자식1 컴포넌트에서 가장 가까운 부모 컴포넌트에 pass up 하고 이 부모 컴포넌트에서 그것을 다시 자식2 컴포넌트로 상태(state) 데이터를 props down 할 수 있다는 이야기다.
+- 결국 '상태(State) 끌어올리기'는 자식 컴포넌트로부터 부모 컴포넌트로 데이터를 이동하는 것이라 이해하면 될 것이다.
+
+</br>
