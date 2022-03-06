@@ -4,6 +4,7 @@
 
 - [Rendering Lists of Data](#데이터의-렌더링-목록)
 - [Using Stateful Lists](#State-저장-목록-사용하기)
+- [Practice | Working with Lists](#Lists-다루기)
 
 ## 데이터의 렌더링 목록
 
