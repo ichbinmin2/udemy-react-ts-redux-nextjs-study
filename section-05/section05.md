@@ -4,7 +4,9 @@
 
 - [Rendering Lists of Data](#데이터의-렌더링-목록)
 - [Using Stateful Lists](#State-저장-목록-사용하기)
+- [Understanding "Keys"](#keys-이해하기)
 - [Practice | Working with Lists](#Lists-다루기)
+- [Outputting Conditional Content](#조건부-내용-출력하기)
 
 ## 데이터의 렌더링 목록
 
@@ -146,6 +148,70 @@ const addExpenseHandler = (expense) => {
 
 </br>
 
+## keys 이해하기
+
+- 지금까지 `Expense` 컴포넌트에서 우리가 받아온 `props.items`를 이용하여 `ExpenseItem`를 매핑해줬다. 하지만 우리는 console에서 이런 경고문을 마주하게 된다.
+
+![console-warning](https://user-images.githubusercontent.com/53133662/157028547-e43b5646-8d77-425d-8611-77f43c5de4ef.png)
+
+### 제대로 작동하고 있음에도 왜 이런 `key` 경고문을 받은 것일까?
+
+- 우리는 현재 `ExpenseForm` 컴포넌트에서 입력한 값을 토대로 `ExpenseItem`을 추가할 수 있도록 작성했다. 여기서 만약 하나의 아이템을 새로 추가하면 React는 새로운 아이템을 기존 데이터 목록의 마지막으로 렌더링하고 모든 아이템을 업데이트한 뒤 그 콘텐츠를 대체하며 이때 또 다시 나의 데이터 배열 안에 있는 아이템 순서와 짝지어 주는 순서로 진행된다. 이런 현상이 일어나는 이유는 React 에서는 모든 아이템들이 특별할 것 없이 전부 다 비슷해보이기 때문이다. 물론 결과만 봤을 때엔 정상적으로 작동하는 것은 맞으나, 모든 아이템을 다시 찾아서 업데이트해야 하기 때문에 성능 면에서는 확실히 떨어진다고 볼 수 있을 것이다. 그리고 이러한 잠재적인 성능 이슈로 인하여 버그로 이어질 가능성이 높아진다.
+- React는 데이터 목록을 렌더링 할 때 특별한 개념을 가진다. 이 개념을 통해 React가 데이터 목록을 효과적으로 업데이트하고 렌더링할 수 있으며, 혹여나 발생할 수 있는 성능 손실의 가능성이나 버그의 가능성으로부터 안전하게 보호받을 수 있도록 해준다. 그리고 우리가 `key` 경고문을 받은데에는 이런 개념을 위한 규칙을 지켜주지 않았기 때문이다.
+- React는 현재 배열의 길이를 확인하고 이미 렌더링한 아이템의 갯수를 확인한다. 즉, React에서는 개별 아이템이 전부 다 똑같아 보인다는 이야기다. 따라서 새로운 아이템이 추가되어도 React에서는 이를 따로 판별하지 못하게 되는 것이다. 그리고 현재까지 우리는 새로운 아이템을 추가했을 때 React에 어떤 방법을 통해서도 새로운 아이템이 추가되었다고 알려주지 않았기 때문에 이런 `key` 경고문을 받게 된 것이다.
+
+```js
+props.items.map((expense) => (
+  <ExpenseItem
+    title={expense.title}
+    amount={expense.amount}
+    date={expense.date}
+  />
+));
+```
+
+- 이를 해결하기 위해서는 기존의 아이템 목록을 매핑하여 출력하던 위치에서 작업해주면 된다. `ExpenseItem`에 특별한 prop(`key prop`) 을 더해주자. 이를 위해서는 데이터 목록 아이템 당 개별 값을 설정해줘야 한다.
+  > `key prop`은 어떤 컴포넌트에나 추가할 수 있는 prop 이며, HTML 요소에 추가할 수도 있다. 이런 `key prop`을 추가하면서 React가 개별 아이템을 식별할 수 있게 된다.
+
+```js
+props.items.map((expense) => (
+  <ExpenseItem
+    key={expense.id}
+    title={expense.title}
+    amount={expense.amount}
+    date={expense.date}
+  />
+));
+```
+
+- `<ExpenseItem>` 아이템에 `key prop`을 추가함으로써 이제 우리는 더이상 `key` 관련 경고문을 받지 않게 되었다. 또한, React는 더이상 데이터 목록 배열의 길이만을 보는 것이 아니라, 아이템의 '위치'까지 고려할 것이다. 이렇게 우리가 가지고 있는 데이터 배열에는 각각의 아이템이 개별 `id` 값이 있으므로, 이것을 이용하여 React에 개별 아이템을 식별할 수 있도록 도와주도록 하자.
+
+### 만약 사용해야 하는 데이터 목록에 `id` 값이 없을 땐 어떻게 해야할까?
+
+- `map()` 메소드에서 두 번째 인수를 사용할 수도 있다.
+  > arr.map(callback(currentValue[, index[, array]])[, thisArg])
+
+```js
+{
+  props.items.map((expense, index) => (
+    <ExpenseItem
+      key={index}
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+  ));
+}
+```
+
+- 하지만 `index`를 사용하는 것은 그다지 권장되지 않는다. 왜냐하면 특정 아이템의 `index`는 항상 동일하며, 배열 아이템 콘텐츠에 직접적으로 첨부되지 않기 때문이다. 이 때문에 자치 잘못하면 버그를 만날 가능성이 높아질 수 밖에 없게 된다.
+
+### 결론
+
+- 데이터 아이템 목록을 `map()` 할 때는 항상 `key`를 추가해야 한다. `key prop`를 추가하면서 React는 더이상 데이터 목록 배열의 길이만을 보는 것이 아니라, 아이템의 '위치'까지 고려하도록 도와줄 수 있으며, 이를 통해 데이터 아이템 목록을 효과적으로 업데이트하고 렌더링하며 또 혹여나 발생할 수 있는 성능 손실의 가능성이나 버그의 가능성으로부터 안전하게 보호받을 수 있게 된다.
+
+</br>
+
 ## Lists 다루기
 
 - 그간 우리는 `<Expense>` 컴포넌트 함수 내에서 `props.items`로 가져온 값에 따라 `<ExpenseItem>`을 매핑해주어 화면에 출력할 수 있도록 하였다. 이제는 `<ExpensesFilter>`에서 옵션으로 선택하여 가져온 `filteredYear` 상태(state)에 따라 `expense`(`props.items`) 값을 가져올 수 있도록 필터링 해주고자 한다.
@@ -176,6 +242,7 @@ const filteredExpenses = props.items.filter((expense) => {
 {
   filteredExpenses.map((expense) => (
     <ExpenseItem
+      key={expense.id}
       title={expense.title}
       amount={expense.amount}
       date={expense.date}
