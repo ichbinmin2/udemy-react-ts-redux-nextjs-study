@@ -7,7 +7,7 @@ import "./Expense.css";
 const Expense = (props) => {
   const [filteredYear, setFilteredYear] = useState("2020");
 
-  const FilterChangeHandler = (selectedYear) => {
+  const filterChangeHandler = (selectedYear) => {
     setFilteredYear(selectedYear);
     console.log(filteredYear);
   };
@@ -20,7 +20,7 @@ const Expense = (props) => {
     <div>
       <Card className="expenses">
         <ExpensesFilter
-          onChangeFilter={FilterChangeHandler}
+          onChangeFilter={filterChangeHandler}
           selected={filteredYear}
         />
         {filteredExpenses.map((expense) => (

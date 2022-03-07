@@ -145,3 +145,47 @@ const addExpenseHandler = (expense) => {
 - 이제 `ExpenseForm`에서 입력한 값들을 submit 하면 동적으로 지출 목록이 추가되며 업데이트되는 것을 확인할 수 있다. 이것이 진정으로 데이터를 동적으로 출력하는 방법이다.
 
 </br>
+
+## Lists 다루기
+
+- 그간 우리는 `<Expense>` 컴포넌트 함수 내에서 `props.items`로 가져온 값에 따라 `<ExpenseItem>`을 매핑해주어 화면에 출력할 수 있도록 하였다. 이제는 `<ExpensesFilter>`에서 옵션으로 선택하여 가져온 `filteredYear` 상태(state)에 따라 `expense`(`props.items`) 값을 가져올 수 있도록 필터링 해주고자 한다.
+
+```js
+const filteredExpenses = props.items.filter((expense) => {});
+```
+
+- 먼저 `props.items`를 이용하여 필터링 해줄 수 있는 함수식 `filteredExpenses`을 작성했다. `filter()` 메소드로 어떤 조건에 맞는 값만 반환할 수 있도록 할 예정이다.
+
+```js
+const filteredExpenses = props.items.filter((expense) => {
+  return expense.date.getFullYear().toString();
+});
+```
+
+- 날짜를 불러오는 객체에서는 `getFullYear()` 메소드를 사용하여 이 날짜 객체 안에서 '연도'만 불러올 수 있다. 연도는 number 타입으로 반환되기 떄문에 문자열로 사용하기 위해 `toString` 메소드로 문자열로 변환하는 작업이 추가적으로 필요했다.
+
+```js
+const filteredExpenses = props.items.filter((expense) => {
+  return expense.date.getFullYear().toString() === filteredYear;
+});
+```
+
+- `<ExpensesFilter>`에서 가져온 `filteredYear` 상태(state)와 비교하여 해당 상태(state)와 동일한 `props.items`(`expense`)만 반환해주도록 작업해주었다.
+
+```js
+{
+  filteredExpenses.map((expense) => (
+    <ExpenseItem
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+  ));
+}
+```
+
+- 마지막으로, 필터링한 `filteredExpenses`으로 매핑해주면 `filteredYear` 상태(state)에 해당하는`ExpenseItem`만 출력된다.
+- [MDN 문서 참조: Date.prototype.getFullYear()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear)
+- [MDN 문서 참조: Object.prototype.toString()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
+
+</br>
