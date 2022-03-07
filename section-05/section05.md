@@ -230,11 +230,11 @@ const filteredExpenses = props.items.filter((expense) => {
 
 - 날짜를 불러오는 객체에서는 `getFullYear()` 메소드를 사용하여 이 날짜 객체 안에서 '연도'만 불러올 수 있다. 연도는 number 타입으로 반환되기 떄문에 문자열로 사용하기 위해 `toString` 메소드로 문자열로 변환하는 작업이 추가적으로 필요했다.
 
-```js
+````js
 const filteredExpenses = props.items.filter((expense) => {
   return expense.date.getFullYear().toString() === filteredYear;
 });
-```
+`
 
 - `<ExpensesFilter>`에서 가져온 `filteredYear` 상태(state)와 비교하여 해당 상태(state)와 동일한 `props.items`(`expense`)만 반환해주도록 작업해주었다.
 
@@ -249,10 +249,118 @@ const filteredExpenses = props.items.filter((expense) => {
     />
   ));
 }
-```
+````
 
-- 마지막으로, 필터링한 `filteredExpenses`으로 매핑해주면 `filteredYear` 상태(state)에 해당하는`ExpenseItem`만 출력된다.
+- 마지막으로, 필터링한 `filteredExpenses`으로 매핑해주면 `filteredYear` 상태(state)에 해당하는 `ExpenseItem`만 출력된다.
 - [MDN 문서 참조: Date.prototype.getFullYear()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear)
 - [MDN 문서 참조: Object.prototype.toString()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
 
 </br>
+
+## 조건부 내용 출력하기
+
+- 조건부 컨텐츠란 다른 조건 하에 다른 출력값을 렌더링하는 것이다. 예를 들자면, A나 B나 C 중에 조건에 맞는 것만 렌더링할 수 있는 것을 말한다.
+
+```js
+{
+  filteredExpenses.map((expense) => (
+    <ExpenseItem
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+}
+```
+
+- 앞서, `filteredYear`를 선택할 때마다 `filteredYear` 상태(state)에 해당하는`ExpenseItem`만 출력되도록 작업해주었다. 지금까지 `ExpenseItem` 목록을 렌더링 하면서 만약 필터링 된 `expense` 가 공백이라면, 아무 것도 렌더링하지 않도록 한 것이다. 만약 `filteredYear` 상태(state)에 해당하는 `ExpenseItem`이 없을 때에 어떤 렌더링 대신 우리가 선택한 필터에서 item이 없다는 메세지를 사용자에게 전달하고 싶다면 어떻게 해야할까?
+
+### 조건부 렌더링 : 삼항 연산자를 사용하기
+
+```js
+{
+  filteredExpenses.length === 0 ? (
+    <p>No Expense Found</p>
+  ) : (
+    filteredExpenses.map((expense) => (
+      <ExpenseItem
+        title={expense.title}
+        amount={expense.amount}
+        date={expense.date}
+      />
+    ))
+  );
+}
+```
+
+- [MDN 문서 참조: 삼항 조건 연산자](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Conditional_Operator)
+- 조건부 렌더링을 위해 간단하게 삼항 연산자를 사용했다. `length`를 이용해서 필터링된 데이터 배열인 `filteredExpenses`의 길이를 구하고, 0과 같을 때(값이 없을 때)는 `<p>No Expense Found</p>`를 출력하고 아닐 때는 기존의 데이터 아이템을 렌더링하도록 해주었다. 이제 우리가 선택한 필터에 데이터 아이템이 없을 때마다 "No Expense Found"라는 메세지를 출력할 수 있게 되었다.
+
+  > JSX 코드의 `{}` 안에서는 `if` 문이나, `for`문 같은 긴 statement가 허용되지 않는다.
+
+- 물론 길게 작성되어 가독성이 떨어지는 삼항연산자 보다 가독성 있게 작성할 수도 있다.
+
+### 조건부 렌더링 : AND Operator(&&)
+
+```js
+{
+  filteredExpenses.length === 0 && <p>No Expense Found</p>;
+}
+{
+  filteredExpenses.length > 0 &&
+    filteredExpenses.map((expense) => (
+      <ExpenseItem
+        title={expense.title}
+        amount={expense.amount}
+        date={expense.date}
+      />
+    ));
+}
+```
+
+- [MDN 문서 참조: Logical AND (&&)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_AND)
+- AND Operator(&&)를 사용하여 조건이 만족했을 때만 렌더링 되도록 해주었다. 기본적으로 AND Operator(&&)에서 바로 뒤에 오는 값은 AND Operator(&&) 앞에서 작성한 조건이 만족했을 때(true일 때) 보여주고 싶은 결과의 값으로 설정한다. 이 또한, `length`를 이용해서 필터링된 데이터 배열인 `filteredExpenses`의 길이를 구하고, 0과 같을 때(값이 없을 때)는 `<p>No Expense Found</p>`가 오도록 설정해주었다. 그리고 한번 더 `{}`를 다시 사용해서 앞서 삼항연산자를 사용했을 때처럼 0보다 클 때(값이 있을 때) 역시 기존의 필터링 된 데이터 아이템을 렌더링하도록 작성해주었다.
+- 이처럼 길이가 긴 삼항연산자 대신 AND Operator(&&)를 사용하여 두개의 독립 수식으로 나눠 가독성을 높이는 방법을 사용할 수 있다. 물론, 두개의 독립 수식으로 나눈다고 해서 삼항연산자보다 성능이 떨어지거나 하지는 않는다.
+
+### JSX 코드 내에서 사용되는 조건식 렌더링의 대안
+
+- 하지만 이런 식조차도 JSX 코드 내에서는 과한 로직일 수도 있을 것이다. 물론, JSX 코드 내에서 조건식 렌더링을 사용하지 않고도 동일한 역할을 수행하는 다른 대안도 있기 마련이다.
+
+```js
+let expensesContent = <p>No Expense Found</p>;
+
+return (
+    ...
+    {filteredExpenses.length === 0 && expensesContent}
+)
+```
+
+- 이렇게 변수를 설정하고 기본 값(메세지)를 할당한뒤 JSX 컨텐츠를 변수 안에 저장함으로써 JSX 코드 내의 로직을 조금 더 간단하게 작성할 수도 있다. 또한, 반환도 가능하다. 이런 방식은 값을 다루는 곳이라면 어디서든 사용할 수 있다. 즉, JSX 콘텐츠를 return 전에 변수 내에 저장할 수 있다는 이야기다. 이렇게 미리 변수에 기본 값을 할당해놓고 사용한다면, 해당 컴포넌트 함수가 return 하기 전에 미리 편집하여 사용할 수도 있다.
+
+```js
+let expensesContent = <p>No Expense Found</p>;
+
+if (filteredExpenses.length > 0) {
+  expensesContent = filteredExpenses.map((expense) => (
+    <ExpenseItem
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+  ));
+}
+```
+
+- 기존에 JSX 코드 내에서 AND Operator(&&)를 사용하여 작성했던 로직을 모두 return 전에 변수 값으로 할당하였다. 만약 `filteredExpenses.length`가 0보다 크다면 `filteredExpenses`으로 매핑한 `ExpenseItem` 컴포넌트가 렌더링되어 `expensesContent`로 저장될 수 있도록 해주었다.
+
+```js
+
+return (
+  ...
+      {expensesContent}
+  ...
+);
+
+```
+
+- AND Operator(&&)를 사용하여 작성했던 로직을 모두 지워주고, `expensesContent` 값만 point 해주었다.
+- 이 `expensesContent` 변수는 `<p>No Expense Found</p>`나 JSX 요소 집합(`filteredExpenses.length > 0`을 만족시켰을 때 렌더링 되는 JSX 코드 로직) 전부 렌더링 가능하므로 JSX 코드 내에서 모두 쓰일 수 있게 된다. 이로써 return 되는 JSX 코드 내에서 작성했을 때보다 가독성이 높아졌음을 확인할 수 있다. 
