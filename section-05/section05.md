@@ -7,6 +7,7 @@
 - [Understanding "Keys"](#keys-이해하기)
 - [Practice | Working with Lists](#Lists-다루기)
 - [Outputting Conditional Content](#조건부-내용-출력하기)
+- [Adding Conditional Return Statements](#조건-명령문-반환-추가하기)
 
 ## 데이터의 렌더링 목록
 
@@ -230,11 +231,11 @@ const filteredExpenses = props.items.filter((expense) => {
 
 - 날짜를 불러오는 객체에서는 `getFullYear()` 메소드를 사용하여 이 날짜 객체 안에서 '연도'만 불러올 수 있다. 연도는 number 타입으로 반환되기 떄문에 문자열로 사용하기 위해 `toString` 메소드로 문자열로 변환하는 작업이 추가적으로 필요했다.
 
-````js
+```js
 const filteredExpenses = props.items.filter((expense) => {
   return expense.date.getFullYear().toString() === filteredYear;
 });
-`
+```
 
 - `<ExpensesFilter>`에서 가져온 `filteredYear` 상태(state)와 비교하여 해당 상태(state)와 동일한 `props.items`(`expense`)만 반환해주도록 작업해주었다.
 
@@ -249,7 +250,7 @@ const filteredExpenses = props.items.filter((expense) => {
     />
   ));
 }
-````
+```
 
 - 마지막으로, 필터링한 `filteredExpenses`으로 매핑해주면 `filteredYear` 상태(state)에 해당하는 `ExpenseItem`만 출력된다.
 - [MDN 문서 참조: Date.prototype.getFullYear()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear)
@@ -363,4 +364,135 @@ return (
 ```
 
 - AND Operator(&&)를 사용하여 작성했던 로직을 모두 지워주고, `expensesContent` 값만 point 해주었다.
-- 이 `expensesContent` 변수는 `<p>No Expense Found</p>`나 JSX 요소 집합(`filteredExpenses.length > 0`을 만족시켰을 때 렌더링 되는 JSX 코드 로직) 전부 렌더링 가능하므로 JSX 코드 내에서 모두 쓰일 수 있게 된다. 이로써 return 되는 JSX 코드 내에서 작성했을 때보다 가독성이 높아졌음을 확인할 수 있다. 
+- 이 `expensesContent` 변수는 `<p>No Expense Found</p>`나 JSX 요소 집합(`filteredExpenses.length > 0`을 만족시켰을 때 렌더링 되는 JSX 코드 로직) 전부 렌더링 가능하므로 JSX 코드 내에서 모두 쓰일 수 있게 된다. 이로써 return 되는 JSX 코드 내에서 작성했을 때보다 가독성이 높아졌음을 확인할 수 있다.
+
+</br>
+
+## 조건 명령문 반환 추가하기
+
+```js
+let expensesContent = <p>No Expense Found</p>;
+if (filteredExpenses.length > 0) {
+  expensesContent = filteredExpenses.map((expense) => (
+    <ExpenseItem
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+  ));
+}
+
+return (
+  ...
+      {expensesContent}
+  ...
+);
+```
+
+- 앞에서 작성한 로직은 `<Expense>` 컴포넌트에서 모두 작업해주었지만, `expensesContent` 구현 부분을 새로운 컴포넌트로 분리하고 `<Expense>` 컴포넌트의 길이를 조금 더 간결하게 작성하고자 한다.
+- 조건식 렌더링으로 구현한 `expensesContent` 로직들을 전부 복사해서 새로운 컴포넌트인 `<ExpensesList>`로 옮겨준다.
+
+```js
+import ExpenseItem from "./ExpenseItem";
+
+const ExpensesList = (props) => {
+  let expensesContent = <p>No Expense Found</p>;
+
+  if (filteredExpenses.length > 0) {
+    expensesContent = filteredExpenses.map((expense) => (
+      <ExpenseItem
+        title={expense.title}
+        amount={expense.amount}
+        date={expense.date}
+      />
+    ));
+  }
+
+  return <></>;
+};
+```
+
+- `filteredExpenses` 상태(state)는 `<Expense>` 컴포넌트에서 관리되고 있으므로, `<Expense>` 컴포넌트에서 `props`로 직접 받아올 수 있도록 할 예정이다. 여기서 `<ExpenseItem>` 컴포넌트도 출력되므로 import 해온다.
+
+```js
+<ExpensesList items={filteredExpenses} />
+```
+
+- `<Expense>` 컴포넌트에서 `<ExpensesList>` 컴포넌트를 출력하도록 import하고 `filteredExpenses` 상태(state)를 `items`이란 이름의 `props`으로 pass down 해준다.
+
+```js
+if (props.items.length > 0) {
+  expensesContent = props.items.map((expense) => (
+    <ExpenseItem
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+  ));
+}
+```
+
+- 기존에 `filteredExpenses`로 받아왔던 값을 전부 `props.items`로 수정해준다.
+
+```js
+return (
+  <ul className="expenses-list">
+    {props.items.map((expense) => (
+      <ExpenseItem
+        title={expense.title}
+        amount={expense.amount}
+        date={expense.date}
+      />
+    ))}
+  </ul>
+);
+```
+
+- `if check`를 해주기 위해 `props.items`으로 매핑한 JSX 코드 로직을 렌더링할 수 있도록 return 값에 그대로 넣어주었다.
+
+```js
+if (props.items.length === 0) {
+  return;
+}
+```
+
+- 만약 데이터 아이템이 없을 떄(0과 같을 때) 특정한 JSX 코드를 반환하도록 설정해주었다. (왜냐하면 아직까진 그것이 조건부 콘텐츠를 다루는 또 다른 방법이기 때문이다.) 만약 컴포넌트 return 값이 다른 조건을 기준으로 아예 달라진다면 이러한 접근법을 사용할 수 있다.
+- 이러한 `if check` 방식은, 혹여나 데이터가 손실되었을 때 전체 JSX 콘텐츠가 변한다면 다른 JSX 코드 블록을 반환하도록 설정할 수 있게 된다.
+
+```js
+if (props.items.length === 0) {
+  return <h2 className="expenses-list__fallback">Found no expenses.</h2>;
+}
+```
+
+- 만약(`if`) `ExpensesList`가 `props.items`이 없을 때 `<h2>` 태그로 "Found no expenses."을 렌더링할 수 있도록 설정해주었다. 이제 이전과 동일한 과정에 따라 데이터 리스트가 없을 때마다 "Found no expenses."이 출력되는 것을 확인할 수 있다.
+
+### 추가 수정사항
+
+```js
+<ul className="expenses-list">
+  {props.items.map((expense) => (
+    <ExpenseItem
+      title={expense.title}
+      amount={expense.amount}
+      date={expense.date}
+    />
+  ))}
+</ul>
+```
+
+- `ExpensesList` 컴포넌트 JSX 로직 내에서 `ExpenseItem` 컴포넌트를 감싸고 있는 태그가 `<ul>`이므로 `ExpenseItem` 컴포넌트를 `<li>` 태그로 감싸줄 수 있도록 `ExpenseItem` 컴포넌트의 JSX 로직을 수정한다.
+
+```js
+<li>
+  <Card className="expense-item">
+    <ExpenseDate date={props.date} />
+    ...
+  </Card>
+</li>
+```
+
+- 이로써 의미론적인(Semantics) 코드를 작성할 수 있게 되었다.
+- [MDN 문서 참조: Semantics](https://developer.mozilla.org/ko/docs/Glossary/Semantics)
+
+</br>
