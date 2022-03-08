@@ -11,6 +11,7 @@
 - [Practice | Conditional Content](#조건부-내용-다루기)
 - [Demo App: Adding a Chart](#데모앱-차트-추가하기)
 - [Adding Dynamic Styles](#동적-스타일-추가하기)
+- [Wrap Up & Next Steps](#마무리-및-다음-단계)
 
 ## 데이터의 렌더링 목록
 
@@ -650,3 +651,128 @@ if (props.maxValue > 0) {
 ```js
 <div className="chart-bar__fill" style={{ backgroundColor : "red" }} >
 ```
+
+</br>
+
+## 마무리 및 다음 단계
+
+- `Chart`를 사용하기 위해서 앞서 임의로 설정한 `dataPoints` 데이터를 작성해주고 `Chart`에 전달해야 할 것이다. 이 데이터를 전달하기 위한 목적으로 `ExpensesChart` 컴포넌트를 생성해주었다. 이 `ExpensesChart` 컴포넌트는 데이터를 전체적으로 `Chart` 컴포넌트에 전달하는 기능을 담당할 것이다.
+
+```js
+import Chart from "../Chart/Chart";
+
+const ExpensesChart = (props) => {
+  return <Chart dataPoints={} />;
+};
+```
+
+- `Chart` 컴포넌트에서 사용할 데이터인 `dataPoints`를 pass down 하도록 설정한다. 이제 `dataPoints` 데이터를 정의하도록 하자. `ExpensesChart` 컴포넌트에서 `dataPoints`를 설정하려면 새로운 상수이자 배열이 필요할 것이다. 그리고 이 배열에 여러 객체를 넣어준다. `dataPoints`를 맵핑해서 데이터 요소에 접근하려면 객체여야 하기 때문이다.
+
+```js
+const chartDataPoints = [
+  { label: "Jan", value: 0 },
+  { label: "Feb", value: 0 },
+  { label: "Mar", value: 0 },
+  { label: "Apr", value: 0 },
+  { label: "May", value: 0 },
+  { label: "Jun", value: 0 },
+  { label: "Jul", value: 0 },
+  { label: "Aug", value: 0 },
+  { label: "Sep", value: 0 },
+  { label: "Oct", value: 0 },
+  { label: "Nov", value: 0 },
+  { label: "Dec", value: 0 },
+];
+```
+
+- `dataPoints` 배열 내부에 배열로 우리가 필요한 `label` 과 `value` 값을 넣어주는데, 이 `value`는 전부 0으로 초기화를 해준다. 이 초기값을 베이스로 필터링된 expense를 살펴보고 선택한 연도의 모든 expense까지 검토한 다음에 매달의 비용(amount)을 합산하여 다시 `value` 값으로 재할당 해줄 것이다.
+
+```js
+const filteredExpenses = props.items.filter((expense) => {
+  return expense.date.getFullYear().toString() === filteredYear;
+});
+
+  return (
+    ...
+    <ExpensesChart expenses={filteredExpenses} />;
+    ...
+  )
+```
+
+- 먼저, `Expenses` 컴포넌트에서 연도를 필터링한 값인 `filteredExpenses`를 `ExpensesChart` 컴포넌트에 `expenses`라는 이름으로 `filteredExpenses`를 pass down 해준다.
+
+```js
+for (const expense of props.expenses) {
+}
+```
+
+- 그리고 `ExpensesChard` 컴포넌트 내부에서 `Expenses` 컴포넌트에서 `props`으로 전달받은 `expenses`를 가지고 for of loop 를 사용하여 모든 `expense`를 살펴본 후, 해당 `expense`의 달을 얻어서 `expense` 금액에 따라 적절한 데이터 `value` 값을 계산해준 뒤 업데이트할 것이다.
+
+```js
+for (const expense of props.expenses) {
+  const expenseMount = expense.date.getMonth(); // 0에서 시작
+}
+```
+
+- `expenseMount`를 통해서 for of loop 내부의 `expense`의 달(Month)을 얻을 수 있도록 날짜 객체의 달(Month)를 반환하는 `getMonth()` 메소드를 사용하여 해당 `expense(지출).date(날짜)`의 Month만을 구한다. 여기에서 `expense.date.getMonth()`를 살펴봄으로써 for of loop 내부의 `expense`(지출) 달(Month)을 얻을 수 있다. `expense`의 `value`는 0으로부터 시작하기 때문에 1(Jan)월은 0이 되도록 설정한다. 그리고 이 `expenseMount`는 알맞은 `dataPoint`를 고르는 데 사용된다. 1(Jan)월은 `chartDataPoints` 배열에서도 index가 0이기 때문이다.
+- [MDN 문서 참조: Date.prototype.getMonth()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
+  > getMonth() 메서드는 Date 객체의 월 값을 현지 시간에 맞춰 반환합니다. 월은 0부터 시작합니다.
+
+```js
+for (const expense of props.expenses) {
+  const expenseMount = expense.date.getMonth(); // 0에서 시작
+  chartDataPoints[expenseMount].value += expense.amount;
+}
+```
+
+- `expenseMount`는 0에서 시작하고 11에서 끝난다. 이는 `dataPoints`의 index로 정확히 적용되기 때문에 `chartDataPoints`에서 `expenseMount`로 찾아온 달(Month)을 index로 사용한다. 그리고 `+=` 연산자로 `chartDataPoints[expenseMount].value` 에 지출 비용인 `expense.amount`를 더해준다. `expense.amount`를 사용하여 주어진 달의 값을 증가시키는 것이다.
+- 이 for of loop는 모든 비용을 검토하고 각 달의 모든 비용을 합산해준다. 그리고 알맞은 달, 알맞은 `dataPoints`에 값을 할당해주고 있다. 이 for of loop가 끝나면 여전히 `chartDataPoints`은 그대로 있지만 `value` 값은 더이상 0이 아닐 것이다. 다만 각 달의 비용에 대해 합산된 값을 가질 것이다. 이제 `Chart`에 props으로 `dataPoints`를 pass down 해줌으로써 `Chart`에서 `dataPoints`를 기반으로 작동될 수 있도록 했다.
+
+```js
+const ExpensesChart = (props) => {
+  return <Chart dataPoints={chartDataPoints} />;
+};
+```
+
+- `Chart` 컴포넌트로 돌아와 전달받은 `dataPoints`을 이용해서 `maxValue`를 구할 수 있도록 계산해줄 것이다. 이제 모든 달을 살펴보고 (연도마다) 전체 달 중에서 가장 큰 값을 찾아야 한다. 그것이 `Chart`에 표시되어야 하는 최대값(`maxValue`)이기 때문이다.
+
+```js
+const Chart = (props) => {
+  const totalMaxinum = Math.max();
+  ...
+};
+```
+
+- [MDN 문서 참조: Math.max()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Math/max)
+  > Math.max()함수는 입력값으로 받은 0개 이상의 숫자 중 가장 큰 숫자를 반환합니다.
+- 새로운 상수인 `totalMaxinum`를 추가했다. 이 상수는 `Math.max()` 메소드를 사용하여 최대값을 찾을 것이다. `max()`는 숫자 타입의 인자를 받아 가장 큰 숫자로 반환하는 메소드이다. 하지만 우리가 사용해야 하는 인자는 객체로 된 배열이므로 해당 객체의 특정 property만 사용해서 `max()` 메소드에 인자로 전달하도록 해야 한다.
+
+```js
+const dataPointValues = props.dataPoints.map((dataPoint) => dataPoint.value);
+```
+
+- `dataPointValues`라는 상수에 `props.dataPoints.map`을 할당하여 `map()` 메서드로 배열 요소(`dataPoints`)를 살피게끔 한뒤 객체에서 특정 property이자 숫자 타입인 `value` 값으로 반환하도록 했다. 이제 `dataPointValues`는 숫자 타입으로 된 배열이 되었다.
+
+```js
+const dataPointValues = props.dataPoints.map((dataPoint) => dataPoint.value);
+const totalMaxinum = Math.max(...dataPointValues);
+```
+
+- 그러나, `dataPointValues`는 숫자 "배열"이다. `Math.max()` 안에 숫자를 인자로 넣어줘야 하기 때문에 spread operator를 사용하여 모든 배열의 element를 가져와 `max()` 메서드에 독립형 인자로 추가하도록 했다. 이제 `max()` 메소드는 12개의 `dataPointValues` 인자를 받게 되었다.
+
+```js
+{
+  props.dataPoints.map((dataPoint) => (
+    <ChartBar
+      key={dataPoint.label}
+      value={dataPoint.value}
+      maxValue={totalMaxinum}
+      label={dataPoint.label}
+    />
+  ));
+}
+```
+
+- 마지막으로 `props.dataPoints`를 매핑하는 곳에서 `maxValue`의 값을 `totalMaxinum`으로 지정해주면 완벽하게 업데이트 된다.
+
+</br>
