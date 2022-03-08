@@ -9,6 +9,7 @@
 - [Outputting Conditional Content](#조건부-내용-출력하기)
 - [Adding Conditional Return Statements](#조건-명령문-반환-추가하기)
 - [Practice | Conditional Content](#조건부-내용-다루기)
+- [Demo App: Adding a Chart](#데모앱-차트-추가하기)
 
 ## 데이터의 렌더링 목록
 
@@ -369,7 +370,7 @@ return (
 ```
 
 - AND Operator(&&)를 사용하여 작성했던 로직을 모두 지워주고, `expensesContent` 값만 point 해주었다.
-- 이 `expensesContent` 변수는 `<p>No Expense Found</p>`나 JSX 요소 집합(`filteredExpenses.length > 0`을 만족시켰을 때 렌더링 되는 JSX 코드 로직) 전부 렌더링 가능하므로 JSX 코드 내에서 모두 쓰일 수 있게 된다. 이로써 return 되는 JSX 코드 내에서 작성했을 때보다 가독성이 높아졌음을 확인할 수 있다.
+- 이 `expensesContent` 변수는 `<p>No Expense Found</p>`나 JSX 요소 배열(`filteredExpenses.length > 0`을 만족시켰을 때 렌더링 되는 JSX 코드 로직) 전부 렌더링 가능하므로 JSX 코드 내에서 모두 쓰일 수 있게 된다. 이로써 return 되는 JSX 코드 내에서 작성했을 때보다 가독성이 높아졌음을 확인할 수 있다.
 
 </br>
 
@@ -504,5 +505,48 @@ if (props.items.length === 0) {
 
 - 이로써 의미론적인(Semantics) 코드를 작성할 수 있게 되었다.
 - [MDN 문서 참조: Semantics](https://developer.mozilla.org/ko/docs/Glossary/Semantics)
+
+</br>
+
+## 데모앱 차트 추가하기
+
+- chart 기능을 추가하기 위해 `Chart`와 `ChartBar` 컴포넌트를 추가했다. `Chart`에서는 `ChatBar`를 import 하여 JSX 블록에서 렌더링해줄 것이다.
+
+```js
+import ChartBar from "./ChartBar";
+
+const Chart = (props) => {
+  return <div className="chart"></div>;
+};
+
+export default Chart;
+```
+
+- 만약 `Chart` 컴포넌트가 어플리케이션 내부 어딘가에서 사용된다고 할 때, `Chart` 컴포넌트는 어떤 데이터를 point 할 예정이기 때문에, `props`로 `ChatBar`의 요소들을 렌더링하기 위한 준비를 한다. 그리고 `Chart` 컴포넌트에서 얼마나 많은 데이터를 point 사용할지 또 어떤 값을 렌더링할 것인지 결정할 수 있기 때문에, point 될 데이터의 배열을 가지고 모든 데이터를 `ChatBar` 컴포넌트에 매핑하여 출력할 것이다.
+
+```js
+<div className="chart">
+  {props.dataPoints.map((dataPoint) => (
+    <ChartBar />
+  ))}
+</div>
+```
+
+- 아직 `Chart` 컴포넌트에서 사용할 데이터가 존재하지 않기 때문에, 임의로 이름을 설정하여 `map()`으로 `ChartBar` 컴포넌트를 출력하는 로직을 작성했다. 모든 개별 데이터를 `dataPoint`로 명명하고 이것을 이용하여 `ChartBar` 컴포넌트 내부로 맵핑할 것이다. 이제 `ChartBar` 컴포넌트는 point되는 데이터(`props.dataPoints`) 갯수와 동일한 갯수로 생성할 수 있게 되었다. 또한, 우리는 데이터를 `ChartBar`로 pass 해서 어떻게 렌더링될 것인지(어떤 데이터 추출 값이 렌더링 될 것인지)를 컨트롤할 수 있게 되었다.
+
+```js
+{
+  props.dataPoints.map((dataPoint) => (
+    <ChartBar
+      key={dataPoint.label}
+      value={dataPoint.value}
+      maxValue={null}
+      label={dataPoint.label}
+    />
+  ));
+}
+```
+
+- `ChartBar` 컴포넌트 내부에서 필요한 데이터 요소들을 추출하여 하나하나 설정해주었다. 먼저, React가 고유식별자를 통해서 데이터 목록의 순서를 확인하고 효과적으로 렌더링할 수 있도록 `key` 값으로 `dataPoint.label`을 달아주었다. 해당 point되는 데이터에 `id` 값이 있다면 이것으로 사용해도 되지만, `dataPoint.label`이 고유의 값을 가졌다면 이것을 사용해도 되기에 `key` 값으로 `dataPoint.label`을 설정해주었다. 그리고 모든 `ChartBar`는 `value`를 구상하며 이는 전체 `Chart`의 최대값과 관련이 있기 때문에 `maxValue`를 설정해준다. `maxValue`는 고유값이며 point된 데이터에서 가져온 요소가 아니기 때문에 임의로 `null` 값으로 지정하여 비워주었다.
 
 </br>
