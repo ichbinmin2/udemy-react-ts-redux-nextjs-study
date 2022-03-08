@@ -12,3 +12,4 @@
 - [React Basics & Working With Components](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-03/section03.md)
 - [React State & Working With Events](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-04/section04.md)
 - [Rendering Lists & Conditional Content](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-05/section05.md)
+- [Styling React Components](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-06/section06.md)
