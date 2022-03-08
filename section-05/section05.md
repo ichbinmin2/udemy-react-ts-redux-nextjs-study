@@ -10,6 +10,7 @@
 - [Adding Conditional Return Statements](#조건-명령문-반환-추가하기)
 - [Practice | Conditional Content](#조건부-내용-다루기)
 - [Demo App: Adding a Chart](#데모앱-차트-추가하기)
+- [Adding Dynamic Styles](#동적-스타일-추가하기)
 
 ## 데이터의 렌더링 목록
 
@@ -550,3 +551,102 @@ export default Chart;
 - `ChartBar` 컴포넌트 내부에서 필요한 데이터 요소들을 추출하여 하나하나 설정해주었다. 먼저, React가 고유식별자를 통해서 데이터 목록의 순서를 확인하고 효과적으로 렌더링할 수 있도록 `key` 값으로 `dataPoint.label`을 달아주었다. 해당 point되는 데이터에 `id` 값이 있다면 이것으로 사용해도 되지만, `dataPoint.label`이 고유의 값을 가졌다면 이것을 사용해도 되기에 `key` 값으로 `dataPoint.label`을 설정해주었다. 그리고 모든 `ChartBar`는 `value`를 구상하며 이는 전체 `Chart`의 최대값과 관련이 있기 때문에 `maxValue`를 설정해준다. `maxValue`는 고유값이며 point된 데이터에서 가져온 요소가 아니기 때문에 임의로 `null` 값으로 지정하여 비워주었다.
 
 </br>
+
+## 동적 스타일 추가하기
+
+- 이제 `ChartBar` 컴포넌트에 동적으로 스타일을 추가하고자 한다. 먼저 미리 JSX 코드를 마크업한 `ChartBar` 컴포넌트를 확인해보자.
+
+```js
+<div className="chart-bar">
+  <div className="chart-bar__inner">
+    <div className="chart-bar__fill"></div>
+  </div>
+  <div className="chart-bar__label">{props.label}</div>
+</div>
+```
+
+- `chart-bar__fill`라는 className을 가진 `div`는 차트 바가 채워지려면 얼마나 필요한지 알려주는 데 필요한 요소이다.
+
+```CSS
+.chart-bar__fill {
+  background-color: #4826b9;
+  width: 100%;
+  transition: all 0.3s ease-out;
+}
+```
+
+- `.chart-bar__fill`가 가진 스타일 값을 확인해보면 배경색을 정의하고 있다. 하지만 앞서 이야기한 스타일(차트 바가 채워지려면 얼마나 필요한지)을 구현하기 위해서는 중요한 한가지 요소가 빠져있다. 바로 "채워진 차트 바의 높이" 값이다.
+
+```CSS
+.chart-bar__inner {
+  height: 100%;
+  ...;
+}
+```
+
+- 전체 차트 바의 스타일을 담당하고 있는 `.chart-bar__inner`를 확인해보면 부모 컨테이너(`Chart.js`)의 "10rem"에 따른 높이 값("100%")으로 설정되어 있다.
+- 하지만 바를 얼마나 채울 수 있는지는 우리가 받는 데이터에 따라 달라져야 할 것이다. 즉, 데이터 값(여기서는 prop으로 받은 `value`)에 따라 영향을 받는다는 의미이다. 왜냐하면 우리는 앞서 `ChartBar` 컴포넌트에 데이터 요소들을 추출해서 넣어줄 때 최대값(여기서는 prop으로 받은 `maxValue`)과 관련이 있는 값을 넣어서 채워주기로 목표했기 때문이다. 따라서 만약 전체 Chart의 최대값(`maxValue`)이 100이고 특정 `ChartBar`의 값(`value`)이 50이라면 `ChartBar`의 높이를 50%까지 채울 수 있게 되는 것이다.
+- 그러므로, `ChartBar` 컴포넌트에서 `ChartBar`가 얼마나 채워질 것인지를 계산해야 하는 로직이 필요하다.
+
+### `ChartBar`의 높이 계산하기
+
+```js
+let barFillHeight = "0%";
+
+if (props.maxValue > 0) {
+}
+```
+
+- 먼저, `barFillHeight` 라는 변수를 설정하고 "0%"로 값을 할당해주었다. 나중에 CSS 형식으로 할당될 것이기 때문에 문자열로 넣어준 것이다.
+- `barFillHeight`를 이용하여 `if` 문을 작성해준다. 이 로직은 만약 0보다 큰 최대값`props.maxValue`을 얻게됐을 떄를 가정하여 결과값을 반환해줄 것이다. 만약 expense가 없는 달을 고를 때와 같은 특정 데이터에서는 0이 나올 수도 있기 때문이다.
+
+```js
+if (props.maxValue > 0) {
+  barFillHeight = Math.round((props.value / props.maxValue) * 100) + "%";
+}
+```
+
+- [MDN 문서 참조: Math.round()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Math/round)
+
+  > Math.round() 함수는 입력값을 반올림한 수와 가장 가까운 정수 값을 반환합니다.
+
+- 변수 `barFillHeight`에 `Math.round()`를 사용하여 정수값을 반환할 수 있도록 하고 그 안에 계산식을 넣어준다. 최대값(`props.maxValue`)에서 값(`props.value`)을 나누고 여기에 100을 곱하도록 한다. 이는 해당 `ChartBar`가 어느 정도까지 높게 채워질 것인지를 0부터 100 사이의 퍼센트(%)로 계산해줄 것이다. 그리고 마지막에 변수 `barFillHeight`이 CSS 형식으로 할당될 수 있도록 문자열 `"%"`를 더해주었다.
+- 정리하자면, 지금까지 작성한 로직들을 통해 `ChartBar`의 높이를 설정하고자 하는 것이다. 즉, `chart-bar__fill`라는 className을 가진 `div`의 높이를 CSS 형식으로 설정해준 것이다. 마지막으로 이 높이 값을 style로 적용하기 위해서 이 `div`에 `style` 요소를 추가하자.
+
+### `ChartBar`의 높이 칠해주기
+
+```js
+<div className="chart-bar__fill" style={{}}></div>
+```
+
+- `barFillHeight`을 사용하여 계산된 높이 값은 동적일 것이다. 단일 `{}`를 사용해서 style에 값으로 할당해주면 동적으로 무언가를 출력할 수 있게 되고, 그러면 동적인 값이 JavaScript 객체가 되며 이 또한, `{}`로 생성된다. 그래서 전체적으로는 `{{}}` 이중 중괄호를 사용하게 된다. 물론, 특별하지 않은 문법이지만 하나 특이한 점이 있다면 바로 style이 JavaScript 객체를 값으로 필요로 한다는 것이다.
+
+```js
+<div className="chart-bar__fill" style={{}}></div>
+```
+
+- 그러면 이 객체는 CSS 속성의 이름을 `key name`, 즉 Property로 지정하고 Property의 `value`는 `value`가 된다. 예를 들어보면, "background-color"를 `key name`으로 사용하여 `value` 값으로 "red"로 설정하여 배경색을 지정할 수도 있고,
+
+```js
+<div className="chart-bar__fill" style={{ "background-color": "red" }} >
+```
+
+- `ChartBar`의 높이가 필요한 우리의 경우에는 높이(`height`)를 `barFillHeight` 으로 설정할 수 있다.
+
+```js
+<div className="chart-bar__fill" style={{ height: barFillHeight }}></div>
+```
+
+### CSS property name 작성하기
+
+- 만약, CSS property name(`key name`) 을 대쉬(`-`)를 사용하여 작성할 때는 반드시 따옴표(`" "`)를 써서 작성해야 한다. 만약 따옴표(`" "`)로 감싸지 않는다면 유효하지 않은 property name이 되기 때문이다.
+
+```js
+<div className="chart-bar__fill" style={{ "background-color": "red" }} >
+```
+
+- "Camel case"로 작성한다면, style 객체의 property name(`key name`)에 `" "` 따옴표로 감싸지 않아도 된다.
+
+```js
+<div className="chart-bar__fill" style={{ backgroundColor : "red" }} >
+```
