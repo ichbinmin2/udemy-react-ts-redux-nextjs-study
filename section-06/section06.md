@@ -7,6 +7,7 @@
 - [Introducing Styled Components](#Styled-Components-소개)
 - [Styled Components & Dynamic Props](#Styled-Components와-동적-Props)
 - [Styled Components & Media Queries](#Styled-Components와-미디어-쿼리)
+- [Using CSS Modules](#CSS-모듈-사용하기)
 
 ## 동적으로 인라인 스타일 설정하기
 
@@ -548,5 +549,67 @@ const Button = styled.button`
 ```
 
 - 미디어 쿼리에 해당 조건 `min-width: 768px`이 충족될 때 이 스타일드 컴포넌트의 엘리먼트에 영향을 미치는 스타일을 내부에 적용하면 완료이다. 그저 미디어쿼리가 정한 조건이 충족될 때 적용될 스타일 속성만 있으면 된다. 그리고 이것은 온전히 styled-components 덕분일 것이다. Styled-Components은 컴포넌트에 스타일을 입히고 컴포넌트가 설정한 스타일에만 영향을 주도록 할 때 사용할 수 있는 훌륭한 패키지라고 말할 수 있다.
+
+</br>
+
+## CSS 모듈 사용하기
+
+- 이전에 일반적인 CSS 접근법으로 범위가 지정되지 않는 전역 스타일을 사용하는 방법으로 스타일을 지정해왔고, 이 방법에서 파생되는 className의 중복이라는 한계를 styled-components으로 차단해왔다. 하지만 이제는 CSS 모듈이라는 기능으로 기본적인 CSS 접근법의 단점을 보강하면서도 CSS 자체를 발전시킬 수도 있는 방법이 등장했다. 만약, CSS 와 JavaScript가 분리되는 것을 원한다면, CSS 모듈을 사용하는 방법을 고려해봐도 좋을 것이라 생각한다. (styled-components 와 비교하는 것은 옳지 않으며, 그저 개인의 선택과 취향이 고려되는 문제라고 보면 된다.)
+
+### CSS Modules Stylesheet
+
+- CSS 모듈은 브라우저에서 코드를 실행하기 전에 코드 변환이 필요하기 때문에 이를 지원하도록 구성된 프로젝트 에서만 사용할 수 있는 기능이다. CRA로 생성한 React 프로젝트는 CSS module 을 지원하도록 구성되어 있다. (만약 CRA로 세팅하지 않았다면, 추가적으로 설치가 필요하다.)
+- [Adding a CSS Modules Stylesheet](https://create-react-app.dev/docs/adding-a-css-modules-stylesheet/)
+
+- 먼저, styled-components로 스타일을 지정해주었던 `Button` 컴포넌트로 돌아가 이전에 작성했던 일반적인 CSS 스타일링 형태로 원복시킨다.
+
+```js
+import React from "react";
+import "./Button.css";
+
+const Button = (props) => {
+  return (
+    <button type={props.type} className="button" onClick={props.onClick}>
+      {props.children}
+    </button>
+  );
+};
+export default Button;
+```
+
+- CSS 모듈로 사용하기 위해서 가장 먼저 해야할 일은 해당 컴포넌트가 import 해온 CSS 파일의 이름에 `module`을 추가하는 것이다. `Button.css`를 `Button.module.css`로 수정한다. 이것은 CSS 모듈이 작동하도록 기본 컴파일 프로세스에 코드를 변환하라고 보내는 신호이다.
+
+![Button.module.css](https://user-images.githubusercontent.com/53133662/157670023-acf9e01e-f694-4f08-9293-88a9da0cf448.png)
+
+```js
+import styles from "./Button.module.css";
+```
+
+- import 해왔던 파일 이름에 `module`을 추가하고, `styles`로 받아올 수 있도록 작성한다.
+
+```js
+import React from "react";
+import styles from "./Button.module.css";
+
+const Button = (props) => {
+  return (
+    <button type={props.type} className={styles.button} onClick={props.onClick}>
+      {props.children}
+    </button>
+  );
+};
+export default Button;
+```
+
+- 이제 문자열로 작성된 className 대신 동적으로 넣어줄 수 있도록 중괄호를 생성한 뒤 CSS 파일에서 가져온 `styles`를 넣어준다. `styles`은 객체이며, 이 객체에서는 파일에서 프로퍼티로 정의한 모든 class(`.button`과 같은)가 존재할 것이다. 즉, CSS 파일에 `.button` class를 추가했다면 `styles` 객체 안에 `.button` 프로퍼티가 존재하는 것이다. 이것은 특별한 방식으로 이 `.button` class를 `<button>` element에 적용시킨다.
+- 저장하고 확인해보면, 이전과 동일한 방식으로 작동하고 있는 것을 확인할 수 있다. 라이브 서버를 열어서, Elements 항목을 확인해보자. 이전에 styled-components가 추가한 class 와는 다른 방식으로 변환되었음을 알 수 있다.
+
+<img width="649" alt="image" src="https://user-images.githubusercontent.com/53133662/157675895-c7abb2a7-bf49-4ce6-88ee-0ee2670535a5.png">
+
+- 기본적으로 CSS 모듈로 적용하여 변환된 element의 class를 확인해보면, "컴포넌트 이름\_class 이름\_\_고유해시"로 붙여지는 것을 알 수 있다.
+
+### 정리
+
+- CSS 모듈이 하는 일, CSS 모듈의 개념, 이 Build 프로세스가 내부에서 하는 작업은 기본적으로 CSS class와 CSS 파일을 가져와서 class 이름을 고유한 이름으로 변환하는 것이다. (그리고 이것이 CSS 모듈의 핵심 작업일 것이다.) 즉, CSS 모듈의 개념은 CSS 파일에 설정한 CSS 스타일이 이 CSS 파일을 import 하는 컴포넌트로 범위가 지정되도록 하는 것이라 말할 수 있다. CSS 모듈은 CSS 파일에 스타일을 설정하면서도 여전히 사용하는 컴포넌트로 적용 범위를 지정할 수 있다는 두가지 장점 모두를 가지고 있는 스타일 적용 방법이다.
 
 </br>
