@@ -6,6 +6,7 @@
 - [Setting CSS Classes Dynamically](#동적으로-CSS-클래스-설정하기)
 - [Introducing Styled Components](#Styled-Components-소개)
 - [Styled Components & Dynamic Props](#Styled-Components와-동적-Props)
+- [Styled Components & Media Queries](#Styled-Components와-미디어-쿼리)
 
 ## 동적으로 인라인 스타일 설정하기
 
@@ -526,5 +527,26 @@ const FormControl = styled.div`
 ```
 
 - styled-components의 props를 이용하는 방법으로 동적으로 스타일링을 완료했다. 이제 이전과 동일하게 동적으로 스타일이 변하는 것을 확인할 수 있을 것이다.
+
+</br>
+
+## Styled Components와 미디어 쿼리
+
+- 미디어 쿼리는 디자인의 퀄리티를 높이고 싶을 때 중요하다. 만약 stlyed-components에서 미디어 쿼리를 적용하고 싶다면 백틱 사이에 스타일 속성을 지정하듯이 그대로 작성하면 되기 때문에 아주 간단하다.
+
+```js
+const Button = styled.button`
+  width: 100%;
+  ...
+
+  @media (min-width: 768px) {
+    width: auto;
+  }
+
+  ...
+`;
+```
+
+- 미디어 쿼리에 해당 조건 `min-width: 768px`이 충족될 때 이 스타일드 컴포넌트의 엘리먼트에 영향을 미치는 스타일을 내부에 적용하면 완료이다. 그저 미디어쿼리가 정한 조건이 충족될 때 적용될 스타일 속성만 있으면 된다. 그리고 이것은 온전히 styled-components 덕분일 것이다. Styled-Components은 컴포넌트에 스타일을 입히고 컴포넌트가 설정한 스타일에만 영향을 주도록 할 때 사용할 수 있는 훌륭한 패키지라고 말할 수 있다.
 
 </br>
