@@ -5,6 +5,7 @@
 - [Setting Dynamic Inline Styles](#동적으로-인라인-스타일-설정하기)
 - [Setting CSS Classes Dynamically](#동적으로-CSS-클래스-설정하기)
 - [Introducing Styled Components](#Styled-Components-소개)
+- [Styled Components & Dynamic Props](#Styled-Components와-동적-Props)
 
 ## 동적으로 인라인 스타일 설정하기
 
@@ -195,14 +196,13 @@ const goalInputChangeHandler = (event) => {
 
 ## Styled Components 소개
 
-- style과 class를 동적으로 설정할 줄 아는 것은 매우 중요하다. 지금까지 React 코드로 그것을 컨트롤했다면, 이번에는 스타일링 그 자체에 대해서 알아보도록 하자.
-- 현재까지 우리는 css만 이용하고 있다. 대부분이 class 셀렉터를 통한 스타일 적용이었고 몇가지 태그 셀렉터 등과 결합되는 일반 셀렉터가 있는 일반 CSS 파일을 사용했다. 그리고 이 CSS 파일은 사용하고자 하는 컴포넌트에 import 하여 적용시켰다.
+- style과 class를 동적으로 설정할 줄 아는 것은 중요할 것이다. 현재까지 우리는 css만 이용하고 있었다. 대부분이 class 셀렉터를 통한 스타일 적용이었고 몇가지 태그 셀렉터 등과 결합되는 일반 셀렉터가 있는 일반 CSS 파일을 사용했다. 그리고 이 CSS 파일은 사용하고자 하는 컴포넌트에 import 하여 적용시켰다. 이렇게 지금까지 React 코드로 컨트롤했지만, 이번에는 스타일링 그 자체에 대해서 알아보려고 한다.
 
 ```js
 import "./Button.css";
 ```
 
-- 그러나 앞에서 몇 차례 강조한 것처럼 이 스타일들의 적용 범위는 import한 컴포넌트에만 국한되지 않는다. 예를 들어보자. DOM 어딘가에 `form-control` 라는 class를 가진 다른 element가 있다면, `form-control`에 작성한 스타일 요소들이 영향을 주게 된다. 그러니까 `form-control`를 어떤 스타일을 적용시킨 하나의 컴포넌트가 다른 컴포넌트의 엘리먼트와 동일한 className(`form-control`)을 가지고 있다면, `form-control`에 작성한 스타일 요소가 동일하게 영향을 미쳐서 적용된다는 소리이다. 이는 기본값으로는 스타일의 범위가 지정되지 않기 때문이다. 물론 셀렉터 name의 중복을 고려하여 조금 더 신경을 쓴다던지 하는 방식을 고수하면 반드시 문제가 될 사항은 아니라고 볼 수도 있겠지만, 만약 큰 프로젝트라면 어떨까? 아마도 많은 개발자들이 코드 작업을 할 것이고 본인도 모르게 className을 중복으로 사용하게 될 가능성이 높을 것이다. 이런 중복을 피하기 위해서 다양한 방법이 존재하지만 이번에는 가장 인기 있는 두가지 방법 중 하나를 소개하려고 한다.
+- 앞에서 몇 차례 강조한 것처럼 이 스타일들의 적용 범위는 import한 컴포넌트에만 국한되지 않는다. 예를 들어보자. DOM 어딘가에 `form-control` 라는 class를 가진 다른 element가 있다면, `form-control`에 작성한 스타일 요소들이 그 element까지 영향을 주게 된다. 그러니까 `form-control`에 어떤 스타일을 적용시킨 하나의 컴포넌트가 다른 컴포넌트의 엘리먼트와 동일한 className(`form-control`)을 가지고 있다면, `form-control`에 작성한 스타일 요소가 동일하게 영향을 미쳐서 적용된다는 소리이다. 이는 기본값으로는 스타일의 범위가 지정되지 않기 때문에 발생하는 문제이다. 물론 셀렉터 name의 중복을 고려하여 조금 더 신경을 쓴다던지 하는 방식을 고수하면 반드시 문제가 될 사항은 아니라고 볼 수도 있겠지만, 만약 큰 프로젝트라면 어떨까? 아마도 많은 개발자들이 코드 작업을 할 것이고 본인도 모르게 className을 중복으로 사용하게 될 가능성이 높을 것이다. 이런 중복을 피하기 위해서 다양한 방법이 존재하지만 이번에는 가장 인기 있는 두가지 방법 중 하나를 소개하려고 한다.
 
 ### Styled-Components
 
@@ -213,7 +213,7 @@ import "./Button.css";
  yarn add styled-components
 ```
 
-- `Button.js` 컴포넌트를 이용하여 Styled-Components 를를 연습해볼 것이다. 먼저 `Button.js`의 원본 코드를 확인해보자.
+- `Button.js` 컴포넌트를 이용하여 Styled-Components 를 연습해볼 것이다. 먼저 `Button.js`의 원본 코드를 확인해보자.
 
 ```js
 import "./Button.css";
@@ -320,5 +320,211 @@ export default Button;
 ### 정리
 
 - styled-components는 우리가 설정한 스타일을 토대로 생성된 className으로 스타일 속성들을 래핑한다. 이렇게 styled-components 패키지는 모든 styled-components 마다 고유한 className을 가지므로 앱의 다른 컴포넌트에 영향을 미치지 못하게 한다.
+
+</br>
+
+## Styled-Components와 동적 Props
+
+- Styled-Components를 특정 컴포넌트에서만 사용하고 싶다면 이전에 `Button`처럼 새로운 컴포넌트를 생성하지 않고, 같은 컴포넌트 파일 내에서 `styled`를 작성하는 방법도 있다. (해당 스타일드 컴포넌트가 여러번 재사용되지 않는 이상 가장 흔히 사용되는 방법이기도 하다.)
+- `CourseInput` 컴포넌트를 통해서 예시를 들어보자. 현재는 CSS 파일을 import 하여 class 선택자로 스타일을 적용하고 있다. `form-control`과 `invalid`를 class로 가지고 있는 `<div>`를 이용해서 styled를 작업할 생각이다.
+
+```js
+<div className={`form-control ${!isValid ? "invalid" : ""}`}>
+  <label>Course Goal</label>
+  <input type="text" onChange={goalInputChangeHandler} />
+</div>
+```
+
+```css
+.form-control {
+  margin: 0.5rem 0;
+}
+
+.form-control label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.form-control input {
+  display: block;
+  width: 100%;
+  border: 1px solid #ccc;
+  font: inherit;
+  line-height: 1.5rem;
+  padding: 0 0.25rem;
+}
+
+.form-control input:focus {
+  outline: none;
+  background: #fad0ec;
+  border-color: #8b005d;
+}
+
+.form-control.invalid input {
+  border-color: red;
+  background-color: #fad0ec;
+}
+
+.form-control.invalid label {
+  color: red;
+}
+```
+
+- `CourseInput` 컴포넌트 내부에 `Button`에서 했던 방식처럼 `FormControl` 라는 상수를 만들고 styled 를 할당해보자. 앞서, `form-control`과 `invalid`를 class로 가지고 있는 `<div>` 를 대신할 styled를 생성할 것이기 때문에 styled에 `div` 메소드를 불러오고 백틱 사이에 `CourseInput.css` 안에 있는 스타일 요소들도 모두 가져와 복사해준다.
+
+```js
+const FormControl = styled.div`
+  .form-control {
+    margin: 0.5rem 0;
+  }
+
+  .form-control label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-control input {
+    display: block;
+    width: 100%;
+    border: 1px solid #ccc;
+    font: inherit;
+    line-height: 1.5rem;
+    padding: 0 0.25rem;
+  }
+
+  .form-control input:focus {
+    outline: none;
+    background: #fad0ec;
+    border-color: #8b005d;
+  }
+
+  .form-control.invalid input {
+    border-color: red;
+    background-color: #fad0ec;
+  }
+
+  .form-control.invalid label {
+    color: red;
+  }
+`;
+```
+
+- `.form-control` class를 가진 `<div>` 태그를 대체할 것이기 때문에 `.form-control` 클래스 항목을 모두 지워준다. `label`과 `input` 같은 중첩 element도 가상 선택자 `&` 기호를 이용하여 target 해준다.
+
+```js
+const FormControl = styled.div`
+  margin: 0.5rem 0;
+
+  & label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  & input {
+    display: block;
+    width: 100%;
+    border: 1px solid #ccc;
+    font: inherit;
+    line-height: 1.5rem;
+    padding: 0 0.25rem;
+  }
+
+  & input:focus {
+    outline: none;
+    background: #fad0ec;
+    border-color: #8b005d;
+  }
+
+  &.invalid input {
+    border-color: red;
+    background-color: #fad0ec;
+  }
+
+  &.invalid label {
+    color: red;
+  }
+`;
+```
+
+- 가상 선택자 `&` 기호를 붙이면 styled-components 에게 `div` 내부의 관한 element 임을 알려주는 것이다. `.invalid`의 경우 `div`와 같은 위치에 있는 class 이기 때문에 가상 선택자 `&`을 빈칸 없이 바로 붙여준다. 이제 다시 JSX 코드로 돌아가서 `FormControl` 스타일드 컴포넌트가 적용될 수 있도록 `<div>` 태그가 있던 위치에 스타일드 컴포넌트가 대체할 수 있도록 수정하자.
+
+```js
+<FormControl>
+  <label>Course Goal</label>
+  <input type="text" onChange={goalInputChangeHandler} />
+</FormControl>
+```
+
+- 이렇게 해당 `FormControl` 스타일드 컴포넌트를 저장해보면 스타일이 제대로 적용되고 있음을 확인할 수 있다. 하지만 이전에 조건식을 이용하여 동적으로 스타일을 적용했던 부분(`${!isValid ? "invalid" : ""}`)이 사라져 더이상 `invalid` 클래스에 대한 스타일이 적용되지 않는다. 다행인 점은 styled-components 함수에 의해 반환되는 컴포넌트가 우리가 설정한 모든 props를 컴포넌트(ex. `<FormControl>`)에 전달할 수 있다는 것이다.
+
+```js
+<FormControl className={!isValid && "invalid"}>...</FormControl>
+```
+
+- className으로 괄호를 생성하고 그 안에 `&&` 로 `isValid`가 false 이면, `invalid` class가 추가되도록 `&&` 조건식을 작성해주었다. (만약 `isValid`가 true 라면 어떤 class도 추가하지 않는다.) 이제 확인해보면 목표를 빈값으로 추가할 때마다 전과 같이 동적으로 스타일이 변하는 것을 알 수 있다.
+
+### Styled-Components의 Props를 이용한 동적 스타일링 구현하기
+
+- 앞서 저런 방법으로 styled-components를 동적으로 스타일링을 할 수도 있지만, styled-components가 제공하는 다른 기능을 사용해봐도 좋을 것이다. 그것은 바로 styled-components에 props를 추가하는 것이다. `FormControl` 스타일드 컴포넌트의 백틱 사이에서, 즉 스타일 요소 안에서 props를 이용하여 동적으로 스타일을 변화시켜보자.
+
+```js
+<FormControl invalid={!isValid}>
+  <label>Course Goal</label>
+  <input type="text" onChange={goalInputChangeHandler} />
+</FormControl>
+```
+
+- props를 이용하기 위해서는 `<FormControl>` 컴포넌트 태그에 먼저 props로 내려줄 속성을 설정한다. 우리가 사용할 상태(state)는 `!isValid` 이므로 props의 이름으로 사용할 `invalid`을 설정하고, 중괄호로 `!isValid`를 할당해준다. 이제 props으로 전달한 `invalid`를 `FormControl`의 백틱 사이에서 사용해보자.
+
+```js
+& label {
+    color: ${(props) => (props.invalid)};
+}
+```
+
+- `${}` 를 사용해서 파라미터로 props를 받고 화살표 함수로 전달한다. 그런 다음 반환되어야 하는 텍스트를 작성한다. (props의 경우 스타일 컴포넌트가 가져오는 모든 props를 제공한다.)
+
+```js
+& label {
+    color: ${(props) => (props.invalid ? "red" : "black")};
+}
+```
+
+- props 으로 전달받은 `invalid`를 이용해서 조건식을 작성했다. 만약 `invalid`이면 (`!isValid`이면, false 이면) "red" 속성을 반환하고, 아니면(`!isValid`가 아니면, true 이면) "black"을 반환하도록 했다. props를 받아서 조정할 나머지 스타일 요소들도 동일하게 작성해준다.
+
+```js
+const FormControl = styled.div`
+  margin: 0.5rem 0;
+
+  & label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+    color: ${(props) => (props.invalid ? "red" : "black")};
+  }
+
+  & input {
+    display: block;
+    width: 100%;
+    /* border: 1px solid #ccc; */
+    border: 1px solid ${(props) => (props.invalid ? "red" : "#ccc")};
+    background: ${(props) => (props.invalid ? "#fad0ec" : "transparent")};
+    font: inherit;
+    line-height: 1.5rem;
+    padding: 0 0.25rem;
+  }
+
+  & input:focus {
+    outline: none;
+    background: #fad0ec;
+    border-color: #8b005d;
+  }
+`;
+```
+
+- styled-components의 props를 이용하는 방법으로 동적으로 스타일링을 완료했다. 이제 이전과 동일하게 동적으로 스타일이 변하는 것을 확인할 수 있을 것이다.
 
 </br>
