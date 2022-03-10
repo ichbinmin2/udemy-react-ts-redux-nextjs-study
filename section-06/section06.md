@@ -4,12 +4,13 @@
 
 - [Setting Dynamic Inline Styles](#동적으로-인라인-스타일-설정하기)
 - [Setting CSS Classes Dynamically](#동적으로-CSS-클래스-설정하기)
+- [Introducing Styled Components](#Styled-Components-소개)
 
 ## 동적으로 인라인 스타일 설정하기
 
 - React로 웹앱을 빌드하는 것은 단지 컴포넌트를 구성하고 로직이 작동되는 것이 전부가 아니다. 물론 이것이 가장 중요한 부분이고 React를 사용하는 가장 큰 이유이기는 하지만 React 앱을 빌드하는 데 있어서는 앱에 Style을 적용하는 것도 중요하다. 스타일링은 컴포넌트를 빌드하는 데에도 중요한 부분을 차지한다. 스타일을 동적으로 설정하고 특정 컴포넌트의 스타일이 다른 컴포넌트에 영향을 주지 못하게 설정하는 다양한 기법이 존재한다.
 
-- 프로젝트를 살펴보면 지금은 class 선택해서 적용하는 일반적인 css 적용 방법을 사용하고 있다. 허나, 이런 방식은 className이 동일할 경우 다른 컴포넌트의 스타일에서도 영향을 끼칠 가능성이 농후하다. 하지만 먼저, 스타일을 동적으로 그리고 inline 방식으로 적용하는 방법에 대해서 알아보자.
+- 프로젝트를 살펴보면 지금은 class 선택해서 적용하는 일반적인 css 적용 방법을 사용하고 있다. 허나, 이런 방식은 className이 동일할 경우 다른 컴포넌트의 스타일에서도 영향을 끼칠 가능성이 농후하다. 이런 한계를 극복하기 전에 먼저 스타일을 동적으로 그리고 inline 방식으로 적용하는 방법에 대해서 알아보자.
 
 ### 조건식을 활용한 동적 인라인 스타일 적용하기
 
@@ -114,7 +115,7 @@ const goalInputChangeHandler = (event) => {
 
 - 이제 사용자가 빈 값을 입력하여 제출하려고 시도할 때마다 스타일의 변화로 피드백을 줄 수 있게 되었다. 그리고 이때 다시 사용자가 유효한 값을 입력하면 이전에 받은 사용자 피드백을 초기화 되도록(처음으로 돌아갈 수 있도록) 하였다.
 
-### 결론
+### 정리
 
 - 지금까지 조건식을 활용하여 동적으로 인라인 스타일을 추가해보았다. 하지만 인라인 스타일은 언제나 최우선 순위로 고려되기 때문에 이전에 적용한 css 클래스를 덮어씌운다는 특이점이 있다. 인라인 스타일의 이런 부분들 때문에 보통은 다른 대안을 더 고려하게 된다.
 
@@ -189,5 +190,135 @@ const goalInputChangeHandler = (event) => {
 - `${}`를 사용하여 `isValid` 라는 상태(state)가 true 인지 false 인지를 확인하는 조건식을 작성한다. 만약 `isValid`가 false이면 `form-control invalid` class를 추가해줄 것이고, 아니라면 빈 문자열을 전달하면서 default 스타일(`form-control`로만 구현되는 CSS 스타일)을 유지할 수 있도록 했다. 이제 인라인으로 동적인 스타일을 구현하지 않아도 동일한 방식으로(동적으로) 스타일을 구현할 수 있게 되었다. 이것은 CSS 파일과 class 만으로 작업할 수 있으며, 예시처럼 간단한 구문으로 class를 동적으로 추가하거나 제거할 수 있기 때문에 매우 강력하다.
 
 ![input warning](https://user-images.githubusercontent.com/53133662/157386480-52c9cd64-fdf2-4811-816c-f6728baeb1e9.png)
+
+</br>
+
+## Styled Components 소개
+
+- style과 class를 동적으로 설정할 줄 아는 것은 매우 중요하다. 지금까지 React 코드로 그것을 컨트롤했다면, 이번에는 스타일링 그 자체에 대해서 알아보도록 하자.
+- 현재까지 우리는 css만 이용하고 있다. 대부분이 class 셀렉터를 통한 스타일 적용이었고 몇가지 태그 셀렉터 등과 결합되는 일반 셀렉터가 있는 일반 CSS 파일을 사용했다. 그리고 이 CSS 파일은 사용하고자 하는 컴포넌트에 import 하여 적용시켰다.
+
+```js
+import "./Button.css";
+```
+
+- 그러나 앞에서 몇 차례 강조한 것처럼 이 스타일들의 적용 범위는 import한 컴포넌트에만 국한되지 않는다. 예를 들어보자. DOM 어딘가에 `form-control` 라는 class를 가진 다른 element가 있다면, `form-control`에 작성한 스타일 요소들이 영향을 주게 된다. 그러니까 `form-control`를 어떤 스타일을 적용시킨 하나의 컴포넌트가 다른 컴포넌트의 엘리먼트와 동일한 className(`form-control`)을 가지고 있다면, `form-control`에 작성한 스타일 요소가 동일하게 영향을 미쳐서 적용된다는 소리이다. 이는 기본값으로는 스타일의 범위가 지정되지 않기 때문이다. 물론 셀렉터 name의 중복을 고려하여 조금 더 신경을 쓴다던지 하는 방식을 고수하면 반드시 문제가 될 사항은 아니라고 볼 수도 있겠지만, 만약 큰 프로젝트라면 어떨까? 아마도 많은 개발자들이 코드 작업을 할 것이고 본인도 모르게 className을 중복으로 사용하게 될 가능성이 높을 것이다. 이런 중복을 피하기 위해서 다양한 방법이 존재하지만 이번에는 가장 인기 있는 두가지 방법 중 하나를 소개하려고 한다.
+
+### Styled-Components
+
+- [Styled-Components 공식페이지](https://styled-components.com/)
+- Styled-Components 는 특정 스타일이 첨부된 컴포넌트를 빌드할 때 도와주는 패키지이다. 스타일이 첨부된 컴포넌트에만 영향을 미치게 하고, 다른 컴포넌트에는 영향을 주지 않는 또 다른 스타일 컴포넌트를 생성하는 것이다. Styled-Components 를 시작하기 위해서는 먼저 패키지를 설치해야 한다.
+
+```
+ yarn add styled-components
+```
+
+- `Button.js` 컴포넌트를 이용하여 Styled-Components 를를 연습해볼 것이다. 먼저 `Button.js`의 원본 코드를 확인해보자.
+
+```js
+import "./Button.css";
+
+const Button = (props) => {
+  return (
+    <button type={props.type} className="button" onClick={props.onClick}>
+      {props.children}
+    </button>
+  );
+};
+```
+
+- `Button.js` 컴포넌트는 CSS 파일을 import하여 class 선택기로 스타일을 적용하고 있다. 이제 Styled-Components를 이용하여 더 쉽게 스타일을 적용해보도록 하자.
+
+```js
+import styled from "styled-components";
+
+const Button = styled;
+```
+
+- 먼저, 이전에 import 했던 `Button.css`를 삭제하고 `styled-components`에서 `styled`를 import 해오자. 그리고 새 상수인 `Button`을 생성하여 `Button`을 리빌드한다. (이 `Button`에 할당하는 것은 함수형 컴포넌트가 아님을 명심하자.)
+
+```js
+import styled from "styled-components";
+const Button = styled.button``;
+```
+
+- `styled.button`을 입력하고 백틱을 붙인다. 이것을 "태그가 지정된 Template literals" 이라고 한다. 이것은 React나 styled-components 에서만 국한된 기능이 아니며, 기본 JavaScript 기능이기에 모든 JavaScript 프로젝트에서 사용할 수 있다.
+
+```js
+styled.button``;
+```
+
+- `button`은 이 `styled` 객체의 메소드이다. `styled`는 styled-components 에서 가져온 객체이며, `button` 메서드에 접근할 수 있도록 만들어준다. 이 메서드는 괄호로 호출하는 메서드가 아니라, 백틱을 붙여서 사용하는 특별한 메서드이다. 그리고 이 백틱 사이에서 작성한 스타일 요소들이 `button` 메서드로 전달된다. 재밌는 점은 이 `button` 메서드가 새로운 `button` 컴포넌트를 반환한다는 사실이다. 물론, styled 패키지가 모든 HTML 엘리먼트에 대한 메서드를 보유하고 있다는 점도 기억하자.
+
+<img width="985" alt="image" src="https://user-images.githubusercontent.com/53133662/157629362-f063e849-10b3-4ec5-8b65-7607aa60f5e5.png">
+
+- `Button.css`에서 작성한 모든 스타일을 복사하여 해당 백틱 사이에 넣어주자.
+
+```js
+const Button = styled.button`
+  .button {
+    font: inherit;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid #8b005d;
+    color: white;
+    background: #8b005d;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.26);
+    cursor: pointer;
+  }
+
+  .button:focus {
+    outline: none;
+  }
+
+  .button:hover,
+  .button:active {
+    background: #ac0e77;
+    border-color: #ac0e77;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.26);
+  }
+`;
+```
+
+- `Button.css`에서 그대로 복사하여 가져온 이 스타일들에 대한 약간의 수정이 필요한데, 아주 간단하다.
+
+```js
+const Button = styled.button`
+    font: inherit;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid #8b005d;
+    color: white;
+    background: #8b005d;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.26);
+    cursor: pointer;
+....
+`;
+```
+
+- 우리는 `button` 이라는 새로운 스타일 컴포넌트를 반환할 것이고, 이 컴포넌트 내부에는 `.button` 이라는 className으로 적용할 엘리먼트가 따로 없기 때문에 두 백틱 사이에서 전달한 스타일이 이 `button` 이라는 메소드에 직접 영향을 줄 것이기 때문에 `.button` 으로 전달한 class 괄호 부분을 지워준다. 이제 `.button`로 적용했던 스타일이 `button` 메서드에 직접적으로 전달되어 `button` 엘리먼트로 반환될 것이다.
+
+```js
+const Button = styled.button`
+  // ...
+
+  &:focus {
+    outline: none;
+  }
+
+  &:hover,
+  &:active {
+    background: #ac0e77;
+    border-color: #ac0e77;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.26);
+  }
+`;
+
+export default Button;
+```
+
+- 가상 선택자의 경우 `&` 기호로 대신할 수 있다. 이 또한 styled-components 패키지에서 지원하는 것이다. `&`로 작성된 코드를 해석하자면, "이 `button`에 `focus`가 있으면 스타일을 적용해달라"는 의미이다. 나머지 `hover`와 `active`에도 동일하게 적용할 수 있기에 수정을 진행했다. 이제 default로 반환된 `Button`은 여기에서 내보내는 컴포넌트에 전달할 수 있는 모든 props를 적용할 수 있게 되었다. `onClick` props을 추가하거나, `type`을 설정할 수도 있는 것이다. 그리고 이 모든 것은 styled-components 패키지에 의해 `button`으로 전달된다. 이제 이전과 동일한 모습으로 똑같이 적용되는 것을 확인 할 수 있을 것이다.
+
+### 정리
+
+- styled-components는 우리가 설정한 스타일을 토대로 생성된 className으로 스타일 속성들을 래핑한다. 이렇게 styled-components 패키지는 모든 styled-components 마다 고유한 className을 가지므로 앱의 다른 컴포넌트에 영향을 미치지 못하게 한다.
 
 </br>
