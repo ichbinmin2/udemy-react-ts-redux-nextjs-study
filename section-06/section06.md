@@ -371,7 +371,7 @@ export default Button;
 }
 ```
 
-- `CourseInput` 컴포넌트 내부에 `Button`에서 했던 방식처럼 `FormControl` 라는 상수를 만들고 styled 를 할당해보자. 앞서, `form-control`과 `invalid`를 class로 가지고 있는 `<div>` 를 대신할 styled를 생성할 것이기 때문에 styled에 `div` 메소드를 불러오고 백틱 사이에 `CourseInput.css` 안에 있는 스타일 요소들도 모두 가져와 복사해준다.
+- `CourseInput` 컴포넌트 내부에 `Button`에서 했던 방식처럼 styled-components의 styled를 import 하고 `FormControl` 라는 상수를 만들어 styled 를 할당해보자. 앞서, `form-control`과 `invalid`를 class로 가지고 있는 `<div>` 를 대신할 styled를 생성할 것이기 때문에 styled에 `div` 메소드를 불러오고 백틱 사이에 `CourseInput.css` 안에 있는 스타일 요소들도 모두 가져와 복사해준다.
 
 ```js
 const FormControl = styled.div`
