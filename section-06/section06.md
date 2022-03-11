@@ -8,6 +8,7 @@
 - [Styled Components & Dynamic Props](#Styled-Components와-동적-Props)
 - [Styled Components & Media Queries](#Styled-Components와-미디어-쿼리)
 - [Using CSS Modules](#CSS-모듈-사용하기)
+- [Dynamic Styles with CSS Modules](#CSS-모듈을-사용한-동적-스타일)
 
 ## 동적으로 인라인 스타일 설정하기
 
@@ -611,5 +612,48 @@ export default Button;
 ### 정리
 
 - CSS 모듈이 하는 일, CSS 모듈의 개념, 이 Build 프로세스가 내부에서 하는 작업은 기본적으로 CSS class와 CSS 파일을 가져와서 class 이름을 고유한 이름으로 변환하는 것이다. (그리고 이것이 CSS 모듈의 핵심 작업일 것이다.) 즉, CSS 모듈의 개념은 CSS 파일에 설정한 CSS 스타일이 이 CSS 파일을 import 하는 컴포넌트로 범위가 지정되도록 하는 것이라 말할 수 있다. CSS 모듈은 CSS 파일에 스타일을 설정하면서도 여전히 사용하는 컴포넌트로 적용 범위를 지정할 수 있다는 두가지 장점 모두를 가지고 있는 스타일 적용 방법이다.
+
+</br>
+
+## CSS 모듈을 사용한 동적 스타일
+
+- `Button`을 CSS 모듈로 스타일링한 것처럼 `CourseInput` 컴포넌트 역시 CSS 모듈로 스타일링해줄 것이다. 이번에는 조건식을 활용한 동적 스타일링이 필요하다. 이전에 styled-components로 작성한 모든 것을 주석 처리해주고, `CourseInput.css` 파일을 `CourseInput.module.css`로 바꿔주며, `styles`로 import 해온다.
+
+- styled-components로 스타일링을 적용했던 컴포넌트를 지우고 이전의 `<div>` 태그로 돌려놓은 뒤, className을 수정해준다.
+
+```jsx
+<div className={styles["form-control"]}>
+```
+
+- `styles.form-control` 는 `-` 때문에 error가 발생하므로 `[]` 로 감싸서 문자열로 넣어준다.
+
+```js
+<div className={`${styles["form-control"]}`}>
+```
+
+- 동적으로 작성해주기 위해서 `styles["form-control"]`를 백틱을 사용하여 `${}` 안에 넣어준다.
+
+```js
+<div className={`${styles["form-control"]} ${!isValid && styles.invalid}`}>
+```
+
+- 조건식(`isValid`의 true, false)을 통한 class 추가(`invalid`) 역시 같은 방식으로 작성해서 넣어주면 이전과 동일한 방식으로 작동된다. 마지막으로 styled-components에서 추가해주었던 미디어 쿼리 스타일링을 `Button.module.css`의 선택자(`.button`)를 추가해서 넣어주면 완료이다.
+
+```css
+.button {
+  width: 100%;
+  ...;
+}
+
+@media (min-width: 768px) {
+  .button {
+    width: auto;
+  }
+}
+```
+
+### 정리
+
+- 현재까지 기본 CSS 스타일링 방법과 styled-components, 그리고 CSS 모듈 방법 모두를 살펴보았다. 세가지 방법 모두 각각의 장/단점이 있기 때문에, 프로젝트에 어떤 방식이 더 나을지를 고려해보고 마음에 드는 방법을 택하여 사용하는 것이 좋다.
 
 </br>
