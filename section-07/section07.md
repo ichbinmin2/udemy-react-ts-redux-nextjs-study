@@ -5,6 +5,7 @@
 - [Understanding React Error Messages](#리액트-오류-메시지-이해하기)
 - [Analyzing Code Flow & Warnings](#코드의-흐름과-경고를-분석하기)
 - [Working with Breakpoints](#중단점-breakpoint-작업하기)
+- [Using the React DevTools](#리액트-DevTools-사용하기)
 
 ## 리액트 오류 메시지 이해하기
 
@@ -118,3 +119,13 @@ const addGoalHandler = (enteredText) => {
 ```
 
 </br>
+
+## 리액트 DevTools 사용하기
+
+- [React Developer Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=ko)
+
+### React Developer Tools : components
+
+![components](https://user-images.githubusercontent.com/53133662/158188957-0a1c3482-a8ed-41b7-a19d-a4aa28f0d726.png)
+
+- React Developer Tools 을 이용하면 인터페이스의 상태(state) 및 prop을 변경할 수 있고 또한 각 요소가 연결된 흐름을 파악할 수 있으며 다양한 동작 시나리오에 대해서 유스 케이스를 시험해볼 수 있다.
