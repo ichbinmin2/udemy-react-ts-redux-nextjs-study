@@ -4,6 +4,7 @@
 
 - [Understanding React Error Messages](#리액트-오류-메시지-이해하기)
 - [Analyzing Code Flow & Warnings](#코드의-흐름과-경고를-분석하기)
+- [Working with Breakpoints](#중단점-breakpoint-작업하기)
 
 ## 리액트 오류 메시지 이해하기
 
@@ -90,5 +91,30 @@ const addGoalHandler = (enteredText) => {
 - Warning 메세지를 하나하나 뜯어보면, 몇 가지 키워드가 등장하는 것을 확인할 수 있다. `Encountered two children with the same key`, `goal1`. `Non-unique keys`.
 - 이 Warning 메시지를 해석해보자면 현재 브라우저에서 사용되고 있는 `goal1` 은 고유한 `key`가 아니라는 것이다. 이는 삭제 기능에서 고유하지 않은 `key` 로 인하여 문제를 발생시킬 여지가 있다고 미리 경고를 보낸 것이다.
 - 이처럼, 개발자 도구에서 출력되는 메세지 들을 통해서 우리는 에러를 추측하고 찾아내며 결국에는 그 에러를 해결할 수 있는 것이다.
+
+</br>
+
+## 중단점 breakpoint 작업하기
+
+- 개발자 도구의 Sources 텝을 이용하여, 아이템을 지워주는 로직의 트리거가 있는 `CourseGoalItem.js`로 이동한 뒤 직접적으로 `id`를 지워주는 로직에 `breakpoint`를 추가한다.
+
+![image](https://user-images.githubusercontent.com/53133662/158186135-bb097c57-5f62-483c-83a7-5dd4e4ba3b44.png)
+
+- `breakpoint`를 추가한 뒤, 브라우저에서 문제가 발생되는 지점의 액션을 동작하도록 해보자. 그러면 해당 트리거가 어디에서 최종적으로 로직을 받아 실행되고 있는지 흐름을 따라가 볼 수 있게 된다. 그리고 이렇게 흐름을 따라가 보면서 최종적으로는 에러의 최초 발생 지점까지 찾아갈 수 있게 된다.
+  > 추가된 `breakpoint`은 해당 줄을 한 번 더 클릭하면 해제가 된다.
+
+### 정리
+
+- 중단점 `breakpoint`을 활용한다면, 코드를 단계적으로 살펴볼 수 있으며 변수들에 저장된 값 또한 직접 살펴보면서 특정한 에러 상황이 발생한 원인을 파악해볼 수 있게 된다. 중단점을 `breakpoint`을 잘 활용만 한다면 코드를 분석하고 더 나아가 그 동작 흐름을 이해할 수 있게 되며, 결론적으로는 에러를 찾아서 문제를 조금 더 빨리 해결할 수도 있게 된다.
+
+```js
+const addGoalHandler = (enteredText) => {
+  setCourseGoals((prevGoals) => {
+    const updatedGoals = [...prevGoals];
+    updatedGoals.unshift({ text: enteredText, id: Math.random().toString() });
+    return updatedGoals;
+  });
+};
+```
 
 </br>
