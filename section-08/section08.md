@@ -5,6 +5,7 @@
 - [Practice | Adding a "User" Component](#사용자-컴포넌트-추가하기)
 - [Practice | Adding a re-usable "Card" Component](#재사용-가능한-카드-컴포넌트-추가하기)
 - [Practice | Adding a re-usable "Button" Component](#재사용-가능한-버튼-컴포넌트-추가하기)
+- [Practice | Managing the User Input State](#사용자-입력-State-관리하기)
 
 ## 재사용 가능한 버튼 컴포넌트 추가하기
 
