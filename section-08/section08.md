@@ -9,6 +9,7 @@
 - [Practice | Adding Validation & Resetting Logic](#검증-추가-및-로직-재설정하기)
 - [Practice | Adding a Users List Component](#사용자-목록-컴포넌트-추가하기)
 - [Practice | Managing a List Of Users via State](#State를-통해-사용자-목록-관리하기)
+- [Practice | Adding The "ErrorModal" Component](#ErrorModal-컴포넌트-추가하기)
 
 ## 재사용 가능한 버튼 컴포넌트 추가하기
 
