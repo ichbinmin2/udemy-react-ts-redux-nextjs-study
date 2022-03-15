@@ -15,3 +15,4 @@
 - [Styling React Components](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-06/section06.md)
 - [Debugging React Apps](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-07/section07.md)
 - [First Practice Project: React](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-08/section08.md)
+- [Diving Deeper: Working with Fragments, Portals & "Refs"](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-09/section09.md)
