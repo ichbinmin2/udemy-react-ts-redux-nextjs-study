@@ -7,6 +7,7 @@
 - [Practice | Adding a re-usable "Button" Component](#재사용-가능한-버튼-컴포넌트-추가하기)
 - [Practice | Managing the User Input State](#사용자-입력-State-관리하기)
 - [Practice | Adding Validation & Resetting Logic](#검증-추가-및-로직-재설정하기)
+- [Practice | Adding a Users List Component](#사용자-목록-컴포넌트-추가하기)
 
 ## 재사용 가능한 버튼 컴포넌트 추가하기
 

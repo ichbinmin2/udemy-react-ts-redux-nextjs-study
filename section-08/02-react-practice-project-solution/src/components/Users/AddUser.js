@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Button from "../../UI/Button/Button";
-import Card from "../../UI/Button/Card";
+import Button from "../UI/Button/Button";
+import Card from "../UI/Button/Card";
 
 import styles from "./AddUser.module.css";
 
