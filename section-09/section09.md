@@ -4,6 +4,7 @@
 
 - [JSX Limitations & Workarounds](#JSX-제한-사항-및-해결-방법)
 - [Creating a Wrapper Component](#컴포넌트-감싸기-wrapper-만들기)
+- [React Fragments](#리액트-프래그먼트)
 
 ## JSX 제한 사항 및 해결 방법
 
@@ -113,10 +114,118 @@ export default Warpper;
 
 ### 정리
 
-- `Warpper` 컴포넌트는 기본적으로 비어있는 컴포넌트이다. `props.children`로 받아온다는 계획만 있고, 실제로 이 커스텀 컴포넌트를 어떤 컨텐츠 태그를 감싸는 데에 사용하지 않으면 그저 빈 컴포넌트라는 이야기다. 실제로 `Warpper` 컴포넌트로 `AddUser` 컴포넌트의 JSX 코드 블럭들을 warp 해주니 앱은 제대로 작동하게 된다. 여기서 `<div>` 태그로 warp 해주는 방법과 다른 지점은 `Warpper` 컴포넌트로 감싸는 요소는 `DOM`에 렌더되지 않는다는 것이다. JSX 코드 블럭이 요구했던 사항에 대해서 생각해보자. JSX 코드는 반드시 하나의 root 컴포넌트가 `DOM`에 렌더되어야 한다. 그런데, `DOM`에 렌더되지는 않지만 하나의 root 컴포넌트가 반환될 수 있는 그 역할을 `Warpper` 컴포넌트가 해주고 있는 것이다. (그리고 이것은 JavsScript의 기술적인 요구사항을 지켜주는 방법이다.) 이제 서버를 열고, 개발자 도구의 `Element` 탭을 확인해보자.
+- `Warpper` 컴포넌트는 기본적으로 비어있는 컴포넌트이다. `props.children`로 받아온다는 계획만 있고, 실제로 이 커스텀 컴포넌트를 어떤 컨텐츠 태그를 감싸는 데에 사용하지 않으면 그저 빈 컴포넌트라는 이야기다. 실제로 `Warpper` 컴포넌트로 `AddUser` 컴포넌트의 JSX 코드 블럭들을 warp 해주니 앱은 제대로 작동하게 된다. 여기서 `<div>` 태그로 warp 해주는 방법과 다른 지점은 `Warpper` 컴포넌트로 감싸는 요소는 `DOM`에 렌더되지 않는다는 것이다. JSX 코드 블럭이 요구했던 사항에 대해서 생각해보자. JSX 코드는 반드시 하나의 root 컴포넌트가 `DOM`에 렌더되어야 한다. 그런데, `DOM`에 렌더되지는 않지만 하나의 root 컴포넌트가 반환될 수 있는 그 역할을 `Warpper` 컴포넌트가 해주고 있는 것이다. (그리고 이것은 JavsScript의 기술적인 요구사항을 지켜주는 방법이다.) 이제 서버를 열고, 개발자 도구의 `Elements` 탭을 확인해보자.
 
-<img width="1009" alt="image" src="https://user-images.githubusercontent.com/53133662/158741765-7ac87041-bf5a-4955-9f37-fbc4fdc60efc.png">
+<img width="500" alt="image" src="https://user-images.githubusercontent.com/53133662/158741765-7ac87041-bf5a-4955-9f37-fbc4fdc60efc.png">
 
-- `Warpper` 컴포넌트는 JSX 코드가 요구하는 단 하나의 지시사항(하나의 root 태그로 JSX 요소를 warp 해주어야 한다)가을 지켜주고 있으나 실제 `DOM`에는 렌더되고 있지 않는 것을 확인할 수 있다. 사실 `Warpper`를 사용하는 것은 어쩌면 눈속임을 해주는 것에 더 가깝지만, 앞서 `<div>` 태그로 warp 해주었을 때보다 스타일링에서도 안전하고 쓸데없는 HTML 요소들을 과하게 렌더하지 않게 되어, 어플리케이션의 성능을 보장할 수 있게 된다.
+- `Warpper` 컴포넌트는 JSX 코드가 요구하는 단 하나의 지시사항(하나의 root 태그로 JSX 요소를 warp 해주어야 한다)을 지켜주고 있으나 실제 `DOM`에는 렌더되고 있지 않는 것을 확인할 수 있다. 이렇듯, `Warpper`를 사용하는 것은 어쩌면 눈속임의 역할에 더 가까울 수도 있다. 하지만 앞서 `<div>` 태그로 warp 해주었을 때보다 스타일링에서도 안전하고 쓸데없는 HTML 요소들을 과하게 렌더하지 않게 되어 어플리케이션의 성능을 보장할 수 있게 된다는 점에서 꽤나 좋은 속임수라고 말할 수도 있을 것이다.
 
 </br>
+
+## 리액트 프래그먼트
+
+```js
+<div>
+  <div>
+    <div>
+      <div>
+        <h2>Some content.</h2>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+- `Warpper` 컴포넌트는 "`<div>` Soup" 를 만들지 않으면서도 요구사항을 충족하는 일종의 눈속임으로서 사용되었다. 사실 이는 아주 편리하고도 괜찮은 방법이기 떄문에 `Warpper` 컴포넌트와 동일한 기능을 가진 것을 React에서 제공해주기도 한다.
+
+### `<React.Fragment>`
+
+```js
+<React.Fragment>
+  <h2>Hi there!</h2>
+  <p>This does not work :-(</p>
+</React.Fragment>
+```
+
+> `Fragment` 컴포넌트는 `React.Fragment`에서 엑세스 하거나 React에서 `Fragment`를 직접 import 해와도 된다.
+
+### `<></>`
+
+```js
+<>
+  <h2>Hi there!</h2>
+  <p>This does not work :-(</p>
+</>
+```
+
+> `<></>`는 React를 사용한 프로젝트라면 언제든 사용 가능한 `Fragment` 컴포넌트와는 달리, 프로젝트 셋업의 빌드 워크 플로가 지원할 경우에만 가능한 방법이다.
+
+- 이 두가지 문법 모두 비어있는 `warpper`를 렌더링하는 것과 같으며, 앞서 소개한 `Warpper` 컴포넌트처럼 `DOM`에 HTML 요소를 렌더링하지 않는 특징을 가지고 있다. 이 두가지는 내장되어 있는 기능이기에 굳이 커스텀 `Warpper`를 사용하지 않아도 충분히 JSX의 요구사항에 복무하고 있기 때문에 사용 가능하다. (다만, `Warpper` 컴포넌트는 이 내장되어 있는 두가지 기능에 대해 보다 깊은 이해를 돕는 용도로 소개되었다.)
+
+### 사용 예시 : `<></>`
+
+```js
+return (
+  <div>
+    <AddUser onAddUser={addUserHandler} />
+    <UsersList users={usersList} />
+  </div>
+);
+```
+
+- `App.js` 파일로 가서 `<div>` 태그로 warp 되어있던 부분을 모두 `<></>`로 변경해주었다.
+
+```js
+return (
+  <>
+    <AddUser onAddUser={addUserHandler} />
+    <UsersList users={usersList} />
+  </>
+);
+```
+
+- `<></>`는 적합한 HTML 요소는 아니지만 모든 React 프로젝트에 적합한 JSX 코드일 것이다. 물론, `<></>`는 프로젝트 셋업의 빌드 워크 플로가 지원해주고 있을 경우에만 사용할 수 있는 React 내장 기능이다. 현재 프로젝트 셋업에서는 지원해주고 있기 때문에 `<></>` 를 사용했다. 이제 서버를 열고 개발자 도구의 `Elements` 탭을 확인해보자. `Warpper` 컴포넌트와 동일하게 JSX 코드의 요구사항을 지켜주고 있으나 실제 `DOM`에는 렌더되고 있지 않는 것을 확인할 수 있다.
+
+### 사용 예시 : `<React.Fragment>`
+
+```js
+return (
+  <>
+    <AddUser onAddUser={addUserHandler} />
+    <UsersList users={usersList} />
+  </>
+);
+```
+
+- 이번엔 `<></>`으로 warp 해주었던 부분을 다시 `<React.Fragment>`로 수정해서 감싸보자.
+
+```js
+return (
+  <React.Fragment>
+    <AddUser onAddUser={addUserHandler} />
+    <UsersList users={usersList} />
+  </React.Fragment>
+);
+```
+
+- `<React.Fragment>` 태그로 사용한다면, 따로 React에서 import 해올 필요가 없지만, 깔끔하게 `Fragment`만 가져오고 싶다면
+
+```js
+import React, { useState, Fragment } from "react";
+
+...
+return (
+  <Fragment>
+    <AddUser onAddUser={addUserHandler} />
+    <UsersList users={usersList} />
+  </Fragment>
+);
+```
+
+- 중괄호로 `Fragment`를 import 해온 뒤, `<Fragment>` 태그로만 사용할 수 있다.
+
+### 정리
+
+- 물론, 우리가 JSX 가 요구하는 단 하나의 요구사항을 지키려고 했던 모든 방법들 중 가장 첫번째로 시도했던 `Warpper` 같은 커스텀 컴포넌트는 기본적으로 직접 작성하여 사용하지는 않을 것이다. 다만 `<></>`와 `Fragment` 같은 React에서 제공하는 내장 기능들의 기본적인 원리를 이해하는 것이 무엇보다도 중요하기에 학습해보았다.
+
+</>
