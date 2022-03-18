@@ -6,6 +6,7 @@
 - [Creating a Wrapper Component](#컴포넌트-감싸기-wrapper-만들기)
 - [React Fragments](#리액트-프래그먼트)
 - [Introducing React Portals](#리액트-포털-소개)
+- [Working with Portals](#리액트-포털-사용해보기)
 
 ## JSX 제한 사항 및 해결 방법
 
@@ -139,7 +140,7 @@ export default Warpper;
 
 - `Warpper` 컴포넌트는 "`<div>` Soup" 를 만들지 않으면서도 요구사항을 충족하는 일종의 눈속임으로서 사용되었다. 사실 이는 아주 편리하고도 괜찮은 방법이기 떄문에 `Warpper` 컴포넌트와 동일한 기능을 React에서 제공해주고 있다.
 
-### `<React.Fragment>`
+### 1. `<React.Fragment>`
 
 ```js
 <React.Fragment>
@@ -150,7 +151,7 @@ export default Warpper;
 
 > `Fragment` 컴포넌트는 `React.Fragment`에서 엑세스 하거나 React에서 `Fragment`를 직접 import 해와도 된다.
 
-### `<></>`
+### 2. `<></>`
 
 ```js
 <>
@@ -265,13 +266,18 @@ return (
 );
 ```
 
-- 다른 컴포넌트에서 비롯된 `<section>`과 `<h2>` 태그가 보일 것이다. 이는 다른 컴포넌트에서 비롯된 태그들이므로 중요하지 않다. 그리고 `<MyModal />` 컴포넌트가 담고 있는 `<div>`태그와 `<h2>`가 보일 것이고, `<MyInputForm />` 컴포넌트가 담고 있는 `<label>`과 `<input>` 태그가 보일 것이다. 이 코드들은 무슨 문제가 있을까? 사실 기술적으로 잘못된 것은 없는 코드이다. 하지만 바람직하지 못한 부분이 존재하고 있다. 바로 `<MyModal />` 컴포넌트가 존재하는 위치 때문이다. `DOM`에 렌더링된 이 모달은 적절한 스타일링만 적용해주면 분명 그럴듯하게 작동이 될 것이다. 하지만 의미론적인(Semantically) 차원에서 한 번 생각해보자. 현재 간결한 HTML 구조를 갖추고 있는가? 그렇지 않을 것이다. 왜냐면 모달이라는 것은 페이지 위의 오버레이임을 고려해야 되기 때문이다. 그것도 전체 페이지를 덮는 오버레이 창이라는 것을 말이다. 논리적으로 생각해보면 모달은 모든 코드 위에 위치해있어야 할 것이다. 모달이 만약 다른 HTML 코드와 중첩되어 있다면, 스타일링에 의해 그럴듯하게 작동은 하겠지만 좋은 코드라고 불리기에는 어딘가 부족하다. 그리고 이런 방식은 스타일링이나 접근성과 관련된 어떤 문제를 발생시킬 가능성이 있다. 예를 들면, 스크린 리더가 렌더링 되고 있는 HTML 코드를 해석하고자 할 때 일반 오버레이로 간주하지 않을 가능성이 있다. 스크린 리더에서는 CSS 스타일링이 중요한 고려 요소가 아니기 때문이다. 또한 의미론적 관점과 스트럭쳐 측면에서 생각해봤을 때 이는 HTML 코드로 짜인 구조일 것이다. 그렇기 때문에 이 모달이 다른 콘텐츠에 대한 오버레이인지도 분명하지 않게 된다. 이는 모달 뿐만 아니라, 사이드 드로어나 다이얼 로그를 비롯한 모든 종류의 오버레이와 그와 연관된 컴포넌트에 문제를 일으킬 수 있는 가능성을 제공한다. 마치 버튼을 만들 때 `<div>` 태그를 `<button>`처럼 스타일링하고 이벤트 리스너를 추가하는 방식과 비슷하다.
+- 다른 컴포넌트에서 비롯된 `<section>`과 `<h2>` 태그가 보일 것이다. 이는 다른 컴포넌트에서 비롯된 태그들이므로 중요하지 않다. 그리고 `<MyModal />` 컴포넌트가 담고 있는 `<div>`태그와 `<h2>`가 보일 것이고, `<MyInputForm />` 컴포넌트가 담고 있는 `<label>`과 `<input>` 태그가 보일 것이다. 대체 이 코드에는 무슨 문제가 있는 것일까? 사실 기술적으로 잘못된 코드라고 말할 수는 없다. 하지만 바람직하지 못한 부분은 분명 존재하고 있다. 바로 `<MyModal />` 컴포넌트가 존재하는 위치 때문이다.
+
+### 바람직한 코드가 아닌 이유
+
+- `DOM`에 렌더링된 이 모달은 적절한 스타일링만 적용해주면 분명 그럴듯하게 작동이 될 것이다. 하지만 의미론적인(Semantically) 차원에서 한 번 생각해보자. 현재 간결한 HTML 구조를 갖추고 있는가? 그렇지 않을 것이다. 왜냐면 모달이라는 것은 페이지 위의 오버레이임을 고려해야 되기 때문이다. (그것도 전체 페이지를 덮는 오버레이 창이라는 것을 말이다.) 논리적으로 생각해보면 모달은 모든 코드 위에 위치해있어야 할 것이다. 모달이 만약 다른 HTML 코드와 중첩되어 있다면, 스타일링에 의해 그럴듯하게 작동은 하겠지만 좋은 코드라고 불리기에는 어딘가 부족하다. 그리고 이런 방식은 스타일링이나 접근성과 관련된 어떤 문제를 발생시킬 가능성이 있다. 예를 들면, 스크린 리더가 렌더링 되고 있는 HTML 코드를 해석하고자 할 때 일반 오버레이로 간주하지 않을 가능성이 있다. 스크린 리더에서는 CSS 스타일링이 중요한 고려 요소가 아니기 때문이다. 또한 의미론적 관점과 스트럭쳐 측면에서 생각해봤을 때 이는 HTML 코드로 짜인 구조일 것이다. 그렇기 때문에 이 모달이 다른 콘텐츠에 대한 오버레이인지도 분명하지 않게 된다. 이는 모달 뿐만 아니라, 사이드 드로어나 다이얼 로그를 비롯한 모든 종류의 오버레이와 그와 연관된 컴포넌트에 문제를 일으킬 수 있는 가능성을 제공한다. 마치 버튼을 만들 때 `<div>` 태그를 `<button>`처럼 스타일링하고 이벤트 리스너를 추가하는 방식과 비슷하다고 생각하면 된다.
 
 ```js
 <div onClick={clickHandler}>Click me, I'm a bad button</div>
 ```
 
-- 앞의 예시 코드처럼 스타일링이나 이벤트 리스너를 추가한 방식으로 작동은 하겠으나, 역시 좋은 방법이라고 말할 수는 없다. 접근성 측면에서도 좋지 않으며 다른 개발자가 코드를 이해하거나 손을 대기에도 진입장벽을 높게 하는 등의 단점이 많다. 일반적으로 웹 개발 측면에서 HTML, CSS, JavaScript는 포용력이 좋아 활용도가 높지만 그렇다고 해서 작동된다는 이유 하나만으로 이런 좋지 않은 방식을 고수하면 안될 것이다. 이렇게 React 개념을 활용해서 모달과 같이 중첩되어서는 곤란한 오버레이 콘텐츠의 문제를 해결할 수 있다. 그리고 포털을 통해 우리가 원하는 방식으로 컴포넌트를 작성할 수 있도록 함으로서 데이터 전달 등에 있어 혹여나 발생할 문제들을 방지할 수 있게 된다. 하지만 이를 실제 `DOM`에서 다른 방식으로 렌더링을 한다면 어떨까?
+- 앞의 예시 코드처럼 스타일링이나 이벤트 리스너를 추가한 방식으로 작동은 하겠으나, 역시 좋은 방법이라고 말할 수는 없다. 접근성 측면에서도 좋지 않으며 다른 개발자가 코드를 이해하거나 손을 대기에도 진입장벽을 높게 하는 등의 단점이 많다. 일반적으로 웹 개발 측면에서 HTML, CSS, JavaScript는 포용력이 좋아 활용도가 높지만 그렇다고 해서 작동된다는 이유 하나만으로 이런 좋지 않은 방식을 고수하면 안될 것이다.
+- 그리고 우리는 React 개념을 활용해서 모달과 같이 중첩되어서는 곤란한 오버레이 콘텐츠의 문제를 해결할 수 있다. 포털을 통해 우리가 원하는 방식으로 컴포넌트를 작성할 수 있도록 함으로서 데이터 전달 등에 있어 혹여나 발생할 문제들을 방지할 수 있기 때문이다. 하지만 이를 실제 `DOM`에서 다른 방식으로 렌더링을 한다면 어떨까?
 
 #### JSX
 
@@ -301,6 +307,203 @@ return (
 );
 ```
 
-- Real DOM 예시를 보면, 모달 HTML 콘텐츠를 일반적인 위치가 아니라 다른 곳에서 렌더링해주고 있다. 앞의 JSX 코드는 변하지 않았지만 렌더링된 HTML 코드는 JSX 코드와는 다소 다른 형태를 가지고 있는 걸 확인할 수 있다. (모달과 form이 서로 떨어져있는 형태다.) 그리고 우리는 React Portal을 통해 JSX 코드의 규칙을 지키면서도 HTML 코드를 이러한 방식으로 만들 수 있다.
+- Real DOM 예시를 보면, 모달 HTML 콘텐츠를 일반적인 위치가 아니라 다른 곳에서 렌더링해주고 있다. 앞의 JSX 코드는 변하지 않았지만 렌더링된 HTML 코드는 JSX 코드와는 다소 다른 형태를 가지고 있는 걸 확인할 수 있다. (모달과 form이 서로 떨어져있는 형태다.) 그리고 우리는 React Portal을 통해 JSX 코드의 규칙을 지키면서도 HTML 코드를 이러한 형태로 만들 수 있게 된다.
+
+</br>
+
+## 리액트 포털 사용해보기
+
+- 현재의 `AddUser.js` 컴포넌트를 살펴보면 백드롭과 모달 오버레이를 담고 있는 `ErrorModal` 컴포넌트가 다른 HTML 요소들(컴포넌트들)과 같은 위치에서 렌더링되고 있음을 확인할 수 있다.
+
+#### `AddUser.js`
+
+```js
+<React.Fragment>
+  {error && (
+    <ErrorModal
+     ...
+    />
+  )}
+  <Card className={classes.input}>
+    ...
+  </Card>
+</React.Fragment>
+```
+
+<img width="500" alt="image" src="https://user-images.githubusercontent.com/53133662/158797326-2a399764-6dd6-492e-9734-a8b821e06636.png">
+
+- 이 어플리케이션은 크지 않기 때문에 그다지 큰 문제가 되지 않을 수도 있다. 하지만 어떤 어플리케이션에서는 `AddUser` 컴포넌트가 어플리케이션의 최상단과 가깝지 않으며, 다른 컴포넌트와 깊이 중첩되어 있어서 백드롭과 모달 오버레이 또한 `DOM` 내의 다른 콘텐츠와 깊게 중첩될 수 있을지도 모른다. 이때는 어떻게 해야할까?
+
+### 리액트 포털
+
+- `body` 바로 아래에 백드롭을 놓아서 `body`의 직계 자식으로 만들고, 모달 오버레이 역시 `body`의 직계 자식으로서 나머지 어플리케이션을 포함하는 root `div` 옆에 배치할 수 있다면, 앞서 거론된 문제를 해결할 수 있을지도 모른다. 그리고 React 에서는 React Portal을 이용하여 이런 기능을 구현할 수 있게 되어있다.
+
+### 리액트 포털에 필요한 두가지
+
+- React Portal 기능을 사용하기 위해서는 일단 두가지가 필요하다. 첫번째로 먼저 컴포넌트를 이식할 "위치"가 필요하며, 두번째로는 해당 위치에 Potal이 필요함을 "컴포넌트에게 알려야" 한다. 먼저, 첫번째의 요소(컴포넌트를 이식할 "위치"를 확인)를 갖추기 위해 우리가 해야할 일은 `public` 폴더에 있는 `index.html`로 이동하는 것이다.
+
+#### index.html
+
+```html
+<body>
+  ...
+  <div id="root"></div>
+</body>
+```
+
+- `index.html`를 보자. `index.html`에서는 보통 `<div>`와 `id`를 함께 추가해서 `index.js`에서 이것을 다시 찾아올 수 있도록 만들어준다.
+
+#### index.js
+
+```js
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+- `index.html`으로 돌아가, 백드롭과 모달 오버레이를 같은 방식으로 찾을 수 있도록 `<div>`와 `id`를 함께 추가해보자.
+
+```html
+<body>
+  ...
+  <div id="backdrop-root"></div>
+  <div id="overlay-root"></div>
+  <div id="root"></div>
+</body>
+```
+
+- 백드롭을 찾아올 수 있도록 `<div id="backdrop-root"></div>`를 추가했고, 모달 오버레이도 같은 방식으로 추가했다. 이제 다시 `ErrorModal` 컴포넌트로 돌아가보자.
+
+#### `ErrorModal.js`
+
+```js
+<React.Fragment>
+  <div className={classes.backdrop} onClick={props.onConfirm} />
+  <Card className={classes.modal}>
+    <header className={classes.header}>
+      <h2>{props.title}</h2>
+    </header>
+    <div className={classes.content}>
+      <p>{props.message}</p>
+    </div>
+    <footer className={classes.actions}>
+      <Button onClick={props.onConfirm}>Okay</Button>
+    </footer>
+  </Card>
+</React.Fragment>
+```
+
+- 먼저 Portal을 사용하기 위해 필요한 두가지 요소 중 두번째 요소 즉, 해당 위치에 Potal이 필요함을 "컴포넌트에게 알려야" 하는 작업이 필요하다. 현재 백드롭을 담당하고 있는 `<div>` 태그 라인을 다른 곳에 이식해야 한다고 React에게 알려줄 생각이다.
+
+#### `ErrorModal.js`
+
+```js
+const Backdrop = (props) => {
+  return <div className={classes.backdrop} onClick={props.onConfirm} />;
+};
+
+const ModalOverlay = (props) => {
+  return (
+    <Card className={classes.modal}>
+      <header className={classes.header}>
+        <h2>{props.title}</h2>
+      </header>
+      <div className={classes.content}>
+        <p>{props.message}</p>
+      </div>
+      <footer className={classes.actions}>
+        <Button onClick={props.onConfirm}>Okay</Button>
+      </footer>
+    </Card>
+  );
+};
+
+const ErrorModal = (props) => {
+  <React.Fragment></React.Fragment>;
+};
+```
+
+- `ErrorModal` 컴포넌트가 위치하고 있는 `ErrorModal.js` 파일에서 `Backdrop` 컴포넌트를 생성한다. (이 백드롭 컴포넌트를 모달 오버레이 컴포넌트와 함께 사용하고 있기 때문이다) 그리고 원래는 `ErrorModal` 컴포넌트 안에 위치해있던 백드롭 코드를 긁어와 return 해줄 수 있도록 한다. 마찬가지로 모달 오버레이 역시 해당하는 코드 블럭들을 긁어와서 `ModalOverlay` 컴포넌트를 생성하여 return 할 수 있도록 해준다. 이렇게 모달을 2개의 컴포넌트(`Backdrop`, `ModalOverlay`)로 분리하면서 간편하게 포털을 다룰 수 있게 되었다.
+
+```js
+const ErrorModal = (props) => {
+  <React.Fragment>{}</React.Fragment>;
+};
+```
+
+- 2개의 컴포넌트(`Backdrop`, `ModalOverlay`)를 감싸고 있던 `<React.Fragment>` 사이에 `{}` 중괄호를 넣어준다. JSX 코드이기 떄문에 표현식을 추가할 수 있기 때문이다.
+
+### ReactDOM
+
+- React는 상태 관리 등을 비롯한 React의 모든 기능이 존재하는 라이브러리이다. 그리고 `ReactDOM`은 React를 사용하여 각종 기능들을 웹 브라우저로 가져올 수 있는 역할을 한다. 즉, React를 `DOM`과 호환되도록 만들어주는 것이다. 바꿔 말하자면, React 라이브러리 자체는 React를 `DOM`이 있는 환경에서 실행하는지, 혹은 네이티브 앱을 만드는 데 사용하는지에 대해서는 관심이 없다는 이야기다. 단순히 말하자면, `ReactDOM`은 브라우저에 대한 React의 어댑터라고 이해하면 될 것이다. 아무튼 이제, 우리가 설정한 2개의 컴포넌트(`Backdrop`, `ModalOverlay`)를 `DOM` 내의 다른 위치로 이식하기 위해서 `ReactDOM`으로부터 import를 해줘야 한다.
+
+```js
+import ReactDOM from "react-dom";
+```
+
+- 이제 `ReactDOM` 에서 `createPortal` 메소드를 사용할 수 있게 되었다.
+
+```js
+<React.Fragment>
+  {ReactDOM.createPortal(
+    <Backdrop />,
+    document.getElementById("backdrop-root")
+  )}
+</React.Fragment>
+```
+
+- 중괄호 `{}` 안에 `ReactDOM`에서 `createPortal()` 메소드를 불러온다. `createPortal()` 메소드는 2개의 인수가 필요한데, 첫번째 인수는 렌더링 되어야 하는 React 노드(반드시, JSX 형태여야 한다.)이고 두번째 인수는 첫번째 인수가 렌더링 되어야 하는 실제 `DOM` 안의 컨테이너를 가리키는 포인터이다. 우리는 `<Backdrop>` 컴포넌트를 `index.html`의 `<div>` 태그에서 `backdrop-root`이라는 `id`를 가진 컨테이너로 이식시켜줄 것이기 때문에 `document.getElementById()`로 `backdrop-root`를 포인터 시켜주었다.
+
+#### 예시) `index.js`
+
+```js
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+> `index.js` 에서도 `ReactDOM`의 `render` 메소드를 통해 root 컴포넌트(`<App />`)를 `getElementById`가 선택한`id` 위치로 렌더링한 것을 알 수 있다.
+
+- 다시 `ErrorModal.js`로 돌아와 `ModalOverlay` 컴포넌트도 새로운 중괄호 `{}`를 생성하여, `Backdrop`을 이식시켜준 방식으로 동일하게 작성한다.
+
+```js
+<React.Fragment>
+  {ReactDOM.createPortal(
+    <Backdrop />,
+    document.getElementById("backdrop-root")
+  )}
+  {ReactDOM.createPortal(
+    <ModalOverlay />,
+    document.getElementById("overlay-root")
+  );
+  }
+</React.Fragment>
+```
+
+### props pass 해주기
+
+- 우리가 이전에, `ModalOverlay`와 `Backdrop` 컴포넌트에 props로 전달해주었던 Property 역시 동일하게 전달하여 해당 컴포넌트에서 사용할 수 있도록 추가해준다.
+
+```js
+{
+  ReactDOM.createPortal(
+    <Backdrop onConfirm={props.onConfirm} />,
+    document.getElementById("backdrop-root")
+  );
+}
+{
+  ReactDOM.createPortal(
+    <ModalOverlay
+      onClick={props.onConfirm}
+      title={props.title}
+      message={props.message}
+      onConfirm={props.onConfirm}
+    />,
+    document.getElementById("overlay-root")
+  );
+}
+```
+
+<img width="758" alt="image" src="https://user-images.githubusercontent.com/53133662/159008311-7aaf879b-20d1-4b6b-86bb-4e8915c3b1d2.png">
+
+- 저장하고 라이브 서버를 열어 확인해보면 `ModalOverlay`와 `Backdrop` 컴포넌트가 제대로 작동되고 있음을 알 수 있다. 다시 `Elements` 탭을 확인해보자. 이제 JSX 코드 어디에서 `ErrorModal`을 쓰든지 관계 없이 `ModalOverlay`와 `Backdrop` 컴포넌트는 이식한 그 위치에 그대로 있을 것이다. `ReactDOM.createPortal`는 JSX 코드를 사용할 수 있는 곳에서는 언제든지 사용할 수 있다. (물론 JSX 코드 내에서 중괄호 `{}`를 사용하여 표현식을 사용할 수 있도록 작업해주어야 한다.)
+
+![Working with Portals](https://user-images.githubusercontent.com/53133662/158755090-78af5c36-84b1-4b8d-9829-f16619effe01.gif)
 
 </br>
