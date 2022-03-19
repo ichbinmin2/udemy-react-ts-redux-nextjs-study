@@ -7,6 +7,7 @@
 - [React Fragments](#리액트-프래그먼트)
 - [Introducing React Portals](#리액트-포털-소개)
 - [Working with Portals](#리액트-포털-사용해보기)
+- [Working with "ref"s](#ref로-작업하기)
 
 ## JSX 제한 사항 및 해결 방법
 
@@ -330,6 +331,8 @@ return (
 </React.Fragment>
 ```
 
+#### 개발자 도구 : `Elements`
+
 <img width="500" alt="image" src="https://user-images.githubusercontent.com/53133662/158797326-2a399764-6dd6-492e-9734-a8b821e06636.png">
 
 - 이 어플리케이션은 크지 않기 때문에 그다지 큰 문제가 되지 않을 수도 있다. 하지만 어떤 어플리케이션에서는 `AddUser` 컴포넌트가 어플리케이션의 최상단과 가깝지 않으며, 다른 컴포넌트와 깊이 중첩되어 있어서 백드롭과 모달 오버레이 또한 `DOM` 내의 다른 콘텐츠와 깊게 중첩될 수 있을지도 모른다. 이때는 어떻게 해야할까?
@@ -500,10 +503,208 @@ ReactDOM.render(<App />, document.getElementById("root"));
 }
 ```
 
-<img width="758" alt="image" src="https://user-images.githubusercontent.com/53133662/159008311-7aaf879b-20d1-4b6b-86bb-4e8915c3b1d2.png">
+#### 개발자 도구 : `Elements`
 
-- 저장하고 라이브 서버를 열어 확인해보면 `ModalOverlay`와 `Backdrop` 컴포넌트가 제대로 작동되고 있음을 알 수 있다. 다시 `Elements` 탭을 확인해보자. 이제 JSX 코드 어디에서 `ErrorModal`을 쓰든지 관계 없이 `ModalOverlay`와 `Backdrop` 컴포넌트는 이식한 그 위치에 그대로 있을 것이다. `ReactDOM.createPortal`는 JSX 코드를 사용할 수 있는 곳에서는 언제든지 사용할 수 있다. (물론 JSX 코드 내에서 중괄호 `{}`를 사용하여 표현식을 사용할 수 있도록 작업해주어야 한다.)
+<img width="500" alt="image" src="https://user-images.githubusercontent.com/53133662/159008311-7aaf879b-20d1-4b6b-86bb-4e8915c3b1d2.png">
+
+- 저장하고 라이브 서버를 열어 확인해보면 `ModalOverlay`와 `Backdrop` 컴포넌트가 제대로 작동되고 있음을 알 수 있다. 다시 `Elements` 탭을 확인해보자. 이제 JSX 코드 어디에서 `ErrorModal`을 쓰든지 관계 없이 `ModalOverlay`와 `Backdrop` 컴포넌트는 이식한 그 위치에 그대로 있을 것이다.
 
 ![Working with Portals](https://user-images.githubusercontent.com/53133662/158755090-78af5c36-84b1-4b8d-9829-f16619effe01.gif)
+
+### 정리
+
+- `ReactDOM.createPortal`는 JSX 코드를 사용할 수 있는 곳에서는 언제든지 사용할 수 있다. (물론 JSX 코드 내에서 중괄호 `{}`를 사용하여 표현식을 사용할 수 있도록 작업해주어야 한다.) 이렇듯, `createPortal`를 사용해서 컴포넌트의 HTML 컨텐츠를 `DOM`이 렌더링 되고 있는 다른 위치에 옮길 수 있으며, 동시에 JSX와 컴포넌트 내에서는 전과 동일한 방식으로 컴포넌트 작업을 이어갈 수 있다.
+
+</br>
+
+## ref로 작업하기
+
+- 이제 `Fragment`와 `Portal`이라는 2개의 멋진 기능을 이용하여 HTML 코드를 깔끔하게 작성할 수 있게 되었다. 물론 앱의 작동 방식은 여전히 동일하지만 이 두가지 기능들을 다양하게 사용함으로써 의미론적으로 더욱 정확한 코드를 쓸 수 있게 되었다. 앱에 대한 접근성을 높이고 불필요하게 많은 `<div>`를 남발하여 렌더링하지 않아도 된 것이다. 마지막으로 `Fragment`와 `Portal`과는 조금 다른 역할을 하면서도 동시에 더 좋은 코드를 사용할 수 있게끔 해주는 기능을 알아보려고 한다. 바로 `ref` 라는 기능이다.
+
+### ref 란 무엇인가?
+
+- `ref`는 레퍼런스(reference)를 뜻하며 React에서는 그냥 `ref`라고 불린다. `ref`의 역할을 단순하게 설명하자면, `ref`는 기본적으로 다른 `DOM` 요소로 엑세스해서 작업할 수 있게 해준다. 이게 무슨 뜻일까? `AddUser` 컴포넌트와 함께 살펴보면서 `ref`가 대체 어떤 역할로서 기능하는지 알아보자.
+
+#### `AddUser.js`
+
+```js
+const [enteredUsername, setEnteredUsername] = useState("");
+const [enteredAge, setEnteredAge] = useState("");
+
+const addUserHandler = (event) => {
+  event.preventDefault();
+
+  if (enteredUsername.trim().length === 0 || enteredAge.trim().length === 0) {
+    setError({
+      title: "Invalid input",
+      message: "Please enter a valid name and age (non-empty values).",
+    });
+    return;
+  }
+  if (+enteredAge < 1) {
+    setError({
+      title: "Invalid age",
+      message: "Please enter a valid age (> 0).",
+    });
+    return;
+  }
+
+  props.onAddUser(enteredNameValue, enteredUserAgeValue);
+  setEnteredUsername("");
+  setEnteredAge("");
+};
+
+const usernameChangeHandler = (event) => {
+  setEnteredUsername(event.target.value);
+};
+const ageChangeHandler = (event) => {
+  setEnteredAge(event.target.value);
+};
+
+return (
+  ...
+    <input
+      id="username"
+      type="text"
+      value={enteredUsername}
+      onChange={usernameChangeHandler}
+    />
+    ...
+    <input
+      id="age"
+      type="number"
+      value={enteredAge}
+      onChange={ageChangeHandler}
+    />
+  ...
+  );
+```
+
+- `AddUser` 컴포넌트를 살펴보면, `userName`과 `userAge`를 입력하는 `<input>`이 각각 존재하며, `onChange` 이벤트 함수로 `<input>`에 입력하는 value를 추적-업데이트 하여 각각의 상태(`enteredUsername`, `enteredAge`)로 관리해주고 있는 걸 볼 수 있다. 이런 상태(state)를 업데이트하는 방식으로 `userName`과 `userAge`를 관리해도 충분히 괜찮을 것이다. 하지만 `form`의 value 값을 제출하기만 하면 되는데 `key` 입력마다 상태(state)를 업데이트하는 건 다소 과한 느낌이 있다. 그리고 이런 경우에 바로 `ref`가 도움을 줄 수 있다.
+
+### ref 는 어떻게 작동할까?
+
+- `ref`를 사용한다면 연결을 만들 수 있게 된다. 정확하게는 렌더링 될 HTML 요소와 JavsScript 코드를 연결할 수 있다는 이야기다. 더 정확하게 이해하기 위해서 `ref`를 한 번 사용해보자.
+
+```js
+import React, { useRef, useState } from "react";
+
+...
+useRef();
+```
+
+- `ref`를 사용하기 위해서는 먼저 React로부터 `useRef`를 import 해야만 한다.
+  > `useRef`은 React Hook 이기 때문에 반드시 함수형 컴포넌트 안에서만 사용할 수 있다.
+- `useRef`은 무엇을 반환하고, 어떤 값을 취할까? `useRef()`는 초기 설정 디폴트 값을 취하는 형태이지만 지금 현재의 기능에서는 필요치 않기 때문에 비워준다. 하지만 `useRef()`가 반환하는 것은 중요할 것이다. 왜냐하면 `useRef()`가 반환하는 값을 통해서 나중에 이 `useRef()`를 활용할 수 있게 되며 연결한 HTML 요소(element)를 작업할 수 있게 해주기 때문이다.
+
+```js
+import React, { useRef, useState } from "react";
+
+...
+const nameInputRef = useRef();
+const ageInputRef = useRef();
+```
+
+- 우리는 `userName`과 `userAge`를 입력하고 관리할 두개의 `<input>` HTML 요소와 연결할 것이기 때문에 각각의 `useRef` 값을 상수로 선언해주었다. (초기 설정 디폴트 값이 필요하지만 여기서는 필요없기 때문에 정의하지 않았다.) 이제 이 두개의 `ref`를 각각의 `<input>` HTML 요소와 연결해야 한다.
+
+```js
+  // userName input
+  <input
+    id="username"
+    type="text"
+    ...
+    ref={nameInputRef}
+  />
+  // userAge input
+  <input
+    id="age"
+    type="number"
+    ...
+    ref={ageInputRef}
+  />
+```
+
+- `<input>` HTML 요소로 이동하여, 특별한 prop을 추가했다. 바로 `ref` prop 말이다.
+
+  > `ref` prop 은 `key` prop 과 마찬가지로 내장 prop 이며, HTML 요소라면 추가할 수 있는 속성이다. 어떤 HTML 요소든 하나의 레퍼런스와 연결하는 게 가능하기 때문이다. 또한, input 의 데이터를 가져오기 위해서 `ref` prop 을 사용하는 경우는 아주 흔한 편이다.
+
+- 이제 `<input>` HTML 요소에 `ref` prop 을 추가하고, 각각 `nameInputRef`와 `ageInputRef` 값으로 연결시켜 준다. 이제 `nameInputRef`와 `ageInputRef`로 각각 연결된 `<input>` HTML 요소를 JavaScript 코드를 사용해서 접근하거나 관리할 수 있게 되었다. React가 이 `AddUser` 컴포넌트의 JSX 코드들을 렌더링 할 때, `nameInputRef`와 `ageInputRef`에 저장된 값들을 연결된 `<input>`에 근거해 렌더링 된 네이티브 `DOM` 요소에 세팅할 것이다. `nameInputRef`와 `ageInputRef` 안의 최종 데이터가 실제 `DOM` 요소가 될 것이라고 생각하면 된다. 이제 연결되었다는 걸 확인해보기 위해 `<input>` 데이터 제출 함수인 `addUserHandler()` 내부에서 `nameInputRef`를 콘솔로 출력해보았다.
+
+```js
+const addUserHandler = (event) => {
+  event.preventDefault();
+  console.log(nameInputRef);
+ ...
+};
+```
+
+![console.log(nameInputRef)](https://user-images.githubusercontent.com/53133662/159108054-93f0c0de-cc72-45d5-b49e-28592832ddde.png)
+
+- Add User 버튼을 클릭하여 `addUserHandler()` 이벤트 함수가 발생하면 console에 `nameInputRef`의 값이 객체 형태로 출력되고 있음을 확인할 수 있다. 이 객체를 살펴보면 current 속성을 가지고 있는 듯이 보이는데, 이는 연결된 `ref` 값은 항상 객체이며 동시에 current prop(`ref`가 연결된 실제 값)을 가지고 있다는 걸 의미한다.
+
+<img width="500" alt="image" src="https://user-images.githubusercontent.com/53133662/159113354-a174919c-5a17-4226-9be6-3f35b55f888d.png">
+
+> current 에 저장된 것들은 어떤 이론 적인 차원의 값이 아니라, 실제 `DOM` 노드이다. `DOM`은 직접 조작하면 안되며, 다만 React에 의해서만 조작되어야 한다. (이러한 까다로운 작업을 편리하게 하고자 React를 사용하는 것이기 때문이다.)
+
+```js
+const addUserHandler = (event) => {
+  event.preventDefault();
+  console.log(nameInputRef.current.value);
+ ...
+};
+```
+
+- `nameInputRef`으로 `<input>`에 접근할 수 있게 되었으니 당연히 `nameInputRef`에 저장된 `<input>`의 현재 값, 즉 current value를 읽어올 수도 있을 것이다. JavaScript에서 모든 `<input>` 요소는 value 속성을 가지고 있기 때문이다.
+
+![console.log(nameInputRef.current.value)](https://user-images.githubusercontent.com/53133662/159108377-39793d30-3020-475f-af80-47224316a03c.gif)
+
+- `<input>` 요소에 입력하고 제출한 값이 `nameInputRef.current.value` 로 접근했을 때도 동일하게 콘솔에 출력되고 있음을 확인할 수 있다. 그리고 이는 모든 `key` 입력을 `log`로 출력하지 않더라도 `<input>` 요소에 저장된 값(value)에 엑세스할 수 있음을 뜻할 것이다. 상태(state)로 접근하고 관리하지 않더라도 말이다.
+
+```js
+const enteredNameValue = nameInputRef.current.value;
+const enteredUserAgeValue = ageInputRef.current.value;
+```
+
+- 이제 각각의 `<input>` 요소에 입력하고 제출한 가장 최신의 값(`current.value`)을 연결한 `ref`를 통해 받아올 수 있도록 상수를 생성한다.
+
+```js
+const addUserHandler = (event) => {
+  event.preventDefault();
+
+  const enteredNameValue = nameInputRef.current.value;
+  const enteredUserAgeValue = ageInputRef.current.value;
+
+  if (
+    enteredNameValue.trim().length === 0 ||
+    enteredUserAgeValue.trim().length === 0
+  ) {
+    ..
+  }
+  if (+enteredUserAgeValue < 1) {
+   ...
+  }
+
+  props.onAddUser(enteredNameValue, enteredUserAgeValue);
+
+  setEnteredUsername("");
+  setEnteredAge("");
+};
+```
+
+- 그리고, 각각의 개별 상태(state)로 접근하여 작성해주었던 조건식들을 모두 `ref.current.value`로 접근한 상수로 수정해준다. 그리고 마지막으로 `props.onAddUser()`로 최종 값들을 pass 하여 제출할 수 있도록 해준다.
+
+```js
+const addUserHandler = (event) => {
+  ...
+  nameInputRef.current.value = "";
+  ageInputRef.current.value = "";
+}
+```
+
+- `<input>` 값들을 상태(state) 업데이트 함수를 사용하여 다시 리셋해주었던 로직도 `ref.current.value`을 빈 문자열로 할당해줌으로서 수정해준다. (`ref.current.value`을 사용해서 빈 문자열을 할당하여 리셋하는 방식은 자주 사용하는 방법도 아니며 React 없이 `DOM`을 조작해서는 안되지만, 단지 유저가 입력한 값을 리셋하기 위해서라면 한 번쯤은 고려해볼 수 있는 방법이다.) 이제 상태(state)를 통하여 `<input>` 요소의 값들에 접근하거나 변경해주지 않으므로, `enteredUsername` 와 `enteredAge` 같은 상태(state)를 비롯하여 이 상태(state)를 이용해서 `<input>` 요소에 접근한 모든 이벤트 핸들러 로직들(`usernameChangeHandler()`, `ageChangeHandler()`)을 삭제해준다. 물론, 상태(state)와 `<input>` 요소를 연결한 속성(`value`, `onChange`)도 모두 삭제해준다. 이제 라이브 서버를 작동시키면, 상태(state)를 사용하던 때와 동일하게 동작하고 있음을 확인할 수 있다.
+
+### 정리
+
+- 앞에서 누누히 말했다시피, `ref`로 `DOM`을 조작하는 경우는 아주 드문 일이다. 현재 `ref`를 사용하고 있는 방식을 살펴보면 `DOM`을 조작하거나 새로운 요소를 추가하는 것이 아니며, 단지 유저가 입력한 값을 바꾸거나 읽어오고 있을 뿐이다. 일반적으로 `ref`와 상태(state) 중 뭐가 더 나은 방식인지 고르는 것은 그다지 중요하지 않다. (사실 무엇을 써도 괜찮기 때문이다.) 하지만 어떤 유스 케이스 에서는 `DOM`을 조작하지 않고, 그저 현재 값을 신속하게 읽기만 해도 되는 경우가 있기 때문에 굳이 상태(state)를 사용할 필요가 없을 것이다. 또한 단지 `key` 로그용으로 상태(state)를 사용하는 것은 보통 나쁜 코드라고 이야기하기도 한다. 이때 상태(state)의 대체제로 `ref`를 사용함으로써 `DOM`을 조작하지 않고서 다만 신속하게 값을 읽어오면서도 전체 코드량을 상대적으로 줄일 수 있는 것이다. 물론 현재 어플리케이션의 케이스에서는 취향의 차이일 뿐일지도 모른다. 다만, 앞으로 어떤 케이스냐에 따라 달라질 것이기 때문에 여러가지를 고려하여 선택해서 사용하면 개발자로서 더 좋은 코드를 작성할 수 있을 것이다.
 
 </br>
