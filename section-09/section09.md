@@ -8,6 +8,7 @@
 - [Introducing React Portals](#리액트-포털-소개)
 - [Working with Portals](#리액트-포털-사용해보기)
 - [Working with "ref"s](#ref로-작업하기)
+- [Controlled vs Uncontrolled Components](#제어되는-컴포넌트와-제어되지-않는-컴포넌트)
 
 ## JSX 제한 사항 및 해결 방법
 
@@ -83,7 +84,7 @@ return [
 
 ## 컴포넌트 감싸기 wrapper 만들기
 
-- 앞서 소개한 `<div>`로 warp을 하는 방법 외에도 JSX 코드 블럭을 감싸주는 여러 방법들이 있다. 먼저, components 폴더에 `Helters`라는 폴더를 만들고, `Warpper.js`를 생성한다.
+- 앞서 소개한 `<div>`로 warp을 하는 방법 외에도 JSX 코드 블럭을 감싸주는 여러 방법들이 있다. 먼저, components 폴더에 `Helpers`라는 폴더를 만들고, `Warpper.js`를 생성한다.
 
 ![Warpper.js](https://user-images.githubusercontent.com/53133662/158738850-00a89866-260a-40ed-a387-ce1403cfa4fc.png)
 
@@ -139,7 +140,7 @@ export default Warpper;
 </div>
 ```
 
-- `Warpper` 컴포넌트는 "`<div>` Soup" 를 만들지 않으면서도 요구사항을 충족하는 일종의 눈속임으로서 사용되었다. 사실 이는 아주 편리하고도 괜찮은 방법이기 떄문에 `Warpper` 컴포넌트와 동일한 기능을 React에서 제공해주고 있다.
+- `Warpper` 컴포넌트는 "`<div>` Soup" 를 만들지 않으면서도 요구사항을 충족하는 일종의 눈속임으로서 사용되었다. 사실 이는 아주 편리하고도 괜찮은 방법이기 때문에 `Warpper` 컴포넌트와 동일한 기능을 React에서 제공해주고 있다.
 
 ### 1. `<React.Fragment>`
 
@@ -432,7 +433,7 @@ const ErrorModal = (props) => {
 };
 ```
 
-- 2개의 컴포넌트(`Backdrop`, `ModalOverlay`)를 감싸고 있던 `<React.Fragment>` 사이에 `{}` 중괄호를 넣어준다. JSX 코드이기 떄문에 표현식을 추가할 수 있기 때문이다.
+- 2개의 컴포넌트(`Backdrop`, `ModalOverlay`)를 감싸고 있던 `<React.Fragment>` 사이에 `{}` 중괄호를 넣어준다. JSX 코드이기 때문에 표현식을 추가할 수 있기 때문이다.
 
 ### ReactDOM
 
@@ -519,11 +520,11 @@ ReactDOM.render(<App />, document.getElementById("root"));
 
 ## ref로 작업하기
 
-- 이제 `Fragment`와 `Portal`이라는 2개의 멋진 기능을 이용하여 HTML 코드를 깔끔하게 작성할 수 있게 되었다. 물론 앱의 작동 방식은 여전히 동일하지만 이 두가지 기능들을 다양하게 사용함으로써 의미론적으로 더욱 정확한 코드를 쓸 수 있게 되었다. 앱에 대한 접근성을 높이고 불필요하게 많은 `<div>`를 남발하여 렌더링하지 않아도 된 것이다. 마지막으로 `Fragment`와 `Portal`과는 조금 다른 역할을 하면서도 동시에 더 좋은 코드를 사용할 수 있게끔 해주는 기능을 알아보려고 한다. 바로 `ref` 라는 기능이다.
+- 이제 `Fragment`와 `Portal`이라는 2개의 멋진 기능을 이용하여 HTML 코드를 깔끔하게 작성할 수 있게 되었다. 물론 앱의 작동 방식은 여전히 동일하지만 이 두가지 기능들을 다양하게 사용함으로써 의미론적으로 더욱 정확한 코드를 쓸 수 있게 된 것이다. 또한, 앱에 대한 접근성을 높이고 불필요하게 많은 `<div>`를 남발하여 렌더링하지 않을 수 있게 된 것이다. 앞으로 `Fragment`와 `Portal`과는 조금 다른 역할을 하면서도 동시에 더 좋은 코드를 사용할 수 있게끔 해주는 기능을 알아보려고 한다. 바로 `ref` 라는 기능이다.
 
 ### ref 란 무엇인가?
 
-- `ref`는 레퍼런스(reference)를 뜻하며 React에서는 그냥 `ref`라고 불린다. `ref`의 역할을 단순하게 설명하자면, `ref`는 기본적으로 다른 `DOM` 요소로 엑세스해서 작업할 수 있게 해준다. 이게 무슨 뜻일까? `AddUser` 컴포넌트와 함께 살펴보면서 `ref`가 대체 어떤 역할로서 기능하는지 알아보자.
+- `ref`는 레퍼런스(reference)를 뜻하며 React에서는 그냥 `ref`라고 불리고 있다. `ref`의 역할을 단순하게 설명하자면, `ref`는 기본적으로 다른 `DOM` 요소로 엑세스해서 작업할 수 있게 해준다. 이게 무슨 뜻일까? 앞으로 `AddUser` 컴포넌트와 함께 살펴보면서 `ref`가 대체 어떤 역할로서 기능하고 있는지 한 번 알아볼까 한다.
 
 #### `AddUser.js`
 
@@ -580,11 +581,11 @@ return (
   );
 ```
 
-- `AddUser` 컴포넌트를 살펴보면, `userName`과 `userAge`를 입력하는 `<input>`이 각각 존재하며, `onChange` 이벤트 함수로 `<input>`에 입력하는 value를 추적-업데이트 하여 각각의 상태(`enteredUsername`, `enteredAge`)로 관리해주고 있는 걸 볼 수 있다. 이런 상태(state)를 업데이트하는 방식으로 `userName`과 `userAge`를 관리해도 충분히 괜찮을 것이다. 하지만 `form`의 value 값을 제출하기만 하면 되는데 `key` 입력마다 상태(state)를 업데이트하는 건 다소 과한 느낌이 있다. 그리고 이런 경우에 바로 `ref`가 도움을 줄 수 있다.
+- `AddUser` 컴포넌트를 살펴보면, `userName`과 `userAge`를 입력하는 `<input>`이 각각 존재하며, `onChange` 이벤트 함수로 `<input>`에 입력하는 value를 추적-업데이트 하여 각각의 상태(`enteredUsername`, `enteredAge`)로 관리해주고 있는 걸 볼 수 있다. 이런 상태(state)를 업데이트하는 방식으로 `userName`과 `userAge`를 관리해도 충분히 괜찮을 것이라는 것을 우리 모두는 이미 알고 있을 것이다. 하지만 `form`의 value 값을 제출하기만 하면 되는데 `key` 입력마다 상태(state)를 업데이트하는 건 다소 과한 느낌이 드는 건 사실이다. 그리고 이런 경우에 바로 `ref`라는 기능이 우리에게 도움을 줄 수 있다.
 
 ### ref 는 어떻게 작동할까?
 
-- `ref`를 사용한다면 연결을 만들 수 있게 된다. 정확하게는 렌더링 될 HTML 요소와 JavsScript 코드를 연결할 수 있다는 이야기다. 더 정확하게 이해하기 위해서 `ref`를 한 번 사용해보자.
+- `ref`를 사용하면, 연결을 만들 수 있다. 즉, 렌더링 될 HTML 요소와 JavsScript 코드를 연결할 수 있도록 도와준다는 이야기다. 이를 더 정확하게 이해하기 위해서 `ref`를 한 번 사용해보자.
 
 ```js
 import React, { useRef, useState } from "react";
@@ -595,7 +596,7 @@ useRef();
 
 - `ref`를 사용하기 위해서는 먼저 React로부터 `useRef`를 import 해야만 한다.
   > `useRef`은 React Hook 이기 때문에 반드시 함수형 컴포넌트 안에서만 사용할 수 있다.
-- `useRef`은 무엇을 반환하고, 어떤 값을 취할까? `useRef()`는 초기 설정 디폴트 값을 취하는 형태이지만 지금 현재의 기능에서는 필요치 않기 때문에 비워준다. 하지만 `useRef()`가 반환하는 것은 중요할 것이다. 왜냐하면 `useRef()`가 반환하는 값을 통해서 나중에 이 `useRef()`를 활용할 수 있게 되며 연결한 HTML 요소(element)를 작업할 수 있게 해주기 때문이다.
+- `useRef`은 무엇을 반환하고, 어떤 값을 취할까? `useRef()`는 초기 설정 디폴트 값을 취하는 형태이지만 지금 현재의 기능에서는 필요치 않기 때문에 비워준다. 그리고 `useRef()`는 어떤 값을 반환하는데 바로 이 `useRef()`가 반환하는 값을 통해서 나중에 이 `useRef()`를 활용할 수 있게 되며 연결한 HTML 요소(element)에 접근하여 작업할 수 있다.
 
 ```js
 import React, { useRef, useState } from "react";
@@ -701,10 +702,79 @@ const addUserHandler = (event) => {
 }
 ```
 
-- `<input>` 값들을 상태(state) 업데이트 함수를 사용하여 다시 리셋해주었던 로직도 `ref.current.value`을 빈 문자열로 할당해줌으로서 수정해준다. (`ref.current.value`을 사용해서 빈 문자열을 할당하여 리셋하는 방식은 자주 사용하는 방법도 아니며 React 없이 `DOM`을 조작해서는 안되지만, 단지 유저가 입력한 값을 리셋하기 위해서라면 한 번쯤은 고려해볼 수 있는 방법이다.) 이제 상태(state)를 통하여 `<input>` 요소의 값들에 접근하거나 변경해주지 않으므로, `enteredUsername` 와 `enteredAge` 같은 상태(state)를 비롯하여 이 상태(state)를 이용해서 `<input>` 요소에 접근한 모든 이벤트 핸들러 로직들(`usernameChangeHandler()`, `ageChangeHandler()`)을 삭제해준다. 물론, 상태(state)와 `<input>` 요소를 연결한 속성(`value`, `onChange`)도 모두 삭제해준다. 이제 라이브 서버를 작동시키면, 상태(state)를 사용하던 때와 동일하게 동작하고 있음을 확인할 수 있다.
+- `<input>` 값들을 상태(state) 업데이트 함수를 사용하여 다시 리셋해주었던 로직도 `ref.current.value`을 빈 문자열로 할당하여 수정해준다.
+
+  > `ref.current.value`을 사용해서 빈 문자열을 할당하여 리셋하는 방식은 자주 사용하는 방법도 아니며 React 없이 `DOM`을 조작해서는 안되지만, 단지 유저가 입력한 값을 리셋하기 위해서라면 한 번쯤은 고려해볼 수 있는 방법이다.
+
+- 이제 상태(state)를 통하여 `<input>` 요소의 값들에 접근하거나 변경해주지 않아도 되므로, `enteredUsername` 와 `enteredAge` 같은 상태(state)를 비롯한 이 상태(state)를 이용해서 `<input>` 요소에 접근한 모든 이벤트 핸들러 로직들(`usernameChangeHandler()`, `ageChangeHandler()`)을 전부 삭제해준다. 물론, 상태(state)와 `<input>` 요소를 연결한 속성(`value`, `onChange`)도 마찬가지로 삭제해준다. 이제 라이브 서버를 작동시키면, 상태(state)를 사용하던 때와 동일하게 동작하고 있음을 확인할 수 있다.
 
 ### 정리
 
 - 앞에서 누누히 말했다시피, `ref`로 `DOM`을 조작하는 경우는 아주 드문 일이다. 현재 `ref`를 사용하고 있는 방식을 살펴보면 `DOM`을 조작하거나 새로운 요소를 추가하는 것이 아니며, 단지 유저가 입력한 값을 바꾸거나 읽어오고 있을 뿐이다. 일반적으로 `ref`와 상태(state) 중 뭐가 더 나은 방식인지 고르는 것은 그다지 중요하지 않다. (사실 무엇을 써도 괜찮기 때문이다.) 하지만 어떤 유스 케이스 에서는 `DOM`을 조작하지 않고, 그저 현재 값을 신속하게 읽기만 해도 되는 경우가 있기 때문에 굳이 상태(state)를 사용할 필요가 없을 것이다. 또한 단지 `key` 로그용으로 상태(state)를 사용하는 것은 보통 나쁜 코드라고 이야기하기도 한다. 이때 상태(state)의 대체제로 `ref`를 사용함으로써 `DOM`을 조작하지 않고서 다만 신속하게 값을 읽어오면서도 전체 코드량을 상대적으로 줄일 수 있는 것이다. 물론 현재 어플리케이션의 케이스에서는 취향의 차이일 뿐일지도 모른다. 다만, 앞으로 어떤 케이스냐에 따라 달라질 것이기 때문에 여러가지를 고려하여 선택해서 사용하면 개발자로서 더 좋은 코드를 작성할 수 있을 것이다.
+
+</br>
+
+## 제어되는 컴포넌트와 제어되지 않는 컴포넌트
+
+- 지금까지 user의 `<input>`에 엑세스하는 방법으로 `ref`를 활용해보았다. 또한 `ref.current.value = "";` 를 사용하여 `<input>` 필드를 조작하고 리셋하기도 하였다. 이렇듯 `ref`를 사용해서 `DOM` 요소(`<input>`)들과 상호작용하는 방식에는 특별한 용어가 붙는다. `ref`를 통해 값value 에 접근하는 방식을 바로 "비제어 컴포넌트" 라고 한다.
+
+### 비제어 컴포넌트
+
+```js
+  // userName input
+  <input
+    id="username"
+    type="text"
+    ref={nameInputRef}
+  />
+  // userAge input
+  <input
+    id="age"
+    type="number"
+    ref={ageInputRef}
+  />
+```
+
+- 여기 존재하는 `<input>` 컴포넌트틀은 "비제어 컴포넌트"에 해당한다. 이들의 내부 상태 즉, 내부에 반영된 값들이 React에 의해서 제어되고 있는 게 아니기 때문이다. 단지 우리는 `<input>`의 디폴트 값에 의존하고 있을 뿐이다. 그러니까 유저가 어떤 값을 `<input>`에 입력하면 그 값이 반영되고 있을 뿐이다. 물론 React 기능(`useRef`)을 통해서 값을 가져오고 있기는 하지만 데이터를 `<input>`에 다시 피드백하지는 않는다.
+
+```js
+nameInputRef.current.value = "";
+ageInputRef.current.value = "";
+```
+
+- `<input>` 값을 리셋하기 위해서 임시방편으로 `<input>`에 대해 새로운 값을 할당하긴 하지만 React를 사용하여 `DOM`을 제어하고 있지는 않음을 알 수 있다. 이러한 방식은 단지 `ref`를 사용하여 네이티브 `DOM` 요소에 대한 엑세스를 얻은 뒤, 일반 `DOM` API를 사용해서 `<input>`의 `DOM` 노드 값을 다시 세팅하고 있을 뿐이다. 그리고 이런 이유로 인해서 바로 "비제어" 라는 말이 붙는 것이다. `ref`를 사용하기 전의 방식처럼, React를 통해서 `<input>` 요소의 상태(state)를 제어하고 있지 않기 때문이다.
+
+  > 일반적으로 input 컴포넌트와 form 컴포넌트에 대해 논의가 필요할 때 제어와 비제어 라는 용어가 필연적으로 등장하게 된다. 왜냐하면 input과 form 컴포넌트는 브라우저에 의해 태생적으로 내부의 상태를 갖게 되기 때문이다. 우리가 input 요소를 구성해서 유저의 input을 가져오고, 저장해서 반영하는 작동 방식을 생각해본다면 왜 브라우저에 의해 태생적으로 내부의 상태를 갖게 되는지에 대해 이해하기가 쉬울 것이다. 이렇듯 React 앱의 컴포넌트를 다룰 때에는 React 상태(state)를 컴포넌트와 연결해야 한다. 그래서 일반적으로 React의 input 컴포넌트를 다룰 때, 제어/비제어 라는 용어가 필연적으로 등장하게 되는 것이다.
+
+### 제어 컴포넌트
+
+```js
+const [enteredUsername, setEnteredUsername] = useState("");
+const [enteredAge, setEnteredAge] = useState("");
+...
+return (
+  ...
+    <input
+      id="username"
+      type="text"
+      value={enteredUsername}
+      onChange={usernameChangeHandler}
+    />
+    ...
+    <input
+      id="age"
+      type="number"
+      value={enteredAge}
+      onChange={ageChangeHandler}
+    />
+  ...
+  );
+```
+
+- `ref`를 사용하기 이전의 방식에 대해 다시 생각해보자. 상태(state)로 관리하면서 `key` 입력에 따라서 업데이트했고 업데이트한 최종 상태(state)를 prop을 통해서 다시 `<input>` 요소에 피드백 해주었다. 이런 방식은 "제어된" 방식에 해당한다. 그리고 상태(state)를 통해서 관리해왔던 `<input>`을 바로 "제어된 컴포넌트" 라고 부른다. (내부 상태가 React에 의해서 제어되고 있기 때문이다.)
+
+### 정리
+
+- 제어/비제어 컴포넌트 같은 용어는 React 어플리케이션을 개발하면서 꽤나 중요한 축에 속한다. 다른 React 개발자들과 원활한 논의가 필요할 때 반드시 알아야 하는 용어이기 때문이다. 그만큼 React와 관련하여 자주 등장하는 용어이기에 이를 이해하고 사용하는 것이 무엇보다도 중요할 것이다.
 
 </br>
