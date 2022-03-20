@@ -3,6 +3,7 @@
 ## 목차
 
 - [What are "Side Effects" & Introducing useEffect](#Side-Effects-와-useEffect)
+- [Using the useEffect() Hook](#useEffect-훅-사용하기)
 
 ## Side Effects 와 useEffect
 
@@ -59,3 +60,58 @@ useEffect(() => { ... }, [ dependencies ]);
 `useEffect`는 2개의 인수, 2개의 파라미터와 함께 호출 된다. 첫 번째 인수는 지정된 의존성 배열(`dependencies`)이 변화했을 경우 모든 컴포넌트를 렌더링한 후에 실행되는 함수이다. 그리고 두 번째 인수는 바로 첫 번째 인수에게 지정된 의존성 배열인 `dependencies` 이다. 디펜던시로 가득한 이 배열을 기반하여 일부 디펜던시에 변화가 생기면 첫 번째 인수인 함수가 재실행되는 형태이다. 그러니 첫 번째 함수에는 어떤 사이드 이펙트(Side Effect) 코드를 넣어도 된다. 이 코드는 의존성 배열에 변화가 생겼을 때에만 실행될 것이기에 컴포넌트가 다시 렌더링 되더라도 실행되지 않기 때문이다. 오직 의존성 배열인 `dependencies`가 변할 때에만 실행되는 함수이다.
 
 </br>
+
+## useEffect 훅 사용하기
+
+- 라이브 서버를 열면, 간단한 더미 앱이 실행된다.
+
+![main login page](https://user-images.githubusercontent.com/53133662/159119675-cd58b8dc-3396-409e-af3b-dfb12f79a712.png)
+
+- 진짜 사용자 인증 페이지가 아니므로, 간단하게 아무 사용자 정보를 입력하고 Login 버튼을 누르자, 간단한 환영 메세지와 함께 더미 페이지가 나타난다.
+
+![ezgif com-gif-maker (12)](https://user-images.githubusercontent.com/53133662/159119825-3aa66bea-b121-45d6-959f-c3c69b5fd5a3.gif)
+
+- 이 앱은 Login을 하면 메인페이지로 이동하며, 다시 Logout 버튼을 누르면 로그인 페이지로 넘어오는 간단한 더미 앱이다. 그러나 Logout 버튼을 누르지 않아도 새로고침을 하면 다시 로그인 페이지로 넘어오는 것을 확인할 수 있다.
+
+```js
+const loginHandler = (email, password) => {
+  localStorage.setItem("isLoggedIn", "1");
+  setIsLoggedIn(true);
+};
+```
+
+![localStorage.setItem("isLoggedIn", "1")](https://user-images.githubusercontent.com/53133662/159119611-ea8daf45-8c9a-42c1-a54d-d79ad5e07f85.png)
+
+```js
+const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+const storedUserLoggedInInformation = localStorage.getItem("isLoggedIn");
+if (storedUserLoggedInInformation === "1") {
+  setIsLoggedIn(true);
+}
+
+const loginHandler = (email, password) => {
+  localStorage.setItem("isLoggedIn", "1");
+  setIsLoggedIn(true);
+};
+```
+
+```js
+import React, { useEffect, useState } from "react";
+
+...
+useEffect(() => {
+  const storedUserLoggedInInformation = localStorage.getItem("isLoggedIn");
+
+  if (storedUserLoggedInInformation === "1") {
+    setIsLoggedIn(true);
+  }
+}, []);
+```
+
+```js
+const logoutHandler = () => {
+  localStorage.removeItem("isLoggedIn");
+  setIsLoggedIn(false);
+};
+```
