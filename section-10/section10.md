@@ -5,6 +5,7 @@
 - [What are "Side Effects" & Introducing useEffect](#Side-Effects-와-useEffect)
 - [Using the useEffect() Hook](#useEffect-훅-사용하기)
 - [useEffect & Dependencies](#useEffect와-종속성)
+- [What to add & Not to add as Dependencies](#종속성으로-추가할-항목-및-추가하지-않을-항목)
 
 ## Side Effects 와 useEffect
 
@@ -316,7 +317,6 @@ setFormIsValid(
 ```
 
 - `setFormIsValid`가 업데이트하는 로직을 살펴보면, `enteredEmail`와 `enteredPassword`에 의존하고 있음을 알 수 있다. 즉, email 이나 password 가 바뀔 때마다 트리거가 발생하고 `setFormIsValid` 상태 업데이트 함수가 실행된다는 의미이다. 그리고 우리는 여기서 "의존성 배열" 을 사용할 수 있다.
-
 ```js
 
   useEffect(() => {
@@ -333,5 +333,60 @@ setFormIsValid(
 
 - `useEffect` 는 한 장소에 코드 하나만 가질 수 있도록 해준다. `useEffect` 는 컴포넌트가 처음으로 렌더링 됐을 뿐만 아니라, 상태(state)나 prop 과 같은 데이터가 바뀔 때마다 로직을 재실행할 수 있도록 하는 게 보편적인 사용 방법이다. 
 `useEffect` 의 주요 업무는 `Side Effect` 를 처리하는 것이다. 이메일이나 비밀번호 필드에서 키 스트로크의 응답으로 form 의 유효성을 체크하고 업데이트하는 것도 `Side Effect`를 일으킬 수 있다는 이야기다. (데이터를 입력하는 사용자의 `Side Effect` 이다.) `useEffect`는 뭔가의 응답으로 실행되는 코드를 처리하게 해준다. 
+
+</br>
+
+## 종속성으로 추가할 항목 및 추가하지 않을 항목
+
+- 지금까지 `effect` 함수에서 사용하는 "모든 것"을 토대로 종속성으로 추가해야 함을 배웠다. 즉, `effect` 함수에서 사용하는 모든 상태(state)변수와 함수를 종속성에 포함한다는 이야기다. 물론 맞는 말이지만 여기서 몇 가지 예외가 있다.
+
+### 상태(state) 업데이트 함수를 종속성으로 추가해야 할까?
+
+- 상태(state) 업데이트 함수를 종속성에 추가할 필요가 없다. React는 해당 함수가 절대 변경되지 않도록 보장하므로 종속성으로 추가할 필요가 없기 때문이다.
+
+### "내장" API 또는 함수를 종속성으로 추가해야 할까?
+
+- "내장" API 또는 함수를 종속성에 추가할 필요가 없다. 예시로 `fetch()`나 "localStorage" 같은 종류(브라우저에 내장된 함수 및 기능, 따라서 전역적으로 사용 가능한 것)를 생각해보면 될 것이다. 브라우저 API/전역 기능은 React 구성 요소 렌더링 주기와 관련이 없으며 변경되지 않기 때문이다.
+
+### 변수와 함수를 종속성으로 추가해야 할까?
+
+- 변수나 함수를 종속성에 추가할 필요가 없다. 구성 요소 외부에서 정의했을 것이기 때문이다. (ex. 별도의 파일에 새 도우미 함수를 만드는 경우) 이러한 함수 또는 변수도 구성 요소 함수 내부에서 생성되지 않으므로 변경해도 구성 요소에 영향을 주지 않는다. (해당 변수가 변경되는 경우, 또는 그 반대의 경우에도 구성 요소는 재평가되지 않기 때문이다.)
+
+
+### 정리 
+
+- 간단히 말해서 `effect` 함수에서 사용하는 모든 "것들"을 추가해야 한다. 구성 요소(또는 일부 상위 구성 요소)가 다시 렌더링 되어 이러한 "것들"이 변경될 수 있는 경우, 그렇기 때문에 컴포넌트 함수에 정의된 변수나 상태, 컴포넌트 함수에 정의된 props 또는 함수는 종속성으로 추가되어야 한다.
+
+
+### 예시
+
+- 다음은 위에서 언급한 시나리오를 더 명확히 하기 위해 구성된 예시이다. 하나씩 살펴보면서, 종속성으로 추가해야 될 것과 추가하지 않아도 될 것을 구분해보자.
+
+```js
+import { useEffect, useState } from 'react';
+
+let myTimer;
+const MyComponent = (props) => {
+  const [timerIsActive, setTimerIsActive] = useState(false);
+  const { timerDuration } = props;
+  // using destructuring to pull out specific props values
+
+  useEffect(() => {
+    if (!timerIsActive) {
+      setTimerIsActive(true);
+      myTimer = setTimeout(() => {
+        setTimerIsActive(false);
+      }, timerDuration);
+    }
+  }, [timerIsActive, timerDuration]);
+};
+```
+
+- `timerIsActive` 는 종속성으로 추가되었다. 왜냐하면 구성 요소가 변경될 때 변경될 수 있는 구성 요소 상태이기 때문이다. (`setTimerIsActive`로 상태(state)가 업데이트되었기 때문에)
+- `timerDuration` 은 종속성으로 추가되었다. 왜냐하면 `timerDuration`은 해당 컴포넌트에서 받아온 prop 값이기 떄문에 상위 컴포넌트에서 해당 값을 변경하면 변경될 수 있음을 고려해줘야 하기 때문이다. (이 `MyComponent` 도 다시 렌더링되도록 함).
+- `setTimerIsActive` 는 종속성으로 추가되지 않았다. (왜냐하면 앞서 거론한 예외 조건이기 때문이다.) 상태(state) 업데이트 기능을 종속성에 추가할 수는 있지만 React는 기능 자체가 절대 변경되지 않음을 보장하므로 굳이 추가할 필요가 없다.
+- `myTimer` 는 종속성으로 추가되지 않았다. 왜냐하면 그것은 `MyComponent` 컴포넌트 내부의 변수가 아니기 때문이다. (즉, 어떤 상태(satte)나 prop 값이 아님) 컴포넌트 요소 외부에서 정의되고 이를 변경하기 때문에(어디에서든) `MyComponent` 컴포넌트 요소가 다시 평가되도록 하지 않는다.
+- `setTimeout` 은 종속성으로 추가되지 않았다. 왜냐하면 그것은 "내장 API"이기 때문이다. 이는 React 및 구성 요소와 독립적이며 변경되지 않는다.
+
 
 </br>
