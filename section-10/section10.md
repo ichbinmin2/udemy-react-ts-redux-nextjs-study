@@ -6,6 +6,7 @@
 - [Using the useEffect() Hook](#useEffect-훅-사용하기)
 - [useEffect & Dependencies](#useEffect와-종속성)
 - [What to add & Not to add as Dependencies](#종속성으로-추가할-항목-및-추가하지-않을-항목)
+- [Using the useEffect Cleanup Function](#useEffect에서-Cleanup-함수-사용하기)
 
 ## Side Effects 와 useEffect
 
@@ -244,20 +245,22 @@ const logoutHandler = () => {
 ### `useEffect` 더 알아보기 [(React 공식문서 참조)](https://ko.reactjs.org/docs/hooks-effect.html)
 
 #### useEffect가 하는 일은 무엇일까요?
+
 > useEffect Hook을 이용하여 우리는 React에게 컴포넌트가 렌더링 이후에 어떤 일을 수행해야하는 지를 말합니다. React는 우리가 넘긴 함수를 기억했다가(이 함수를 ‘effect’라고 부릅니다) DOM 업데이트를 수행한 이후에 불러낼 것입니다. 위의 경우에는 effect를 통해 문서 타이틀을 지정하지만, 이 외에도 데이터를 가져오거나 다른 명령형(imperative) API를 불러내는 일도 할 수 있습니다.
 
 #### useEffect를 컴포넌트 안에서 불러내는 이유는 무엇일까요?
+
 > useEffect를 컴포넌트 내부에 둠으로써 effect를 통해 count state 변수(또는 그 어떤 prop에도)에 접근할 수 있게 됩니다. 함수 범위 안에 존재하기 때문에 특별한 API 없이도 값을 얻을 수 있는 것입니다. Hook은 자바스크립트의 클로저를 이용하여 React에 한정된 API를 고안하는 것보다 자바스크립트가 이미 가지고 있는 방법을 이용하여 문제를 해결합니다.
 
 #### useEffect는 렌더링 이후에 매번 수행되는 걸까요?
+
 > 네, 기본적으로 첫번째 렌더링과 이후의 모든 업데이트에서 수행됩니다.(나중에 effect를 필요에 맞게 수정하는 방법에 대해 다룰 것입니다.) 마운팅과 업데이트라는 방식으로 생각하는 대신 effect를 렌더링 이후에 발생하는 것으로 생각하는 것이 더 쉬울 것입니다. React는 effect가 수행되는 시점에 이미 DOM이 업데이트되었음을 보장합니다.
 
 </br>
 
 ## useEffect와 종속성
 
-- 지금까지 `useEffect`에 대해서 알아보았다. `useEffect`를 이용하면, `useEffect`의 "의존성 배열" 인자에 의해서 무한 루프가 발생하지 않는다는 사실도 알게 되었다. 하지만 때로는 어플리케이션이 실행되고, `useEffect` 내부 함수가 실행되는 것이 단 한번만이 아니라 특정 시기에만 다시 실행되어야 하는 시나리오 또한 고려할 때가 많을 것이다. (대신 "의존성 배열" 내부의 특정 의존성이 변화할 때마다 모든 컴포넌트가 다시 평가되고 재실행된다는 것을 잊으면 안된다.) 
-
+- 지금까지 `useEffect`에 대해서 알아보았다. `useEffect`를 이용하면, `useEffect`의 "의존성 배열" 인자에 의해서 무한 루프가 발생하지 않는다는 사실도 알게 되었다. 하지만 때로는 어플리케이션이 실행되고, `useEffect` 내부 함수가 실행되는 것이 단 한번만이 아니라 특정 시기에만 다시 실행되어야 하는 시나리오 또한 고려할 때가 많을 것이다. (대신 "의존성 배열" 내부의 특정 의존성이 변화할 때마다 모든 컴포넌트가 다시 평가되고 재실행된다는 것을 잊으면 안된다.)
 
 ### 의존성 배열
 
@@ -288,8 +291,7 @@ const logoutHandler = () => {
   };
 ```
 
-- `emailChangeHandler()` 함수와 `passwordChangeHandler()` 를 살펴보자. 두개의 함수는 해당하는 필드(email, password)의 모든 키 스트로크 마다 각각의 상태(state) 값을 변화시키는 핸들러가 작동하고 있다. 그리고 유효성 체크를 통해서 로그인 `<button/>`의 `disabled` 속성을 처리하는 `formIsValid` 상태(state) 값을 업데이트 해주고 있다. 그렇다면, `useEffect`는 어디서 어떻게 사용해야 할까? 
-
+- `emailChangeHandler()` 함수와 `passwordChangeHandler()` 를 살펴보자. 두개의 함수는 해당하는 필드(email, password)의 모든 키 스트로크 마다 각각의 상태(state) 값을 변화시키는 핸들러가 작동하고 있다. 그리고 유효성 체크를 통해서 로그인 `<button/>`의 `disabled` 속성을 처리하는 `formIsValid` 상태(state) 값을 업데이트 해주고 있다. 그렇다면, `useEffect`는 어디서 어떻게 사용해야 할까?
 
 ```js
 setFormIsValid(
@@ -299,40 +301,38 @@ setFormIsValid(
 
 - `emailChangeHandler()` 함수와 `passwordChangeHandler()` 함수에서 같은 용도(form이 유효한지 아닌지를 체크하는)로 사용하는 상태 업데이트 함수 `setFormIsValid()`은 굳이 트리거 핸들러 함수 안에서 각각 사용할 필요가 없을 것이다. `useEffect`를 통해서 사용할 수 있도록 수정해보자.
 
-
 ```js
-  useEffect(() => {
-    setFormIsValid(
-      enteredEmail.includes("@") && enteredPassword.trim().length > 6
-    );
-  }, []);
+useEffect(() => {
+  setFormIsValid(
+    enteredEmail.includes("@") && enteredPassword.trim().length > 6
+  );
+}, []);
 
-  const emailChangeHandler = (event) => {
-    setEnteredEmail(event.target.value);
-  };
+const emailChangeHandler = (event) => {
+  setEnteredEmail(event.target.value);
+};
 
-  const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
-  };
+const passwordChangeHandler = (event) => {
+  setEnteredPassword(event.target.value);
+};
 ```
 
 - `setFormIsValid`가 업데이트하는 로직을 살펴보면, `enteredEmail`와 `enteredPassword`에 의존하고 있음을 알 수 있다. 즉, email 이나 password 가 바뀔 때마다 트리거가 발생하고 `setFormIsValid` 상태 업데이트 함수가 실행된다는 의미이다. 그리고 우리는 여기서 "의존성 배열" 을 사용할 수 있다.
-```js
 
-  useEffect(() => {
-    setFormIsValid(
-      enteredEmail.includes("@") && enteredPassword.trim().length > 6
-    );
-  }, [enteredEmail, enteredPassword]);
+```js
+useEffect(() => {
+  setFormIsValid(
+    enteredEmail.includes("@") && enteredPassword.trim().length > 6
+  );
+}, [enteredEmail, enteredPassword]);
 ```
 
-
-- `useEffect` 에는 규칙이 있다. `Side Effect` 에서 사용하는 것을 토대로 의존성을 추가하는 것이다. 그것이 바로 `setFormIsValid` 상태 업데이트 함수가 의존하고 있는 상태(state) 값인 `enteredEmail`와 `enteredPassword`를 의존성 배열에 추가해야만 하는 이유다. 
+- `useEffect` 에는 규칙이 있다. `Side Effect` 에서 사용하는 것을 토대로 의존성을 추가하는 것이다. 그것이 바로 `setFormIsValid` 상태 업데이트 함수가 의존하고 있는 상태(state) 값인 `enteredEmail`와 `enteredPassword`를 의존성 배열에 추가해야만 하는 이유다.
 
 ### 정리
 
-- `useEffect` 는 한 장소에 코드 하나만 가질 수 있도록 해준다. `useEffect` 는 컴포넌트가 처음으로 렌더링 됐을 뿐만 아니라, 상태(state)나 prop 과 같은 데이터가 바뀔 때마다 로직을 재실행할 수 있도록 하는 게 보편적인 사용 방법이다. 
-`useEffect` 의 주요 업무는 `Side Effect` 를 처리하는 것이다. 이메일이나 비밀번호 필드에서 키 스트로크의 응답으로 form 의 유효성을 체크하고 업데이트하는 것도 `Side Effect`를 일으킬 수 있다는 이야기다. (데이터를 입력하는 사용자의 `Side Effect` 이다.) `useEffect`는 뭔가의 응답으로 실행되는 코드를 처리하게 해준다. 
+- `useEffect` 는 한 장소에 코드 하나만 가질 수 있도록 해준다. `useEffect` 는 컴포넌트가 처음으로 렌더링 됐을 뿐만 아니라, 상태(state)나 prop 과 같은 데이터가 바뀔 때마다 로직을 재실행할 수 있도록 하는 게 보편적인 사용 방법이다.
+  `useEffect` 의 주요 업무는 `Side Effect` 를 처리하는 것이다. 이메일이나 비밀번호 필드에서 키 스트로크의 응답으로 form 의 유효성을 체크하고 업데이트하는 것도 `Side Effect`를 일으킬 수 있다는 이야기다. (데이터를 입력하는 사용자의 `Side Effect` 이다.) `useEffect`는 뭔가의 응답으로 실행되는 코드를 처리하게 해준다.
 
 </br>
 
@@ -352,18 +352,16 @@ setFormIsValid(
 
 - 변수나 함수를 종속성에 추가할 필요가 없다. 구성 요소 외부에서 정의했을 것이기 때문이다. (ex. 별도의 파일에 새 도우미 함수를 만드는 경우) 이러한 함수 또는 변수도 구성 요소 함수 내부에서 생성되지 않으므로 변경해도 구성 요소에 영향을 주지 않는다. (해당 변수가 변경되는 경우, 또는 그 반대의 경우에도 구성 요소는 재평가되지 않기 때문이다.)
 
-
-### 정리 
+### 정리
 
 - 간단히 말해서 `effect` 함수에서 사용하는 모든 "것들"을 추가해야 한다. 구성 요소(또는 일부 상위 구성 요소)가 다시 렌더링 되어 이러한 "것들"이 변경될 수 있는 경우, 그렇기 때문에 컴포넌트 함수에 정의된 변수나 상태, 컴포넌트 함수에 정의된 props 또는 함수는 종속성으로 추가되어야 한다.
-
 
 ### 예시
 
 - 다음은 위에서 언급한 시나리오를 더 명확히 하기 위해 구성된 예시이다. 하나씩 살펴보면서, 종속성으로 추가해야 될 것과 추가하지 않아도 될 것을 구분해보자.
 
 ```js
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 let myTimer;
 const MyComponent = (props) => {
@@ -388,5 +386,132 @@ const MyComponent = (props) => {
 - `myTimer` 는 종속성으로 추가되지 않았다. 왜냐하면 그것은 `MyComponent` 컴포넌트 내부의 변수가 아니기 때문이다. (즉, 어떤 상태(satte)나 prop 값이 아님) 컴포넌트 요소 외부에서 정의되고 이를 변경하기 때문에(어디에서든) `MyComponent` 컴포넌트 요소가 다시 평가되도록 하지 않는다.
 - `setTimeout` 은 종속성으로 추가되지 않았다. 왜냐하면 그것은 "내장 API"이기 때문이다. 이는 React 및 구성 요소와 독립적이며 변경되지 않는다.
 
+</br>
+
+## useEffect에서 Cleanup 함수 사용하기
+
+- 우리는 때떄로 Clean up 작업이 필요한 `Effect`를 사용할 때도 있을 것이다. 물론 이는 너무 추상적인 이야기이기 때문에 예시를 통해 알아보는 것이 좋겠다.
+
+```js
+useEffect(() => {
+  console.log("Checking from validity!");
+  setFormIsValid(
+    enteredEmail.includes("@") && enteredPassword.trim().length > 6
+  );
+}, [enteredEmail, enteredPassword]);
+```
+
+- 우리는 그간 스트로크 마다 필수적으로 `useEffect` 내부의 함수를 실행시켰다. 이것을 확인해보기 위해 `setFormIsValid()` 함수를 업데이트하기 전에 `console.log("Checking from validity!")`를 작성하여 출력해볼 것이다.
+
+![](https://user-images.githubusercontent.com/53133662/160779756-2a5908db-6ea1-44cb-88c2-57b933a8c310.gif)
+
+- 출력 결과를 확인해보면, 키 스트로크 마다 "Checking from validity!" 가 출력되고 있음을 알 수 있다. 그동안 우리는 `useEffect` 내부의 함수에서 상태(state)를 업데이트 해왔다. 상태(state) 업데이트가 제대로 작동하고 있지만, 어쩌면 이것이 이상적인 코드 작성법이라고 말할 수는 없을지도 모른다. 만약 조금 더 복잡한 일을 처리해야한다고 생각해보자. 예를 들어, 사용자 이름이 이미 사용되고 있는지에 대한 유효성 체크를 백엔드에 HTTP 요청을 보내서 체크해야 한다면 어떨까? 이전의 방법대로라면 키 스트로크마다 HTTP 요청을 수십번 보내야 할지도 모른다. 또한 이 때문에 불필요한 네트워크 트래픽이 생길 수도 있을 것이다. 결론적으로 모든 키 스트로크마다 상태(state)를 업데이트를 해야하는 것이 얼마나 비효율적인 로직인지 알 수 있다.
+- 우리가 원하는 건 특정한 양의 키 스트로크를 모으는 것이다. 혹은 키 스트로크 다음에 일정시간을 기다리는 것도 괜찮을 것이다. 다만 이 멈춰있는 일정시간이 충분히 길어야지만 우리가 원하는 작업들을 진행할 수 있을 것이다.
+- 사용자가 input 창에서 무언가를 입력하고 있을 때 email이 유효한지를 확인하지 않을 것이다. 사용자가 input 창에서 입력을 모두 마치고(입력을 멈추고) 난 후 500밀리초나 그 이상 지났을 때 비로소 유효성을 체크해야만 한다. 우리는 이때 '디바운싱' 이라는 기술을 이용해서 앞서 이야기한 방법대로 구현해볼 수 있다.
+
+```js
+useEffect(() => {
+  setTimeout(() => {
+    console.log("Checking from validity!");
+    setFormIsValid(
+      enteredEmail.includes("@") && enteredPassword.trim().length > 6
+    );
+  }, 500);
+}, [enteredEmail, enteredPassword]);
+```
+
+- [MDN 참조 : setTimeout()](https://developer.mozilla.org/ko/docs/Web/API/setTimeout)
+
+  > 전역 setTimeout() 메서드는 만료된 후 함수나 지정한 코드 조각을 실행하는 타이머를 설정한다. 이는 브라우저에 내장된 함수이므로, `Effect`나 React와는 관련이 없다.
+
+- 사용자 입력을 "디바운스"해서 사용자가 입력을 하는 도중의 키 스트로크마다 상태(state)를 업데이트 하지 않도록 했다. 그 대신 사용자가 입력하는 동안 500밀리초라는 시간을 기다릴 수 있게 `setTimeout()`를 사용해서 `setFormIsValid()` 식을 감싸주었다. 이제 `setTimeout()`로 지정한 500밀리초가 지난 후에 form 유효성을 검사하는 `setFormIsValid()`가 실행될 것이다.
+
+![ezgif com-gif-maker (17)](https://user-images.githubusercontent.com/53133662/161028362-50235d80-69b5-412c-b5cb-17a1ab3fb8e2.gif)
+
+- 이전과 다른 것은 console에 출력한 결과를 즉시 볼 수 없다는 것이다. 모든 키 스트로크마다 타이머가 실행될 것이기 때문에 입력할 때마다 500밀리초의 지연이 발생하게 된다. 여기서 속임수는 타이머를 저장했다는 것인데, 이 다음의 키 스트로크에서는 클리어하게 된다. 따라서 한 번에 하나의 타이머만 실행되며, 사용자가 키를 입력하는 동안 다른 타이머는 모두 클리어할 것이다. 오직 마지막 타이머만 완료할 뿐이다. 시간이 지연되는 이유는 타이머를 클리어하려면 새로운 스트로크를 만들어야 하기 때문이다. 이는 언뜻 보기엔 복잡한 과정 같지만, `useEffect`가 이러한 과정을 아주 쉽게 처리해줄 수 있다.
+
+### useEffect에서 return 하기
+
+- `useEffect`의 첫번째 인수로 실행되는 함수에서 이전에는 해본 적 없는 것을 해볼 것이다. 뭔가를 return 하는 일 말이다.
+
+```js
+useEffect(() => {
+  setTimeout(() => {
+    console.log("Checking from validity!");
+    setFormIsValid(
+      enteredEmail.includes("@") && enteredPassword.trim().length > 6
+    );
+  }, 500);
+
+  return () => {};
+}, [enteredEmail, enteredPassword]);
+```
+
+- `useEffect`의 함수에서 return 하는 것은 조금 더 특별하다. return 하는 것이 함수 자체일 필요성이 있기 때문이다. (지금은 익명 함수로 처리해줬지만 이름이 있는 함수로 처리해줘도 된다.) 그리고 `useEffect` 함수 내부에서 return으로 처리하는 함수를 "클린 업" 함수라고 한다. "클린 업" 함수는 `useEffect`가 이 함수를 다음 순번으로 실행하기 전까지 클린 업 과정으로 작동할 에정이다.
+
+### "클린 업" 함수의 작동 원리
+
+- (첫번째 순번으로 작동하는 함수를 제외하고) `useEffect` 함수가 작동할 때마다 또 작동하기 전마다 "클린 업" 함수가 돌아갈 것이다. 그리고 `DOM` 에서부터 특정한 컴포넌트가 작동할 때마다 "클린 업" 함수가 작동할 것이다. 따라서 "클린 업" 함수는 새로운 `Side Effect` 함수 모두가 실행되고, 컴포넌트가 제거되기 전에 작동될 것이다.
+
+```js
+useEffect(() => {
+  const identifier = setTimeout(() => {
+  setTimeout(() => {
+    console.log("Checking from validity!");
+    setFormIsValid(
+      enteredEmail.includes("@") && enteredPassword.trim().length > 6
+    );
+  }, 500);
+
+  return () => {
+    console.log("CLEANUP");
+  };
+
+}, [enteredEmail, enteredPassword]);
+```
+
+- 따라서 위의 식은 `useEffect`의 첫 번째 `Side Effect` 함수가 실행되기 전에는 작동하지 않는다. 그리고 모든 `Side Effect` 함수가 실행되기 전에 작동할 것이다. "클린 업" 함수 안에 `console.log("CLEANUP")` 를 출력해보자.
+
+![ezgif com-gif-maker (18)](https://user-images.githubusercontent.com/53133662/161033016-d96a96ce-44f8-4e9d-9d02-6ee60154c3dc.gif)
+
+- 페이지를 리로드 할 때마다 "Checking from validity!" 가 출력되고 있는 걸 확인할 수 있다. `setFormIsValid()` 내부의 코드 즉 메인 `Side Effect` 함수의 코드는 제대로 작동하고 있는 것이다. 하지만 "클린 업" 함수 안에 출력하고자 했던 식(`console.log("CLEANUP")`)은 출력되지 않는다. 왜냐하면 앞서 설명했듯이 첫번째 `Side Effect`가 실행되기 전에는 "클린 업" 함수는 작동되지 않기 때문이다.
+
+![ezgif com-gif-maker (19)](https://user-images.githubusercontent.com/53133662/161033952-fea2e158-105a-4c4a-8842-952e26590d89.gif)
+
+- 결과 화면에서처럼 사용자가 input에 단 한글자만 입력해도 "클린 업" 함수 안에 출력하고자 했던 식(`console.log("CLEANUP")`)이 출력되고 있음을 알 수 있다. 첫번째 `Side Effect`가 실행되자마자 "클린 업" 함수가 즉시 실행되고 있는 것이다. 이렇듯, "클린 업" 함수는 (첫번째 `Side Effect` 실행 후) 새로운 `Side Effect` 함수 모두가 실행되기 전에 작동한다.
+
+### "클린 업" 함수를 사용하여 타이머를 클리어하기
+
+- `setTimeout()`으로 설정된 타이머를 클리어해보자.
+
+```js
+useEffect(() => {
+  const identifier = setTimeout(() => {
+  setTimeout(() => {
+    console.log("Checking from validity!");
+    setFormIsValid(
+      enteredEmail.includes("@") && enteredPassword.trim().length > 6
+    );
+  }, 500);
+
+  return () => {
+    console.log("CLEANUP");
+    clearTimeout(identifier);
+  };
+}, [enteredEmail, enteredPassword]);
+```
+
+- [MDN 참조 : clearTimeout()](https://developer.mozilla.org/en-US/docs/Web/API/clearTimeout)
+
+  > 전역 clearTimeout()메서드는 이전에 setTimeout()으로 설정된 시간을 취소해준다. 이는 브라우저에 내장된 함수이므로, `Effect`나 React와는 관련이 없다.
+
+- "클린 업" 함수 내부에 빌트인 `clearTimeout()` 함수를 실행해줄 수 있도록 했다. (`clearTimeout()`는 이전에 설정한 타이머를 클리어해주는 함수이다.) 타이머를 설정해주었던 로직을 식별자(`identifier`)로 생성해준 뒤, "클린 업" 함수 내부의 `clearTimeout()`에 인자로 전달해줄 수 있도록 했다. 이렇게 해주면, "클린 업" 함수가 작동될 때마다 "클린 업" 함수가 작동되기 전에 설정한 타이머를 클리어해줄 수 있다. 그러니까 마지막 `Side Effect` 함수가 실행되면 다음 `Side Effect`가 실행될 때마다 새롭게 타이머를 설정할 수 있게 되는 것이다. 따라서, 새로운 것을 설정하기 전에 마지막 타이머를 클리어하도록 해주었다.
+
+### 정리
+
+![ezgif com-gif-maker (20)](https://user-images.githubusercontent.com/53133662/161037252-3098c283-4d6d-4619-8adb-8c89741f0138.gif)
+
+- 페이지를 리로드하면 자동으로 console에 "Checking from validity!" 라고 뜬다. 그리고 사용자가 input 창에 무언가를 입력할 때마다 "클린 업" 함수 내부에서 설정한 문자열 "CLEANUP" 가 출력되고, 다시 "Checking from validity!" 도 출력된다. 그런데 input 창에 무언가를 아주 빠르게 입력하게 되면 "CLEANUP" 이 빠르게 축적되어 출력되고, "Checking from validity!" 는 한 번만 출력되는 것을 알 수 있다. 그 말인 즉슨, "클린 업" 함수 전에 실행되던 `setTimeout()` 함수는 "모든 키 스트로크"마다 딱 한 번만 실행된다는 뜻이다. 
+- 앞서 초반에 `useEffect`를 이용한 HTTP 요청에 대한 질문의 답이 바로 여기있다. 만약 `useEffect`를 통해 HTTP 요청을 보내고 싶다면 (키 스트로크마다 HTTP 요청을 수십번 보내거나 또한 이 때문에 불필요한 네트워크 트래픽이 생기는 대신) "클린 업" 함수를 통해 요청을 중지하면서 단 한번만 HTTP 요청을 할 수 있을 것이다. 
 
 </br>
