@@ -7,6 +7,7 @@
 - [useEffect & Dependencies](#useEffect와-종속성)
 - [What to add & Not to add as Dependencies](#종속성으로-추가할-항목-및-추가하지-않을-항목)
 - [Using the useEffect Cleanup Function](#useEffect에서-Cleanup-함수-사용하기)
+- [useEffect Summary](#useEffect-요약)
 
 ## Side Effects 와 useEffect
 
@@ -511,7 +512,86 @@ useEffect(() => {
 
 ![ezgif com-gif-maker (20)](https://user-images.githubusercontent.com/53133662/161037252-3098c283-4d6d-4619-8adb-8c89741f0138.gif)
 
-- 페이지를 리로드하면 자동으로 console에 "Checking from validity!" 라고 뜬다. 그리고 사용자가 input 창에 무언가를 입력할 때마다 "클린 업" 함수 내부에서 설정한 문자열 "CLEANUP" 가 출력되고, 다시 "Checking from validity!" 도 출력된다. 그런데 input 창에 무언가를 아주 빠르게 입력하게 되면 "CLEANUP" 이 빠르게 축적되어 출력되고, "Checking from validity!" 는 한 번만 출력되는 것을 알 수 있다. 그 말인 즉슨, "클린 업" 함수 전에 실행되던 `setTimeout()` 함수는 "모든 키 스트로크"마다 딱 한 번만 실행된다는 뜻이다. 
-- 앞서 초반에 `useEffect`를 이용한 HTTP 요청에 대한 질문의 답이 바로 여기있다. 만약 `useEffect`를 통해 HTTP 요청을 보내고 싶다면 (키 스트로크마다 HTTP 요청을 수십번 보내거나 또한 이 때문에 불필요한 네트워크 트래픽이 생기는 대신) "클린 업" 함수를 통해 요청을 중지하면서 단 한번만 HTTP 요청을 할 수 있을 것이다. 
+- 페이지를 리로드하면 자동으로 console에 "Checking from validity!" 라고 뜬다. 그리고 사용자가 input 창에 무언가를 입력할 때마다 "클린 업" 함수 내부에서 설정한 문자열 "CLEANUP" 가 출력되고, 다시 "Checking from validity!" 도 출력된다. 그런데 input 창에 무언가를 아주 빠르게 입력하게 되면 "CLEANUP" 이 빠르게 축적되어 출력되고, "Checking from validity!" 는 한 번만 출력되는 것을 알 수 있다. 그 말인 즉슨, "클린 업" 함수 전에 실행되던 `setTimeout()` 함수는 "모든 키 스트로크"마다 딱 한 번만 실행된다는 뜻이다.
+- 앞서 초반에 `useEffect`를 이용한 HTTP 요청에 대한 질문의 답이 바로 여기있다. 만약 `useEffect`를 통해 HTTP 요청을 보내고 싶다면 (키 스트로크마다 HTTP 요청을 수십번 보내거나 또한 이 때문에 불필요한 네트워크 트래픽이 생기는 대신) "클린 업" 함수를 통해 요청을 중지하면서 단 한번만 HTTP 요청을 할 수 있을 것이다.
+
+</br>
+
+## useEffect 요약
+
+- `useEffect`는 React에서 가장 중요한 hook 이다. 그렇기에 어느 "시점"에 `useEffect`가 실행되고, `useEffect`의 어느 "부분"이 먼저 혹은 나중에 실행되는지를 이해하는 것은 무엇보다도 중요하다.
+
+```js
+useEffect(() => {
+  console.log("Effect Running");
+});
+```
+
+- 현재 (`Login` 컴포넌트에 임의로 추가한) `useEffect`는 의존성 배열을 제외하고, 첫번째 인자만 받아와서 실행하고 있다. (하지만 당연히 의존성 배열 없이 `useEffect`를 사용하는 일은 거의 없을 것이다.)
+
+![ezgif com-gif-maker (21)](https://user-images.githubusercontent.com/53133662/161381533-f18f43bd-fee6-4f6f-81b7-ed8da43d9c96.gif)
+
+- 브라우저를 리로드하고 개발자 도구의 콘솔을 살펴보면, 컴포넌트가 첫 번째로 마운트 됐을 때 작동하는 걸 확인할 수 있다. 따라서 `Login` 컴포넌트가 처음으로 render 되면 모든 상태(state)가 업데이트될 것이다.
+
+![ezgif com-gif-maker (22)](https://user-images.githubusercontent.com/53133662/161381887-1be34a5e-ca11-4907-906f-6355ee02fd87.gif)
+
+- input 창의 안쪽을 클릭하고 바깥을 클릭하거나, input 창에 무언가를 입력하면 모든 키 스트로크마다 상태가 변화하고 있으므로 그때마다 콘솔에 "Effect Running"라고 출력이 된다. 모든 키 스트로크마다 해당 `effect` 가 작동되고 있는 것이며 다른 말로는 컴포넌트 함수가 재렌더되고 작동되는 모든 순간마다 `effect`가 작동한다는 의미가 된다. (`useEffect` 함수는 모든 컴포넌트 렌더 사이클 마다 작동하기 때문이다. 그리고 그 시점은 모든 컴포넌트가 렌더하기 전도 아니고, 그 중간도 아니며, 렌더한 "이후"에 작동한다. 컴포넌트가 마운트되는 첫 순간을 포함해서.)
+
+```js
+useEffect(() => {
+  console.log("Effect Running");
+}, []);
+```
+
+- `useEffect` 함수에 의존성 배열을 추가했다. 빈 배열을 추가했기 때문에, 해당 `useEffect`는 컴포넌트가 처음으로 마운트되고 렌더될 때만 실행될 것이다. 그리고 이후에 발생하는 리렌더 사이클에서는 작동하지 않을 것이다.
+
+![ezgif com-gif-maker (23)](https://user-images.githubusercontent.com/53133662/161384184-26c56d1d-6206-4fa0-9ff6-d74daee35733.gif)
+
+- 처음 컴포넌트가 렌더되었을 때만 콘솔에 "Effect Running"라고 출력되는 것을 알 수 있다. 키 스트로크를 입력해도 "Effect Running" 는 출력되지 않는다. 이렇듯 빈 배열의 의존성 배열은 컴포넌트가 처음으로 마운트되고 렌더될 때만 실행된다.
+
+```js
+useEffect(() => {
+  console.log("Effect Running");
+}, [enteredEmail, enteredPassword]);
+```
+
+- 이제 의존성 배열에 의존성 값을 추가했다. 이제 `useEffect`는 컴포넌트가 재렌더 될 때마다 혹은 의존성 배열에 추가한 상태 값인 `enteredEmail` 과 `enteredPassword` 가 변화할 때마다 실행될 것이다.
+
+![ezgif com-gif-maker (24)](https://user-images.githubusercontent.com/53133662/161384388-96385997-4f99-4568-b659-ed0541d236f4.gif)
+
+- 컴포넌트가 처음 렌더될 때 그리고 `enteredEmail` 과 `enteredPassword` 에 키 스트로크가 입력될 때마다 콘솔에 "Effect Running"라고 출력되는 것을 확인할 수 있다.
+
+```js
+useEffect(() => {
+  console.log("Effect Running");
+
+  return () => {
+    console.log("Effect CleanUp");
+  };
+}, [enteredPassword]);
+```
+
+- 이번에 추가한 "클린 업" 함수는 상태(state) 함수 전체가 작동하기 전에 작동한다. (하지만 최초로 `useEffect`가 작동하기 전에는 작동하지 않는다는 특징이 있다.)
+  > "클린 업" 함수의 작동 순서를 명확하게 하기 위해서 의존성 배열에 `enteredPassword` 상태 값만 추가했다.
+
+![ezgif com-gif-maker (26)](https://user-images.githubusercontent.com/53133662/161384819-22681972-8d6d-4fbf-9226-89f6737cb42f.gif)
+
+- 컴포넌트가 처음 렌더될 때는 "Effect Running"만 출력된다. (최초의 렌더 사이클에서는 "클린 업" 함수가 실행되지 않는다.) 그리고 `enteredPassword` 에 키 스트로크를 입력하자마자 즉시 콘솔에 "Effect CleanUp"가 출력되는 것을 확인할 수 있다. (`effect` 함수가 작동하기 전에 트리거 되기 때문이다.)
+
+```js
+useEffect(() => {
+  console.log("Effect Running");
+
+  return () => {
+    console.log("Effect CleanUp");
+  };
+}, []);
+```
+
+- 만약 의존성 배열이 빈 배열이라면 "Effect Running"을 단 한번만 볼 수 있다. 그리고 "클린 업" 함수는 해당 컴포넌트가 제거되면 실행될 것이다.
+
+![ezgif com-gif-maker (27)](https://user-images.githubusercontent.com/53133662/161385012-120faa24-f68d-44fc-87ed-ed5c4122df76.gif)
+
+- 로그인을 위한 값을 입력하고 로그인을 하면, `Login` 컴포넌트가 `DOM`에서 제거되면서 "클린 업" 함수가 실행된다. 로그인을 하자마자 콘솔에 "Effect CleanUp"가 출력되는 것을 확인할 수 있다.
 
 </br>
