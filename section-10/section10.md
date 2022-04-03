@@ -9,6 +9,7 @@
 - [Using the useEffect Cleanup Function](#useEffect에서-Cleanup-함수-사용하기)
 - [useEffect Summary](#useEffect-요약)
 - [Introducing useReducer & Reducers In General](#useReducer-및-Reducers의-개요)
+- [Using the useReducer() Hook](#useReducer-훅-사용해보기)
 
 ## Side Effects 와 useEffect
 
@@ -711,5 +712,282 @@ const validatePasswordHandler = () => {
 ### 정리
 
 - 우리가 앞서 보여준 예시들은 모두 다 복잡한 상태(state)를 왜 `useState`가 아닌 `useReducer`로 관리해야 하는지에 대한 이유를 알 수 있도록 해주었다. 다른 상태에 의존하고 있는 상태를 업데이트해야 하는 상황이라면, 하나의 상태로 합치는 게 좋은 선택일 수 있다는 사실 역시 말이다. 그리고 어쩌면 이러한 옵션을 고려하게 될 때 굳이 `useReducer`를 사용하지 않고 `useState`로 관리해줄 수도 있지만 여기서 분명한 것은 `useState`로 대체하게 된다면 상태는 훨씬 더 복잡해지고 커질 것이다. 또 무엇보다도 여러 개의 상태를 결합해야하는 상황이라면 확실히 `useState` 보다 `useReducer`가 더 나은 선택이라고 말할 수 있다.
+
+</br>
+
+## useReducer 훅 사용해보기
+
+- 이제 우리는 왜 `useReducer`를 사용하는지 또 언제 `useReducer`를 사용하는게 더 좋은지에 대해 알고 있다. 하지만 어떻게 `useReducer`를 써야하는지에 대해서는 아는 바가 없다. `useReducer`를 어떻게 사용하는지에 대해 배우기 전에 먼저 `useReducer`가 어떻게 생겼는지에 대해서 알아볼 필요가 있을 것이다.
+
+### `useReducer`를 이론적 측면으로 접근해보기
+
+> [React 공식문서 참조: useReducer)](https://ko.reactjs.org/docs/hooks-reference.html#usereducer)
+
+```js
+const [state, dispatchFn] = useReducer(reducerFn, initialState, initFn);
+```
+
+- `useReducer`는 `useState`와 마찬가지로 항상 2개의 값이 있는 배열을 반환한다. 따라서 `useState`처럼 '배열의 구조 분해 할당'를 통해 이 값들을 모두 끄집어내서 서로 다른 상수에 저장할 수 있게 된다. `useReducer`에서 반환되는 2개의 값 중 하나는 최신 상태의 '스냅 샷'인 `state` 이다.
+
+#### `state`
+
+- `useReducer`는 `useState`처럼 상태 관리 매커니즘이기에 반환되는 2개의 값 중 첫번째 값이 왜 `state`인지 이해할 수 있을 것이다.
+
+#### `dispatchFn`
+
+- 또한 `useReducer`에서는 최신 상태(state)를 보관하는 `state` 뿐만 아니라 상태 '스냅 샷'을 업데이트 해주는 함수(`useReducer`가 반환하는 2개의 값 중 두번째 값)도 반환될 것이다. 보다시피 `useState`의 경우와 매우 유사한 것을 알 수 있다. 그러나, 이 `dispatchFn`는 `useState`의 상태 업데이트 함수(`setState`) 와는 작동 방식에서 다소 차이가 있다. `dispatchFn`는 `setState`처럼 새로운 상태 값을 설정하는 대신에 하나의 'action' 을 디스패치하고 있기 때문이다. 그리고 이 'action'은 `useReducer`로 전달한 첫번째 인수인 `reducerFn`에서 사용하게 된다.
+
+#### `useReducer`의 첫번째 인수 `reducerFn`
+
+```js
+(prevState, action) => newState;
+```
+
+- `reducerFn`는 최신 상태 스냅 샷을 자동으로 가져오는 함수이다. (이는 React에 의해서 호출될 함수이기 때문이다.) 그리고 `reducerFn`는 디스패치 된 'action'을 가져오게 된다. 왜냐하면 새로운 'action'이 디스패치 될 때마다 React가 `reducerFn`를 호출하기 때문이다. 그러면 React가 관리하는 최신 상태(state) 스냅 샷을 자동으로 가져오게 되고, 디스패치 된 'action'을 가져오며 이는 다시 `reducerFn` 실행을 트리거하게 된다. 그리고 `reducerFn`는 또 다른 중요한 임무를 맡는다. 바로, 새로 업데이트 된 상태를 반환하는 것이다. 이는 `useState` hook에서 최신의 스냅 샷을 받아와 이전의 상태를 최신의 상태로 업데이트할 때 사용하던 함수 업데이트 방식과 유사하다. 하지만 `reducerFn`는 'action'을 이용한다는 점에서 이보다는 확장된 방식일 것이다.
+
+#### `useReducer`의 두번째 인수 `initialState`
+
+- `initialState`로 초기 상태를 설정할 수도 있다.
+
+#### `useReducer`의 세번째 인수 `initFn`
+
+- `initFn`로 초기 함수도 설정할 수 있다. 이 함수를 통해서 초기 상태가 설정된다. `initFn`는 초기 상태가 다소 복잡한 경우에 대비해서 사용하거나 HTTP 리퀘스트 등의 결과를 대비할 때 사용한다.
+
+### `useReducer`를 사용해보기
+
+- 현재의 `Login` 컴포넌트를 살펴보면 여러 개의 상태(state)를 `useState`로 관리해주고 있다.
+
+```js
+const [enteredEmail, setEnteredEmail] = useState("");
+const [emailIsValid, setEmailIsValid] = useState();
+const [enteredPassword, setEnteredPassword] = useState("");
+const [passwordIsValid, setPasswordIsValid] = useState();
+const [formIsValid, setFormIsValid] = useState(false);
+```
+
+- 이제 우리는 `useReducer`를 통해서 사용자가 입력한 값과 이 값의 유효성 체크의 상태들을 결합하여 사용해보려고 한다. 또한 form 의 전반적인 상태(state)를 관리할 수 있도록 해볼 것이다. 즉 모든 상태를 포함하는 하나의 거대한 form 의 상태를 관리하거나, 아니면 여러 개의 작은 상태들을 관리할 수 있다는 뜻이다. (물론 어느 쪽을 선택해도 무방하다.) 하지만 일을 조금 더 간단하게 처리해주기 위해서 먼저 `useReducer`를 통한 "email 상태 관리" 부터 시작해볼 것이다.
+
+### email의 상태 관리
+
+- 여기서의 목표는 입력 값과 유효성 체크 상태를 결합해서 `useReducer`가 관리하는 하나의 상태(state)로 만드는 것이다. 먼저 `Login` 컴포넌트 내에 `useReducer`를 import 해오자.
+
+```js
+import React, { useState, useEffect, useReducer } from "react";
+
+const Login = (props) => {
+  ...
+const [emailState, dispatchEmail] = useReducer();
+  ...
+}
+```
+
+- `useReducer`를 호출한 뒤, '배열 구조 할당 분해'로 두 요소를 갖는 배열 안에서 반환했다. 앞에서 살펴보았듯이, `useReducer`가 반환하는 배열 안의 첫번째 요소는 `emailState`라는 최신 상태(state)를 관리하는 값이며, 두번쨰는 이 상태 값을 디스패치하는 `dispatchEmail` 함수이다. 그리고 `useReducer`는 첫 번째 인수로 어떤 함수(reducerFn)를 취할 것이다.
+
+```js
+const [emailState, dispatchEmail] = useReducer(() => {});
+```
+
+- 물론 `useReducer`의 첫번째 인수로 사용하는 함수를 익명의 함수가 아닌, 별개의 함수로 아웃소싱 할 수도 있다.
+
+```js
+const emailReducer = () => {};
+
+const Login = (props) => {
+  ...
+const [emailState, dispatchEmail] = useReducer(emailReducer);
+...
+}
+```
+
+- 먼저, `Login` 컴포넌트 함수 밖에서 `emailReducer`라는 이름의 함수를 선언한다. 우리는 이 `emailReducer` 함수는 컴포넌트 함수 밖에서 만들었다는 것에 주목해야 한다. 이 `emailReducer`라는 리듀서 함수가 컴포넌트 밖에서 만들어진 이유는 리듀서 함수 안에서는 컴포넌트 함수 내부에서 만들어진 데이터는 필요하지 않기 때문이다. 따라서, 이 리듀서 함수(`emailReducer`)는 `Login` 컴포넌트 함수 범위 밖에서 만들어졌다. 그러면 컴포넌트 함수 내부의 것들과 상호작용할 필요가 없어진다. 또한 리듀서 함수(`emailReducer`)는 함수 안에서 요청되거나 활용될 모든 데이터는 `emailReducer` 라는 이름의 함수로 전달될 것이다. 그리고 이는 React에 의해서 자동으로 실행된다.
+
+```js
+const emailReducer = (state, action) => {};
+```
+
+- 이 리듀서 함수(`emailReducer`)는 2개의 인수, 2개의 parameter를 갖는다. 바로 최신 상태 스냅 샷(state)와 디스패치 된 액션(action)이다.
+
+```js
+const emailReducer = (state, action) => {
+  return { value: "", isValid: false };
+};
+```
+
+- 그리고, 리듀서 함수(`emailReducer`)는 새로운 상태(state)를 반환한다. 여기서 반환된ㄴ 새로운 상태는 값을 갖는 객체일 수 있다. 먼저, value 의 초기값인 빈 문자열을 할당한 뒤, isValid 필드의 초기값인 false 도 추가한다.
+
+```js
+const emailReducer = (state, action) => {
+  return { value: "", isValid: false };
+};
+
+const Login = (props) => {
+  ...
+  const [emailState, dispatchEmail] = useReducer(emailReducer, {
+    value: "",
+    isValid: false,
+  });
+  ...
+}
+```
+
+- `useReducer`가 받는 두번째 인자인 `initialState`는 초기 상태를 설정할 수 있다. 먼저, 우리가 설정하고자 하는 초기 상태(value, isValid)를 추가해주었다. 이 초기 상태는 우리가 리듀서 함수(`emailReducer`)의 `emailState`에서 설정한 초기 상태이다. 여기까지 마치면 이제 우리는 `emailState`를 코드 내에서 사용할 수 있게 된다.
+
+### 최신 상태 값인 `emailState` 사용해보기
+
+```js
+const passwordChangeHandler = (event) => {
+  setEnteredPassword(event.target.value);
+
+  setFormIsValid(
+    enteredEmail.includes("@") && event.target.value.trim().length > 6
+  );
+};
+```
+
+- 먼저 기존의 `passwordChangeHandler` 핸들러 함수에서 `setFormIsValid`를 업데이트할 때 사용하던 `enteredEmail` 상태를 `emailState`로 바꿔서 설정해보자. 물론 `emailState`의 `value` 값으로 접근해서 value 값의 유효성을 체크해야 할 것이다.
+
+```js
+const passwordChangeHandler = (event) => {
+  setEnteredPassword(event.target.value);
+
+  setFormIsValid(
+    emailState.value.includes("@") && event.target.value.trim().length > 6
+  );
+};
+```
+
+```js
+const validateEmailHandler = () => {
+  setEmailIsValid(emailState.value.includes("@"));
+};
+```
+
+- `validateEmailHandler` 함수 내부에서 `enteredEmail`로 email의 유효성을 체크하던 `setEmailIsValid` 업데이트 함수 내에서도 `emailState`로 수정하여 `value` 값으로 접근해서 사용했다. 여기서 알아둬야 할 점은 리듀서 함수(`emailReducer`) 에서 반환하는 객체 값에는 isValid도 있다는 사실이다.
+
+```js
+const passwordChangeHandler = (event) => {
+  setEnteredPassword(event.target.value);
+
+  setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
+};
+```
+
+- `emailState.value.includes("@")`로 접근했던 것을 지우고, `emailState.isValid`로 수정하면서 간단하게 true 인지 false 인지를 체크할 수 있게 되었다. 좀 전에 수정한 유효성 체크 핸들러 함수도 isValud를 사용해서 간단하게 수정해보자.
+
+```js
+const validateEmailHandler = () => {
+  setEmailIsValid(emailState.isValid);
+};
+```
+
+- `emailState.value.includes("@")`를 `emailState.isValid`로 간단하게 접근하여 수정했다. 리듀서에서 관리하는 `emailState`를 이용해서 기존의 `useState`로 관리해주던 상태들을 계속 수정해보자.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+  props.onLogin(enteredEmail, enteredPassword);
+};
+```
+
+- `submitHandler` 함수에서 `props.onLogin`의 첫번째 인자로 보내주었던 `enteredEmail` 상태 값을,
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+  props.onLogin(emailState.value, enteredPassword);
+};
+```
+
+- `emailState.value`로 변경해주었다. 이제 JSX 코드 내에서 사용하던 email 관련한 state 값들을 전부 리듀서에서 관리하는 `emailState`를 이용해서 수정해보자.
+
+#### before
+
+```js
+<div
+  className={`${classes.control} ${
+      emailIsValid === false ? classes.invalid : ""
+  }`}
+>
+...
+<input
+  type="email"
+  id="email"
+  value={enteredEmail}
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+/>
+```
+
+#### after
+
+```js
+<div
+  className={`${classes.control} ${
+      emailState.isValid === false ? classes.invalid : ""
+  }`}
+>
+...
+<input
+  type="email"
+  id="email"
+  value={emailState.value}
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+/>
+```
+
+```js
+const [enteredEmail, setEnteredEmail] = useState("");
+const [emailIsValid, setEmailIsValid] = useState();
+```
+
+- 이제 기존에 `useState`로 관리하던 `enteredEmail`과 `emailIsValid`는 사용할 필요가 없어졌으니 주석처리를 하도록 하자. 주석처리를 해보면, 기존에 사용하던 `setEmailIsValid`과 `setEnteredEmail`를 대체하지 않은 상태에서 주석처리를 했기 때문에 당연히 error가 발생할 것이다. 이때 나머지 리듀서 함수 작업, 즉 'action'을 디스패치 해줘야 한다.
+
+### 'action'을 디스패치 해보기
+
+```js
+const emailChangeHandler = (event) => {
+  setEnteredEmail(event.target.value);
+  ...
+};
+```
+
+- 먼저, 사용자 email 입력 값을 처리해주는 `emailChangeHandler` 함수부터 수정해보자. `setEnteredEmail`로 상태를 업데이트해주고 있었지만 우리가 설정한 리듀서 상태 업데이트 함수인 `dispatchEmail`를 이용해서 상태를 업데이트할 수 있을 것이다.
+
+```js
+const [emailState, dispatchEmail] = useReducer(emailReducer, {
+    value: "",
+    isValid: false,
+});
+
+...
+
+const emailChangeHandler = (event) => {
+  dispatchEmail();
+  ...
+};
+```
+
+- 이제 `dispatchEmail`에 'action' 을 보내야 한다. 이 'action'을 정하는 건 각자의 몫이기 때문에 문자열 식별자로 하거나 숫자로도 지정할 수 있을 것이다. 하지만 보통은 'action'을 객체로 자주 사용한다. 생성자를 품고 있는 필드를 갖는 객체 말이다.
+
+```js
+dispatchEmail({ type: "USER_INPUT" });
+```
+
+- 필드의 이름은 주로 type 으로 쓴다. 값은 "USER_INPUT" 로 설정했다. 이 값은 대문자로만 이루어진 문자열이지만 관례적으로 대문자를 사용하기 때문에 대문자로만 이루어진 문자열을 사용하는 게 좋다. 문자열을 모두 대문자로 채워서 알아보기 쉬운 식별자로 만드는 것이다.
+
+```js
+dispatchEmail({ type: "USER_INPUT", val: event.target.value });
+```
+
+- 또한 이 'action'에 추가적인 페이로드를 추가할 수 있다. 추가할 수 있다고 말하는 이유는 보통 선택사항이기 때문이다. 우리는 유저가 입력한 값을 저장하길 원하기 때문에 이 페이로드를 추가해줄 것이다. 바로 val 이란 필드를 추가하고, 여기에 유저가 입력한 값인 `event.target.value`을 담을 수 있도록 한다.
+
+- 이것이 바로 'action'이다. 이는 객체로서 type 이란 필드를 가지며 이는 일어난 일을 설명해주고, 추가적인 페이로드로 val 이란 필드로 유저가 입력한 값을 갖는다. 이제 `dispatchEmail()`은 `useReducer`가 보낸 리듀서 함수인 `emailReducer` 이란 이름의 함수를 실행시킬 수 있게 되었다.
+
+```js
+const emailReducer = (state, action) => {
+  return { value: "", isValid: false };
+};
+```
 
 </br>
