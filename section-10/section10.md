@@ -8,6 +8,7 @@
 - [What to add & Not to add as Dependencies](#종속성으로-추가할-항목-및-추가하지-않을-항목)
 - [Using the useEffect Cleanup Function](#useEffect에서-Cleanup-함수-사용하기)
 - [useEffect Summary](#useEffect-요약)
+- [Introducing useReducer & Reducers In General](#useReducer-및-Reducers의-개요)
 
 ## Side Effects 와 useEffect
 
@@ -43,7 +44,7 @@ function App() {
 
 ### Side Effect
 
-- 그럼 Side Effects(Effect) 란 무엇일까? 사이드 이펙트(Side Effect)는 어플리케이션에서 벌어지는 모든 일들을 총칭하는 용어이다. 예를 들자면 HTTP 리퀘스트를 보내거나 브라우저 스토리지(or 로컬 스토리지)에 무언가를 저장하는 일 등이 바로 사이드 이펙트에 해당한다. 물론 코드 내에서 세팅하는 타이머나 interval 역시 사이드 이펙트라고 말할 수 있을 것이다. 앞서 거론한 이러한 작업들은 모두 어플리케이션 내부에서 고려되어야 하는 사항이다. HTTP 리퀘스트를 백엔드 서버로 보내야 하는 경우를 생각해보자. (당연히 어플리케이션의 시나리오에 따라 다르겠지만) 어떤 어플리케이션에서는 이런 리퀘스트가 셀 수도 없이 많을지도 모른다. 하지만 놀랍게도 이런 어플리케이션 내부에서 고려되어야 하는 작업들은 모두 화면에 무언가를 가져오거나 그려내는 것과는 관련이 없다. (적어도 직접적으로는 말이다.) 물론 HTTP 리퀘스트를 백엔드 서버에 전송해서 응답을 받을 때마다 화면에 무언가를 그려낼 수도 있겠으나 HTTP 리퀘스트를 전송하는 행위 그 자체는 관련이 없다. HTTP 리퀘스트나 잠재적 error를 관리하는 등등의 일들은 적어도 React가 필요한 일이 아니기 떄문이다. (이러한 일들은 보통 React가 관심을 두거나 고려하는 사항도 아니며, 애초에 React의 역할도 아니다.)
+- 그럼 Side Effects(Effect) 란 무엇일까? 사이드 이펙트(Side Effect)는 어플리케이션에서 벌어지는 모든 일들을 총칭하는 용어이다. 예를 들자면 HTTP 리퀘스트를 보내거나 브라우저 스토리지(or 로컬 스토리지)에 무언가를 저장하는 일 등이 바로 사이드 이펙트에 해당한다. 물론 코드 내에서 세팅하는 타이머나 interval 역시 사이드 이펙트라고 말할 수 있을 것이다. 앞서 거론한 이러한 작업들은 모두 어플리케이션 내부에서 고려되어야 하는 사항이다. HTTP 리퀘스트를 백엔드 서버로 보내야 하는 경우를 생각해보자. (당연히 어플리케이션의 시나리오에 따라 다르겠지만) 어떤 어플리케이션에서는 이런 리퀘스트가 셀 수도 없이 많을지도 모른다. 하지만 놀랍게도 이런 어플리케이션 내부에서 고려되어야 하는 작업들은 모두 화면에 무언가를 가져오거나 그려내는 것과는 관련이 없다. (적어도 직접적으로는 말이다.) 물론 HTTP 리퀘스트를 백엔드 서버에 전송해서 응답을 받을 때마다 화면에 무언가를 그려낼 수도 있겠으나 HTTP 리퀘스트를 전송하는 행위 그 자체는 관련이 없다. HTTP 리퀘스트나 잠재적 error를 관리하는 등등의 일들은 적어도 React가 필요한 일이 아니기 때문이다. (이러한 일들은 보통 React가 관심을 두거나 고려하는 사항도 아니며, 애초에 React의 역할도 아니다.)
 - 사이드 이펙트(Side Effect)와 관련된 일들은 일반적인 컴포넌트의 평가 밖에서 일어나야만 한다. 즉 일반적인 컴포넌트 함수 바깥에서 일어날 수 있도록 해야한다는 이야기이다. 여기서 잊지 말아야할 사항 중에 하나는 컴포넌트는 해당 함수 내에서 사용하는 상태(state)가 변할 때마다 React에 의해 자동으로 재실행 된다는 사실이다.
 
 ```js
@@ -382,7 +383,7 @@ const MyComponent = (props) => {
 ```
 
 - `timerIsActive` 는 종속성으로 추가되었다. 왜냐하면 구성 요소가 변경될 때 변경될 수 있는 구성 요소 상태이기 때문이다. (`setTimerIsActive`로 상태(state)가 업데이트되었기 때문에)
-- `timerDuration` 은 종속성으로 추가되었다. 왜냐하면 `timerDuration`은 해당 컴포넌트에서 받아온 prop 값이기 떄문에 상위 컴포넌트에서 해당 값을 변경하면 변경될 수 있음을 고려해줘야 하기 때문이다. (이 `MyComponent` 도 다시 렌더링되도록 함).
+- `timerDuration` 은 종속성으로 추가되었다. 왜냐하면 `timerDuration`은 해당 컴포넌트에서 받아온 prop 값이기 때문에 상위 컴포넌트에서 해당 값을 변경하면 변경될 수 있음을 고려해줘야 하기 때문이다. (이 `MyComponent` 도 다시 렌더링되도록 함).
 - `setTimerIsActive` 는 종속성으로 추가되지 않았다. (왜냐하면 앞서 거론한 예외 조건이기 때문이다.) 상태(state) 업데이트 기능을 종속성에 추가할 수는 있지만 React는 기능 자체가 절대 변경되지 않음을 보장하므로 굳이 추가할 필요가 없다.
 - `myTimer` 는 종속성으로 추가되지 않았다. 왜냐하면 그것은 `MyComponent` 컴포넌트 내부의 변수가 아니기 때문이다. (즉, 어떤 상태(satte)나 prop 값이 아님) 컴포넌트 요소 외부에서 정의되고 이를 변경하기 때문에(어디에서든) `MyComponent` 컴포넌트 요소가 다시 평가되도록 하지 않는다.
 - `setTimeout` 은 종속성으로 추가되지 않았다. 왜냐하면 그것은 "내장 API"이기 때문이다. 이는 React 및 구성 요소와 독립적이며 변경되지 않는다.
@@ -391,7 +392,7 @@ const MyComponent = (props) => {
 
 ## useEffect에서 Cleanup 함수 사용하기
 
-- 우리는 때떄로 Clean up 작업이 필요한 `Effect`를 사용할 때도 있을 것이다. 물론 이는 너무 추상적인 이야기이기 때문에 예시를 통해 알아보는 것이 좋겠다.
+- 우리는 때때로 Clean up 작업이 필요한 `Effect`를 사용할 때도 있을 것이다. 물론 이는 너무 추상적인 이야기이기 때문에 예시를 통해 알아보는 것이 좋겠다.
 
 ```js
 useEffect(() => {
@@ -519,7 +520,7 @@ useEffect(() => {
 
 ## useEffect 요약
 
-- `useEffect`는 React에서 가장 중요한 hook 이다. 그렇기에 어느 "시점"에 `useEffect`가 실행되고, `useEffect`의 어느 "부분"이 먼저 혹은 나중에 실행되는지를 이해하는 것은 무엇보다도 중요하다.
+- `useEffect`는 (`useState`를 제외하고) React에서 가장 중요한 hook 이다. 그렇기에 어느 "시점"에 `useEffect`가 실행되고, `useEffect`의 어느 "부분"이 먼저 혹은 나중에 실행되는지를 이해하는 것은 무엇보다도 중요하다.
 
 ```js
 useEffect(() => {
@@ -593,5 +594,122 @@ useEffect(() => {
 ![ezgif com-gif-maker (27)](https://user-images.githubusercontent.com/53133662/161385012-120faa24-f68d-44fc-87ed-ed5c4122df76.gif)
 
 - 로그인을 위한 값을 입력하고 로그인을 하면, `Login` 컴포넌트가 `DOM`에서 제거되면서 "클린 업" 함수가 실행된다. 로그인을 하자마자 콘솔에 "Effect CleanUp"가 출력되는 것을 확인할 수 있다.
+
+</br>
+
+## useReducer 및 Reducers의 개요
+
+- `useReducer`는 또 다른 React의 빌트인 hook 이며, 상태(state) 관리를 도와줄 것이다. `useReducer`는 상태(state) 관리 측면에서라면 `useState`와 비슷해보이지만 능력이 더 많으며, 더 복잡한 상태(state)를 관리해야 할 때 훨씬 유용하다는 차이점이 있다.
+
+### 복잡한 상태(state)를 다룬다는 것
+
+- 우리는 그동안 `useState`를 사용하면서 상태(state)를 관리해왔다. 하지만 더 복잡한 상태(state)를 관리해야 한다면 어떨까? 예를 들어, 여러 곳에서 관리하는 상태(state)이지만 관점만 다르거나 동시에 업데이트하면서 서로 관련이 있는 멀티플 상태(state)를 생각해보자. 이런 경우에는 `useState`와 거기서 얻는 상태(state)가 에러를 일으킬 가능성이 높다. 기본적으로 효율적지 않으며, 잠재적으로 버그를 발생시킬지도 모른다. (이는 분명 우리가 원하는 상황일리가 없다.) 그리고 `useReducer`는 이런 상황일 때 `useState`의 대안이 될 수 있다.
+
+> 물론 언제나 `useReducer`를 사용할 필요는 없다. 더 강력하다고 완벽할리는 없기 때문이다. 강력한 만큼 사용하기에는 더 복잡할 것이고, 당연히 설정할 것도 많아질 것이다. 따라서 대부분의 경우에는 `useState`를 사용하는 게 더 적합할 수 있다.
+
+### 더 강력한 상태(state) 관리가 필요한 이유
+
+```js
+const [enteredEmail, setEnteredEmail] = useState("");
+const [enteredPassword, setEnteredPassword] = useState("");
+const [emailIsValid, setEmailIsValid] = useState();
+const [passwordIsValid, setPasswordIsValid] = useState();
+const [formIsValid, setFormIsValid] = useState(false);
+```
+
+- 우리는 현재 `Login` 컴포넌트에서 여러 개의 상태(state)를 관리해주고 있다. `enteredEmail`과 `enteredPassword`를 관리해주고 있고, 각각의 유효성을 검사하는 `emailIsValid`와 `passwordIsValid`도 관리하고 있다. 마지막으로 form 전체의 유효성을 관리하는 `formIsValid`도 있다. 이것들은 전체적으로 하나의 거대한 상태(state)라고 볼 수도 있을 것이다. 이 모든 상태(state)는 전반적으로 form 상태(state)를 설명하고 있기 때문이다. 반면 이 모든 상태(state)를 최소한의 관점으로 쪼개면 두가지로 나눌 수도 있다. 바로 사용자가 입력한 값과 입력의 유효성이다.
+
+```js
+useEffect(() => {
+  const identifier = setTimeout(() => {
+    setFormIsValid(
+      enteredEmail.includes("@") && enteredPassword.trim().length > 6
+    );
+  }, 500);
+
+  return () => {
+    clearTimeout(identifier);
+  };
+}, [enteredEmail, enteredPassword]);
+
+const validateEmailHandler = () => {
+  setEmailIsValid(enteredEmail.includes("@"));
+};
+
+const validatePasswordHandler = () => {
+  setPasswordIsValid(enteredPassword.trim().length > 6);
+```
+
+- 위의 로직을 살펴보면 `useEffect` 내부 함수에서 이메일과 비밀번호의 유효성을 확인해서 form의 전반적인 유효성을 설정하고, 각각의 유효성을 체크하는 두개의 핸들러 함수에도 동일한 작업(중복되는 로직)을 하고 있음을 확인할 수 있다. 우리는 이제 이 중복되는 로직을 기반으로 다양한 방법을 사용해서 상태(state) 관리를 할 수 있게 된 것이다. 예를 들면, `useEffect`에서는 `emailIsValid`과 `passwordIsValid`의 상태(state)를 확인하는데 사용할 수 있다. (form이 전반적으로 유효한지, 또 작동하고 있는지에 대해서 확인할 수 있다는 이야기다.) `enteredEmail`과 `emailIsValid`는 어떨까? 이것들은 확실히 같은 범위 안에 속하는 것으로 보여진다. 따라서 함께 관리할 수 있을 것이다.
+
+```js
+// useEffect(() => {
+//   const identifier = setTimeout(() => {
+//     setFormIsValid(
+//       enteredEmail.includes("@") && enteredPassword.trim().length > 6
+//     );
+//   }, 500);
+
+//   return () => {
+//     clearTimeout(identifier);
+//   };
+// }, [enteredEmail, enteredPassword]);
+
+const emailChangeHandler = (event) => {
+  setEnteredEmail(event.target.value);
+
+  setFormIsValid(
+    event.target.value.includes("@") && enteredPassword.trim().length > 6
+  );
+};
+
+const passwordChangeHandler = (event) => {
+  setEnteredPassword(event.target.value);
+
+  setFormIsValid(
+    enteredEmail.includes("@") && event.target.value.trim().length > 6
+  );
+};
+```
+
+- `useEffect`를 주석 처리하고 이전에 `emailChangeHandler`와 `passwordChangeHandler`에서 관리해주었던 form 유효성 체크 로직을 다시 살려놓는다. 이 방법은 이전에도 말했다시피 작동은 하지만, 코드를 여러번 재사용하는 좋지 않은 코드이다. (그래서 우리는 `useEffect`를 사용했을 것이다.) 하지만 어떤 이유에서인지 라우트를 `useEffect`에 가져오고 싶지 않다고 가정해보자. 그리고 이때 우리는 어떤 문제를 맞닿드리게 된다.
+
+```js
+const passwordChangeHandler = (event) => {
+  ...
+  setFormIsValid(
+    enteredEmail.includes("@") && event.target.value.trim().length > 6
+  );
+};
+```
+
+- 여기 예시가 있다. 우리는 `passwordChangeHandler` 핸들러 함수에서 form의 유효성을 체크하고 업데이트하고 있다. 다른 두 개(이메일, 패스워드)의 상태(state)에 근거해서 말이다. 떠올려보면, 우리는 예전 상태(state)를 기반으로 상태를 업데이트하는 (함수 폼을 사용한)방법을 배웠고 이것을 사용할 수 있지 않을까 고민할 수도 있을 것이다. 하지만 안타깝게도 이 로직에서는 상태(state)를 업데이트하는 함수 폼을 사용할 수 없다. 함수 폼은 (같은 상태의 이전 상태 스냅 샷에 따라서) 다음 상태(state)를 업데이트할 때만 참(true)이기 때문이다. 반면 이 로직에서는 두 개의 다른 상태(state) 스냅 샷에 기반하고 있고 이는 `formIsValid`의 마지막 상태 스냅 샷이 아닐 것이다.
+
+### 가장 최신의 상태(state)를 받아오지 않을 가능성
+
+- 또한, React가 상태를 업데이트하는 방법 때문에 해당 상태 업데이트 코드는 작동하게 되지만 올바른 상태를 받아오지 않을 가능성이 높다. 그러니까 이메일 `enteredEmail` 상태 업데이트가 진행되기 전이라도 `setFormIsValid()` 코드는 작동될 가능성이 있다는 뜻이다. 따라서 사용자가 입력한 이메일이 해당 `setFormIsValid()` 코드가 실행될 때 `enteredEmail`의 가장 마지막 스냅 샷(가장 최근의 `enteredEmail`)을 포함하지 않을 수 있다. 그래서 그동안 우리는 함수 폼을 이용해서 최신의 상태를 기반으로 업데이트 했었지만, 이번 경우에는 함수 폼을 사용할 수 없었기 때문에 이러한 리스크를 안고서도 해당 로직을 작성했던 것이다. 그리고 우리는 이런 상황에서 바로 `useReducer`를 사용할 수 있다.
+
+## `useState`의 대체제 `useReducer`
+
+- `enteredEmail`이나 `emailIsValid` 처럼, 같은 범위에 속하는 상태(state)가 있다면 혹은 여러 상태(state)를 기반으로 상태(state)를 업데이트해야 한다면 `useState`의 대체제로 `useReducer`를 사용할 수 있을 것이다. 그리고 `useReducer`를 사용한다면 리스크를 안고 (함수 폼 대신) `formIsValid`를 업데이트했던 코드 역시 더이상 사용하지 않아도 된다.
+
+```js
+const validateEmailHandler = () => {
+  setEmailIsValid(enteredEmail.includes("@"));
+};
+
+const validatePasswordHandler = () => {
+  setPasswordIsValid(enteredPassword.trim().length > 6);
+};
+```
+
+- 우리는 `validateEmailHandler`와 `validatePasswordHandler` 같은 핸들러 함수를 이용해서 두개의 상태(`emailIsValid`, `passwordIsValid`)를 업데이트 했다. 그리고 이 업데이트를 위해서는 두개의 상태(`emailIsValid`, `passwordIsValid`)가 있어야 할 것이며, 이 두개의 상태는 각각 `enteredEmail`과 `enteredPassword`이라는 상태를 살펴보고 메소드를 호출해서 유효성을 체크한 뒤에 업데이트하고 있다. 우리는 그동안 입력 값을 상태로 관리해주는 상태(`emailIsValid`, `passwordIsValid`)와 이 입력 값의 유효성을 상태로 관리해주는 상태(`enteredEmail`, `enteredPassword`)를 따로 따로 관리해주고 있었다. 이 두개의 종류는 모두 사용자가 무엇을 입력하느냐에 따라 달라지지만 이 두가지는 엄연히 말하자면 다른 상태이고 다른 변수일 것이다. 그렇기에 유효성을 체크한 뒤 업데이트해주는 상태를 추출할 때 "다른 상태를 기반"으로 업데이트를 해주는 것은 어찌됐건 큰 리스크가 될 것이다.
+
+- 대부분의 경우에는 해당 방법이 정상적으로 작동할 수는 있으나, 특정 경우에는 작동하지 않을 가능성이 높다. 예를 들어보면 가끔 `validateEmailHandler` 핸들러 함수에서 `setEmailIsValid`로 업데이트할 때 기반으로 사용하는 `enteredEmail` 상태(state)는 제때 작동되지 않을 수 있다. 그럼에도 `setEmailIsValid`는 가장 최신의 스냅 샷이 아닌 `enteredEmail` 상태를 기반으로 업데이트되기도 한다.
+  > 따라서 우리는 상태를 업데이트할 때 함수 폼을 이용하지만 `setFormIsValid` 만으로는 불가능하다. 상태(state) 업데이트 함수의 함수 폼이 `validateEmailHandler`와 `validatePasswordHandler` 같은 핸들러 함수 내부에 있기 때문이다. 그리고 만약 두개의 핸들러 내부에 함수 폼을 사용해서 상태를 업데이트하게 된다면, `setFormIsValid`는 가장 최신의 `enteredEmail`나 `enteredPassword`가 아니라, `emailIsValid`와 `passwordIsValid`의 최신 상태만 받을 것이다. 그렇기 때문에 이것은 옵션으로 고려할 수 없다.
+
+### 정리
+
+- 우리가 앞서 보여준 예시들은 모두 다 복잡한 상태(state)를 왜 `useState`가 아닌 `useReducer`로 관리해야 하는지에 대한 이유를 알 수 있도록 해주었다. 다른 상태에 의존하고 있는 상태를 업데이트해야 하는 상황이라면, 하나의 상태로 합치는 게 좋은 선택일 수 있다는 사실 역시 말이다. 그리고 어쩌면 이러한 옵션을 고려하게 될 때 굳이 `useReducer`를 사용하지 않고 `useState`로 관리해줄 수도 있지만 여기서 분명한 것은 `useState`로 대체하게 된다면 상태는 훨씬 더 복잡해지고 커질 것이다. 또 무엇보다도 여러 개의 상태를 결합해야하는 상황이라면 확실히 `useState` 보다 `useReducer`가 더 나은 선택이라고 말할 수 있다.
 
 </br>

@@ -20,26 +20,36 @@ const Login = (props) => {
     };
   }, []);
 
-  useEffect(() => {
-    const identifier = setTimeout(() => {
-      // console.log("Checking from validity!");
-      setFormIsValid(
-        enteredEmail.includes("@") && enteredPassword.trim().length > 6
-      );
-    }, 500);
+  // useEffect(() => {
+  //   const identifier = setTimeout(() => {
+  //     // console.log("Checking from validity!");
+  //     setFormIsValid(
+  //       enteredEmail.includes("@") && enteredPassword.trim().length > 6
+  //     );
+  //   }, 500);
 
-    return () => {
-      // console.log("CLEANUP");
-      clearTimeout(identifier);
-    };
-  }, [enteredEmail, enteredPassword]);
+  //   return () => {
+  //     // console.log("CLEANUP");
+  //     clearTimeout(identifier);
+  //   };
+  // }, [enteredEmail, enteredPassword]);
 
   const emailChangeHandler = (event) => {
     setEnteredEmail(event.target.value);
+
+    setFormIsValid(
+      // 두개의 상태에 근거해서 폼의 유효성을 확인
+      event.target.value.includes("@") && enteredPassword.trim().length > 6
+    );
   };
 
   const passwordChangeHandler = (event) => {
     setEnteredPassword(event.target.value);
+
+    setFormIsValid(
+      // 두개의 상태에 근거해서 폼의 유효성을 확인
+      enteredEmail.includes("@") && event.target.value.trim().length > 6
+    );
   };
 
   const validateEmailHandler = () => {
@@ -47,7 +57,7 @@ const Login = (props) => {
   };
 
   const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    setPasswordIsValid(enteredPassword.trim().length > 6); // 패스워드 길이가 6 이상일 때마다 true
   };
 
   const submitHandler = (event) => {
