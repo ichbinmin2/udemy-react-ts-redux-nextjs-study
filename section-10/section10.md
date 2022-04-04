@@ -10,6 +10,7 @@
 - [useEffect Summary](#useEffect-요약)
 - [Introducing useReducer & Reducers In General](#useReducer-및-Reducers의-개요)
 - [Using the useReducer() Hook](#useReducer-훅-사용해보기)
+- [useReducer & useEffect](#useReducer-&-useEffect)
 
 ## Side Effects 와 useEffect
 
@@ -1132,10 +1133,285 @@ const [emailState, dispatchEmail] = useReducer(emailReducer, {
 
 ![ezgif com-gif-maker (29)](https://user-images.githubusercontent.com/53133662/161487707-1b37af5c-d3bc-4476-b8fa-cacb3c903604.gif)
 
-- email input 창이 아무런 변화가 없다는 걸 확인할 수 있다. 즉, 처음부터 blur 된 것처럼 취급되지 않는 것이다. 다시 isValid 의 초기 값을 false 로 돌려놓은 뒤 로그인을 실행해보면
+- email input 창이 아무런 변화가 없다는 걸 확인할 수 있다. 즉, 처음부터 blur 된 것처럼 취급되지 않는 것이다. 다시 로그인을 실행해보면,
 
 ![ezgif com-gif-maker (30)](https://user-images.githubusercontent.com/53133662/161488160-5addb260-3f34-4a30-bc80-40c82342d454.gif)
 
 - `useReducer`를 사용하기 전과 동일하게 작동되고 있음을 확인할 수 있다. `useReducer`를 사용하게 되면서 emailState를 하나로 묶어서 하나의 장소에서 관리할 수 있었고, `Login` 컴포넌트 내부에서의 코드가 보다 간결해질 수 있었다.
+
+</br>
+
+## useReducer & useEffect
+
+### user password의 상태관리
+
+- `useReducer` 호출 한뒤 reducer 함수 생성하고 초기값 전달
+
+```js
+const passwordReducer = (state, action) => {
+  return { value: "", isValid: false };
+};
+
+const Login = (props) => {
+  ...
+  const [passwordState, dispatchPassword] = useReducer(passwordReducer, {
+    value: "",
+    isValid: null,
+  });
+  ...
+}
+```
+
+- `useState`로 관리되었던 상태(state) 값 모두 `useReducer`의 상태(state) 값으로 수정
+
+```js
+const emailChangeHandler = (event) => {
+  dispatchEmail({ type: "USER_INPUT", val: event.target.value });
+
+  setFormIsValid(event.target.value.includes("@") && passwordState.isValid);
+};
+
+const submitHandler = (event) => {
+  event.preventDefault();
+  props.onLogin(emailState.value, passwordState.value);
+};
+```
+
+```js
+<div
+  className={`${classes.control} ${
+    passwordState.isValid === false ? classes.invalid : ""
+  }`}
+>
+  <label htmlFor="password">Password</label>
+  <input
+    type="password"
+    id="password"
+    value={passwordState.value}
+    onChange={passwordChangeHandler}
+    onBlur={validatePasswordHandler}
+  />
+</div>
+```
+
+- `useState`로 관리해주던 상태 값 모두 주석처리
+
+```js
+// const [enteredPassword, setEnteredPassword] = useState("");
+// const [passwordIsValid, setPasswordIsValid] = useState();
+```
+
+- 리듀서 함수(`passwordReducer`)에 `dispatchPassword` 함수로 디스패치 된 'action' 전달
+
+```js
+const passwordChangeHandler = (event) => {
+  dispatchPassword({ type: "USER_INPUT", val: event.target.value });
+
+  setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
+};
+
+const validatePasswordHandler = () => {
+  dispatchPassword({ type: "INPUT_BLUR" });
+};
+```
+
+- 리듀서 함수(`passwordReducer`)에 type에 맞는 새로운 객체 값 반환
+
+```js
+const passwordReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    return { value: action.val, isValid: action.val.trim().length > 6 };
+  }
+  if (action.type === "INPUT_BLUR") {
+    return { value: state.value, isValid: state.value.trim().length > 6 };
+  }
+  return { value: "", isValid: false };
+};
+```
+
+- 저장하고, 실행해보면
+
+![ezgif com-gif-maker (32)](https://user-images.githubusercontent.com/53133662/161529354-04db1ba4-d7d1-4a8d-bfba-e64612ebe075.gif)
+
+- user password input 도 정상적으로 작동하는 것을 확인할 수 있다.
+
+```js
+const emailReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    return { value: action.val, isValid: action.val.includes("@") };
+  }
+  if (action.type === "INPUT_BLUR") {
+    return { value: state.value, isValid: state.value.includes("@") };
+  }
+  return { value: "", isValid: false };
+};
+
+const passwordReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    return { value: action.val, isValid: action.val.trim().length > 6 };
+  }
+  if (action.type === "INPUT_BLUR") {
+    return { value: state.value, isValid: state.value.trim().length > 6 };
+  }
+  return { value: "", isValid: false };
+};
+```
+
+- 지금까지 우리는 리듀서 함수를 하나만 사용해왔다. `emailReducer`와 `passwordReducer`는 유효성 검사 로직을 제외하고 거의 동일한 방식으로 이루어졌기 때문이다. (이는 분명 리팩터를 할 수 있는 부분이곘지만 여기에선 조금 복잡하기 때문에 일단 넘어가도록 하자.) 하지만 이것보다도 우리에겐 큰 문제가 하나 남아있다는 걸 잊으면 안된다.
+
+### formIsValid 의 상태관리
+
+```js
+const [formIsValid, setFormIsValid] = useState(false);
+```
+
+- `useState`로 관리해주고 있는 `formIsValid` 라는 상태(state)는 input의 IsValid 와 약간은 관련이 있음을 알 수 있다. input은 전체적인 form 의 일부이기 때문이다. 따라서 우리가 그동안 `formIsValid` 라는 상태(state)로 관리해주던 로직들은 최적의 코드는 아닐지도 모른다.
+
+```js
+const emailChangeHandler = (event) => {
+  dispatchEmail({ type: "USER_INPUT", val: event.target.value });
+
+  setFormIsValid(event.target.value.includes("@") && passwordState.isValid);
+};
+
+const passwordChangeHandler = (event) => {
+  dispatchPassword({ type: "USER_INPUT", val: event.target.value });
+
+  setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
+};
+```
+
+- 위의 로직들을 살펴보면, 우리는 여전히 `formIsValid` 를 다른 상태(state)들에 기반해서 업데이트해주고 있기 때문이다. 앞서 이야기했듯 이것은 분명 우리가 원하는 방식은 아니다. (React의 상태 업데이트 스케줄링을 생각해보자.) 우리는 아직도 최종 상태(state)가 아닌 상태를 기반하여 업데이트를 할지도 모른다는 위험성을 안고 있는 것이나 마찬가지이다.
+
+```js
+setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
+```
+
+- 물론 기술적으로 동일하게 속해있다고 해도 이렇게 쪼개져 있는 상태(state)를 가지고 있다는 건 좋은 방법일리도 최적의 상태(state)일리도 없다. 그래서 우리는 새로운 방법을 사용하고자 한다.
+
+### `useEffect` 사용하기
+
+```js
+useEffect(() => {
+  const identifier = setTimeout(() => {
+    console.log("Checking form validity!");
+    setFormIsValid(
+      enteredEmail.includes("@") && enteredPassword.trim().length > 6
+    );
+  }, 500);
+
+  return () => {
+    console.log("CLEANUP");
+    clearTimeout(identifier);
+  };
+}, [enteredEmail, enteredPassword]);
+```
+
+- 이전에 편의를 위해 주석처리를 해줬던 `useEffect` 로직을 다시 살려놓는다. 그리고 우리는 `useReducer`의 최적의 상태(state)를 기반으로 이 `useEffect` 내부에 있는 `formIsValid` 상태(state)를 업데이트해줄 것이다.
+
+```js
+useEffect(() => {
+  ...
+    setFormIsValid(emailState.isValid && passwordState.isValid);
+  ...
+}, [enteredEmail, enteredPassword]);
+```
+
+- 먼저, `setFormIsValid` 함수에서 `useState` 상태 기반이었던 로직인 `enteredEmail.includes("@")`와 `enteredPassword.trim().length > 6` 를 지우고, 그 자리를 리듀서 상태(state) 값인 `emailState`와 `passwordState`로 수정해준다. 그리고 각 상태(state) 값의 isValid 필드로 접근하여 간단하게 true/false 값으로 처리해준다.
+
+```js
+useEffect(() => {
+  ...
+    setFormIsValid(emailState.isValid && passwordState.isValid);
+  ...
+}, [emailState, passwordState]);
+```
+
+- 그리고 종속성 배열 안에 넣어주었던 `useState` 상태 기반이었던 `enteredEmail`와 `enteredPassword` 를 지워주고, 그 자리를 `useReducer` 상태 값인 `emailState`와 `passwordState`로 수정해준다. 이것은 `setFormIsValid` 를 요청하는 좋은 방법이다. 왜냐하면, `effect` 안에 있고, 상태(state) 최신 값을 적용하고 있기 때문이다. 하지만 이 `effect`는 종속성 배열에 추가한 `emailState`와 `passwordState`가 변경되면 언제든 다시 실행될 것이고, 따라서 결국은 가장 최근의 상태(state) 값을 기반으로 작동하게 될 것이다. 따라서,
+
+```js
+setFormIsValid(emailState.isValid && passwordState.isValid);
+```
+
+- 이런 방식은 다른 상태(state)를 기반으로 상태(state) 업데이트를 좋은 방법일 수 있다. `useEffect`로는 이것이 모든 상태 업데이트를 하는 React 수행에서 작동한다는 보장이 있으며, 이는 수정하기 전과는 다른 경우이다. 이전에는 코드가 너무 빨리 작동을 하거나 `useEffect`가 상태 업데이트 후에만 작동했을 수도 있었기 때문이다. 이제 정상적으로 작동이 되는지 확인해보자.
+
+![ezgif com-gif-maker (33)](https://user-images.githubusercontent.com/53133662/161533468-b742d9e8-4d23-431a-8855-eedc01230f4b.gif)
+
+- 정상적으로 작동이 되는 걸 확인할 수 있다. 하지만 콘솔을 보면, 여기에 작은 문제가 있음을 알 수 있다. 우리가 가동시킨 `effect`가 너무 자주 작동된다는 점이다. 우리가 `effect`의 종속성 값을 설정할 때, `emailState`와 `passwordState`로 지정했기 때문에 이 값들이 변경되면 언제든 작동하는 것이다. 물론 우리는 `effect`가 이렇게 여러번 실행되는 걸 원하지 않을 것이다. 그리고 사실 우리는 `effect`에서 user 가 입력한 각 input 값의 isValid(유효성)만 신경쓰면 된다. 그리고 우리는 이 isValid 상태(state)를 업데이트할 때 value 값을 기반으로 업데이트 해왔음을 잊으면 안될 것이다.
+
+```js
+const passwordReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    return { value: action.val, isValid: action.val.trim().length > 6 };
+  }
+  if (action.type === "INPUT_BLUR") {
+    return { value: state.value, isValid: state.value.trim().length > 6 };
+  }
+  return { value: "", isValid: false };
+};
+```
+
+- 또한, 만약에 각각의 input의 유효성이 보장(유효성을 체크하는 로직이 true 가)되는 순간부터, 그리고 이 input 값에 다른 문자를 추가해도 isValid(유효성) 여부는 변하지 않을 것이다. 하지만 우리가 현재 설정한 `effect`는 isValid 값이 변하지 않음에도 불구하고 계속해서 `effect`를 다시 실행시키고 있다. 왜냐하면, 우리가 설정한 의존성 값(`emailState`와 `passwordState`)은 실제로 `effect` 내부에서 신경 써야만 하는 isValid 값이 아니기 때문이다. 그리고 이는 분명 좋은 방법이 아닐 것이다. 그럼 의존성 값을 어떻게 수정해야 할까? 먼저 새로운 테크닉을 사용해서 조금 더 편리하게 코드를 작성해볼 것이다.
+
+### 객체 구조 분해 할당
+
+```js
+const {} = emailState;
+```
+
+- 객체 구조 분해 할당은 이전에도 배운 적 있는 기술이다. 우리는 이 기술을 이용해서 조금 더 쉽게 isValid 에 접근할 수 있도록 할 수 있다. 배웠다시피 객체 구조 분해 할당은 객체의 어떤 값을 이끌어내는 기술이며, `emailState` 라는 상태(state)에서 isValid 를 추출할 수 있을 것이다. 그리고 추출한 isValid를 새로운 이름으로 할당할 수도 있다.
+
+```js
+const { isValid: emailValid } = emailState;
+const { isValid: passwordValid } = passwordState;
+```
+
+- 각 상태(state) 마다 isValid 의 속성을 추출하고, 각각의 이름(`emailValid`, `passwordValid`)을 지정해주었다. 객체 구조 분해 할당을 통해 객체로부터 추출한 값에 새로운 이름을 매기는 것은 값을 할당하는 것이 아니라 추출한 값을 가리킬 새로운 이름이라고 보면 된다. 그리고 이것은 구조 분해 할당에서 자동으로 사용하는 문법 중에 하나이다. 이제 우리는 이 `emailValid`와 `passwordValid`를 사용해서 `effect`의 의존성 값을 수정할 것이다.
+
+```js
+const { isValid: emailValid } = emailState;
+const { isValid: passwordValid } = passwordState;
+
+useEffect(() => {
+  const identifier = setTimeout(() => {
+    console.log("Checking form validity!");
+    setFormIsValid(emailState.isValid && passwordState.isValid);
+  }, 500);
+
+  return () => {
+    console.log("CLEANUP");
+    clearTimeout(identifier);
+  };
+}, [emailValid, passwordValid]);
+```
+
+- 그리고 이제 이 `effect`는 더이상 `emailState`나 `passwordState`로 isValid 에 접근해서 사용할 수 없기 때문에 `emailValid`와 `passwordValid`로 수정해준다.
+
+```js
+const { isValid: emailValid } = emailState;
+const { isValid: passwordValid } = passwordState;
+
+useEffect(() => {
+  const identifier = setTimeout(() => {
+    console.log("Checking form validity!");
+    setFormIsValid(emailValid && passwordValid);
+  }, 500);
+
+  return () => {
+    console.log("CLEANUP");
+    clearTimeout(identifier);
+  };
+}, [emailValid, passwordValid]);
+```
+
+- 지금까지 각각의 상태(state)의 isValid 상태(state)를 객체 구조 분해 할당 문법을 통해 값을 끌어낸 뒤 이것을 기반으로 `effect`를 수정했다. 이제 `effect`는 우리가 원하지 않을 때 재작동되지 않을 것이다.
+
+![ezgif com-gif-maker (34)](https://user-images.githubusercontent.com/53133662/161537810-6aef651f-15ce-44fa-8839-1f82587df043.gif)
+
+- 실행 결과를 확인해보자. 시작할 때 input 창에 무언가를 쓰기 시작하면 `effect`가 작동을 시작한 뒤, 각각의 `emailValid`와 `passwordValid`가 한 번 작동하게 됐을 때 이 상태에서 새로운 문자가 추가되어도 `effect`가 재실행되지 않는 걸 알 수 있다. 이것은 isValid(유효성)가 한 번 작동된 이후부터는 변하지 않기 때문이다. (물론, 짧게 입력하거나 유효성에 맞지 않게 입력하면 isValid가 false가 되므로, 다시 `effect`가 작동될 것이다.)
+
+### 정리
+
+- 지금까지 `useReducer`를 이용해서 `useEffect`를 최적화하는 방법에 대해서 배워보았다. 이는 최적화에서 중요한 개념이며, 불필요한 `effect`의 수행을 방지하기 위한 일이기 때문에 반드시 이해하고 있어야 한다. (만약 `effect`의 의존성 값으로 props를 가지게 되었을 때 앞에서 배운 개념을 사용해서 최적화할 수도 있을 것이다.)
 
 </br>
