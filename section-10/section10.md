@@ -11,6 +11,7 @@
 - [Introducing useReducer & Reducers In General](#useReducer-및-Reducers의-개요)
 - [Using the useReducer() Hook](#useReducer-훅-사용해보기)
 - [useReducer & useEffect](#useReducer-&-useEffect)
+- [Adding Nested Properties As Dependencies To useEffect](#중첩-속성을-useEffect에-종속성으로-추가하기)
 
 ## Side Effects 와 useEffect
 
@@ -1413,5 +1414,39 @@ useEffect(() => {
 ### 정리
 
 - 지금까지 `useReducer`를 이용해서 `useEffect`를 최적화하는 방법에 대해서 배워보았다. 이는 최적화에서 중요한 개념이며, 불필요한 `effect`의 수행을 방지하기 위한 일이기 때문에 반드시 이해하고 있어야 한다. (만약 `effect`의 의존성 값으로 props를 가지게 되었을 때 앞에서 배운 개념을 사용해서 최적화할 수도 있을 것이다.)
+
+</br>
+
+## 중첩 속성을 useEffect에 종속성으로 추가하기
+
+- 이전 강의에서 우리는 useEffect()에 객체 속성을 종속성으로 추가하기 위해 '구조 분해 할당'이라는 개념을 이용했다.
+
+> [MDN 문서 참조 : Destructuring assignment ](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) > [모던 자바스크립트 문서 참조 : 구조 분해 할당 ](https://ko.javascript.info/destructuring-assignment)
+
+```js
+const { someProperty } = someObject;
+
+useEffect(() => {
+  // code that only uses someProperty ...
+}, [someProperty]);
+```
+
+- 이것은 매우 일반적인 패턴 및 접근 방식이다. 핵심은 우리가 '구조 분해 할당'을 사용한다는 것이 아니라, 전체 개체 대신 특정 속성을 종속성으로 전달한다는 것에 있다. 우리는 아래와 같이 코드를 작성할 수도 있으며 이는 위의 코드와 같은 방식으로 작동한다.
+
+```js
+useEffect(() => {
+  // code that only uses someProperty ...
+}, [someObject.someProperty]);
+```
+
+- 하지만 우리는 아래의 코드같은 방식은 절대적으로 지양해야 한다.
+
+```js
+useEffect(() => {
+  // code that only uses someProperty ...
+}, [someObject]);
+```
+
+- 왜냐하면 `effect` 함수는 `someObject` 가 변경될 때마다 재실행될 것이기 때문이며, `someObject`는 단일 속성이 아니기 때문이다.
 
 </br>
