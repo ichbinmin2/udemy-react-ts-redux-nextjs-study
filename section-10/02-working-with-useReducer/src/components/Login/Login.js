@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useReducer } from "react";
 
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
 import Button from "../UI/Button/Button";
 
 const emailReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    return { value: action.val, isValid: action.val.includes("@") };
+  }
+  if (action.type === "INPUT_BLUR") {
+    return { value: state.value, isValid: state.value.includes("@") };
+  }
   return { value: "", isValid: false };
 };
 
@@ -20,13 +26,13 @@ const Login = (props) => {
     isValid: false,
   });
 
-  useEffect(() => {
-    console.log("EFFECT RUNNING");
+  // useEffect(() => {
+  //   console.log("EFFECT RUNNING");
 
-    return () => {
-      console.log("EFFECT CLEANUP");
-    };
-  }, []);
+  //   return () => {
+  //     console.log("EFFECT CLEANUP");
+  //   };
+  // }, []);
 
   // useEffect(() => {
   //   const identifier = setTimeout(() => {
@@ -70,7 +76,9 @@ const Login = (props) => {
     // setEmailIsValid(enteredEmail.includes("@"));
 
     // reducer
-    setEmailIsValid(emailState.isValid);
+    // setEmailIsValid(emailState.isValid);
+
+    dispatchEmail({ type: "INPUT_BLUR" }); // 입력하지 않을 때를 체크
   };
 
   const validatePasswordHandler = () => {
