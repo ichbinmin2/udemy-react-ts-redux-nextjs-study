@@ -12,6 +12,7 @@
 - [Using the useReducer() Hook](#useReducer-훅-사용해보기)
 - [useReducer & useEffect](#useReducer-&-useEffect)
 - [Adding Nested Properties As Dependencies To useEffect](#중첩-속성을-useEffect에-종속성으로-추가하기)
+- [useReducer vs useState for State Management](#State-관리를-위한-useReducer-VS-useState)
 
 ## Side Effects 와 useEffect
 
@@ -1421,7 +1422,8 @@ useEffect(() => {
 
 - 이전 강의에서 우리는 useEffect()에 객체 속성을 종속성으로 추가하기 위해 '구조 분해 할당'이라는 개념을 이용했다.
 
-> [MDN 문서 참조 : Destructuring assignment ](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) > [모던 자바스크립트 문서 참조 : 구조 분해 할당 ](https://ko.javascript.info/destructuring-assignment)
+- [MDN 문서 참조 : Destructuring assignment ](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)
+- [모던 자바스크립트 문서 참조 : 구조 분해 할당 ](https://ko.javascript.info/destructuring-assignment)
 
 ```js
 const { someProperty } = someObject;
@@ -1448,5 +1450,26 @@ useEffect(() => {
 ```
 
 - 왜냐하면 `effect` 함수는 `someObject` 가 변경될 때마다 재실행될 것이기 때문이며, `someObject`는 단일 속성이 아니기 때문이다.
+
+</br>
+
+## State 관리를 위한 useReducer VS useState
+
+- `useState`와 `useReducer`는 언제 어떻게 사용해야 하는지 다시 한 번 요약해보려고 한다. 지금까지 우리는 `useReducer`를 언제 사용해야 하는지(물론 항상 적용되는 법칙은 아니겠지만)에 대해서 배웠다. 간단하게 예를 들어보자면, `useState`에서 수 많은 상태(state) 스냅 샷을 각각 따로 처리해야하는 일이 있을 것이고, 이것과 더불어 효과도 없는 업데이트를 할지도 모른다. 그리고 우리는 이때 `useReducer`를 사용하고 싶어질 것이다. 지금부터 `useState`와 `useReducer`를 언제 사용해야 할지 몇가지를 요약해서 적어보자면,
+
+### `useState`
+
+1.  `useState`는 주로 사용하는 상태 관리 방법이다. 우리는 거의 `useState`로 시작할 것이고, 대체로 `useState`만으로도 그럭저럭 가능하다.
+2.  상태(state)와 데이터의 독립된 부분을 다루기 좋으며, 간단한 상태(state)를 관리할 때도 좋다.
+3.  상태(state) 업데이트가 쉽고, 업데이트 종류가 적게 제한되어 있다면 `useState`를 사용하는 게 좋다. 특히나, 상태(state)를 변경하는 케이스가 적을 때 더 좋을 것이고, 상태 객체 같은 것이 없을 때 `useState`를 사용하면 좋을 것이다.
+
+### `useReducer`
+
+1. 상태(state)가 객체이거나, 그보다 더 복잡한 경우일 때 `useReducer`를 사용하는 게 더 좋다. 왜냐하면 보통 `useReducer`는 `useState`보다 더 많은 기능과 힘이 있기 때문이다. 이를 설명하자면, 더 복잡한 상태(state) 업데이트 로직을 포함할 수 있는 리듀서 함수를 사용할 수 있다는 뜻이며, 이 리듀서 함수를 사용함으로써 항상 최근의 상태(state) 스냅 샷 작업이 보장된다는 뜻이다. 또한, 잠재적으로는 더 복잡한 로직을 컴포넌트 함수 body 에서 별개의 리듀서 함수로 아웃소싱하여 옮길 수도 있다.
+2. 우리가 처리할 데이터가 관련된 상태 부분들로 이루어진 상태 데이터일 때 `useReducer`를 사용하는 게 좋을 것이다. 예를 들면, form input 상태(state)일 때를 생각해보자. 일반적으로 `useReducer`는 상태(state)가 복잡할 때나 다른 케이스, 다른 액션을 기반으로 상태(state) 혹은 케이스를 바꿀 수도 있을 때 도움이 된다. 여러 곳에서 관리하는 상태(state)이지만 관점만 다르거나 동시에 업데이트하면서 서로 관련이 있는 멀티플 상태(state)를 생각해보자.
+
+### 결론
+
+- `useState`와 `useReducer`를 골라 사용하는 것에는 사실 어려운 규칙이란 건 없으며, 프로그래밍에서 늘 그렇듯 확실히 옳고 그른 것도 없을 것이다. 우리는 분명 `useState`와 함께 `useReducer`를 사용해서 케이스를 다룰 것이고, 특히 `useEffect`와 결합하면 훨씬 더 좋은 코드를 작성할 수 있게 될 뿐이다. 하지만 때로는 `useReducer`가 더 멋있고 간단해보이기도 한다. 물론 이러한 이유로 언제나 `useState` 대신 `useReducer`를 사용하는 건 지양해야 할 것이다. 왜냐하면 생각보다 `useReducer`를 선택하는 게 훨씬 과할 때가 많기 때문이다. 상태(state)가 단지 두 개의 다른 값을 변화시키만 하는 것에 목적이 있다면 확실히 `useReducer`를 대신 사용하는 것은 과할 수 있을 것이다.
 
 </br>
