@@ -13,6 +13,7 @@
 - [useReducer & useEffect](#useReducer-&-useEffect)
 - [Adding Nested Properties As Dependencies To useEffect](#중첩-속성을-useEffect에-종속성으로-추가하기)
 - [useReducer vs useState for State Management](#State-관리를-위한-useReducer-VS-useState)
+- [Introducing React Context (Context API)](#리액트-Context-API-소개)
 
 ## Side Effects 와 useEffect
 
@@ -1259,15 +1260,15 @@ const passwordReducer = (state, action) => {
 };
 ```
 
-- 지금까지 우리는 리듀서 함수를 하나만 사용해왔다. `emailReducer`와 `passwordReducer`는 유효성 검사 로직을 제외하고 거의 동일한 방식으로 이루어졌기 때문이다. (이는 분명 리팩터를 할 수 있는 부분이곘지만 여기에선 조금 복잡하기 때문에 일단 넘어가도록 하자.) 하지만 이것보다도 우리에겐 큰 문제가 하나 남아있다는 걸 잊으면 안된다.
+- 지금까지 우리는 리듀서 함수를 하나만 사용해왔다. `emailReducer`와 `passwordReducer`는 유효성 검사 로직을 제외하고 거의 동일한 방식으로 이루어졌기 때문이다. (이는 분명 리팩터를 할 수 있는 부분이곘지만 여기에선 조금 복잡하기 때문에 일단 넘어가도록 하자.) 하지만 이것보다도 지금의 우리에겐 큰 문제가 남아있다. 바로 `formIsValid`의 상태관리이다.
 
-### formIsValid 의 상태관리
+### `formIsValid` 의 상태관리
 
 ```js
 const [formIsValid, setFormIsValid] = useState(false);
 ```
 
-- `useState`로 관리해주고 있는 `formIsValid` 라는 상태(state)는 input의 IsValid 와 약간은 관련이 있음을 알 수 있다. input은 전체적인 form 의 일부이기 때문이다. 따라서 우리가 그동안 `formIsValid` 라는 상태(state)로 관리해주던 로직들은 최적의 코드는 아닐지도 모른다.
+- `useState`로 관리해주고 있는 `formIsValid` 라는 상태(state)는 input의 IsValid 와 약간은 관련이 있음을 알 수 있다. input은 전체적인 form 의 일부이기 때문이다. 따라서 우리가 그동안 `formIsValid` 라는 상태(state)로 관리해주던 로직들은 (어쩌면) 최적의 코드라고 말할 수 없을지도 모른다.
 
 ```js
 const emailChangeHandler = (event) => {
@@ -1283,13 +1284,13 @@ const passwordChangeHandler = (event) => {
 };
 ```
 
-- 위의 로직들을 살펴보면, 우리는 여전히 `formIsValid` 를 다른 상태(state)들에 기반해서 업데이트해주고 있기 때문이다. 앞서 이야기했듯 이것은 분명 우리가 원하는 방식은 아니다. (React의 상태 업데이트 스케줄링을 생각해보자.) 우리는 아직도 최종 상태(state)가 아닌 상태를 기반하여 업데이트를 할지도 모른다는 위험성을 안고 있는 것이나 마찬가지이다.
+- 위의 로직들을 살펴보면, 우리는 여전히 `formIsValid` 를 다른 상태(state)들에 기반해서 업데이트해주고 있기 때문이다. 앞서 이야기했듯 이것은 분명 우리가 원하는 방식은 아니다. (React의 상태 업데이트 스케줄링을 생각해보자.) 우리는 아직도 최종 상태(state)가 아닌 상태를 기반하여 업데이트를 할지도 모른다는 위험성을 안고 있는 것이다.
 
 ```js
 setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
 ```
 
-- 물론 기술적으로 동일하게 속해있다고 해도 이렇게 쪼개져 있는 상태(state)를 가지고 있다는 건 좋은 방법일리도 최적의 상태(state)일리도 없다. 그래서 우리는 새로운 방법을 사용하고자 한다.
+- 물론 기술적으로 동일하게 속해있다고 해도 이렇게 쪼개져 있는 상태(state)를 가지고 있다는 건 좋은 방법일리도 또 최적의 상태(state)일리도 없다. 그래서 우리는 새로운 방법을 사용하고자 한다.
 
 ### `useEffect` 사용하기
 
@@ -1335,11 +1336,11 @@ useEffect(() => {
 setFormIsValid(emailState.isValid && passwordState.isValid);
 ```
 
-- 이런 방식은 다른 상태(state)를 기반으로 상태(state) 업데이트를 좋은 방법일 수 있다. `useEffect`로는 이것이 모든 상태 업데이트를 하는 React 수행에서 작동한다는 보장이 있으며, 이는 수정하기 전과는 다른 경우이다. 이전에는 코드가 너무 빨리 작동을 하거나 `useEffect`가 상태 업데이트 후에만 작동했을 수도 있었기 때문이다. 이제 정상적으로 작동이 되는지 확인해보자.
+- 이런 방식은 다른 상태(state)를 기반으로 상태(state) 업데이트 하는 좋은 방법일 수 있다. `useEffect`로는 이것이 모든 상태 업데이트를 하는 React 수행에서 작동한다는 보장이 있으며, 이는 분명 수정하기 전과는 다른 경우이기 때문이다. 이전에는 코드가 너무 빨리 작동을 하거나 `useEffect`가 상태 업데이트 후에만 작동했을 수도 있었다. 이제 정상적으로 작동이 되는지 확인해보자.
 
 ![ezgif com-gif-maker (33)](https://user-images.githubusercontent.com/53133662/161533468-b742d9e8-4d23-431a-8855-eedc01230f4b.gif)
 
-- 정상적으로 작동이 되는 걸 확인할 수 있다. 하지만 콘솔을 보면, 여기에 작은 문제가 있음을 알 수 있다. 우리가 가동시킨 `effect`가 너무 자주 작동된다는 점이다. 우리가 `effect`의 종속성 값을 설정할 때, `emailState`와 `passwordState`로 지정했기 때문에 이 값들이 변경되면 언제든 작동하는 것이다. 물론 우리는 `effect`가 이렇게 여러번 실행되는 걸 원하지 않을 것이다. 그리고 사실 우리는 `effect`에서 user 가 입력한 각 input 값의 isValid(유효성)만 신경쓰면 된다. 그리고 우리는 이 isValid 상태(state)를 업데이트할 때 value 값을 기반으로 업데이트 해왔음을 잊으면 안될 것이다.
+- 정상적으로 작동이 되는 걸 확인할 수 있다. 그러나 콘솔을 보면, 여기에 작은 문제가 여전히 존재하고 있음을 알 수 있다. 우리가 가동시킨 `effect`가 너무 자주 작동된다는 점이다. 우리가 `effect`의 종속성 값을 설정할 때, `emailState`와 `passwordState`로 지정했기 때문에 이 값들이 변경되면 언제든 다시 `effect`가 실행되고 있는 것이다. 당연히 우리는 `effect`가 이렇게 매번 다시 실행되는 상황을 원치 않을 것이다. 그리고 사실 우리는 `effect`에서 user 가 입력한 각 input 값의 isValid(유효성)만 신경쓰면 된다. 우리는 이 isValid 상태(state)를 업데이트할 때 value 값을 기반으로 업데이트 해왔음을 잊으면 안될 것이다.
 
 ```js
 const passwordReducer = (state, action) => {
@@ -1361,7 +1362,7 @@ const passwordReducer = (state, action) => {
 const {} = emailState;
 ```
 
-- 객체 구조 분해 할당은 이전에도 배운 적 있는 기술이다. 우리는 이 기술을 이용해서 조금 더 쉽게 isValid 에 접근할 수 있도록 할 수 있다. 배웠다시피 객체 구조 분해 할당은 객체의 어떤 값을 이끌어내는 기술이며, `emailState` 라는 상태(state)에서 isValid 를 추출할 수 있을 것이다. 그리고 추출한 isValid를 새로운 이름으로 할당할 수도 있다.
+- 객체 구조 분해 할당은 이전에도 배운 적 있는 기술이다. 우리는 이 기술을 이용해서 조금 더 쉽게 isValid 에 접근할 수 있도록 할 수 있다. 객체 구조 분해 할당은 객체의 어떤 값을 이끌어내는 기술이며, 이 기술을 사용해서 `emailState` 라는 상태(state)에서 isValid 를 추출할 수 있을 것이다. 그리고 추출한 isValid를 새로운 이름으로 할당할 수도 있다.
 
 ```js
 const { isValid: emailValid } = emailState;
@@ -1387,7 +1388,7 @@ useEffect(() => {
 }, [emailValid, passwordValid]);
 ```
 
-- 그리고 이제 이 `effect`는 더이상 `emailState`나 `passwordState`로 isValid 에 접근해서 사용할 수 없기 때문에 `emailValid`와 `passwordValid`로 수정해준다.
+- 그리고 `effect`는 더이상 `emailState`나 `passwordState`로 isValid 에 접근해서 사용할 수 없기 때문에 `emailValid`와 `passwordValid`로 수정해준다.
 
 ```js
 const { isValid: emailValid } = emailState;
@@ -1406,21 +1407,21 @@ useEffect(() => {
 }, [emailValid, passwordValid]);
 ```
 
-- 지금까지 각각의 상태(state)의 isValid 상태(state)를 객체 구조 분해 할당 문법을 통해 값을 끌어낸 뒤 이것을 기반으로 `effect`를 수정했다. 이제 `effect`는 우리가 원하지 않을 때 재작동되지 않을 것이다.
+- 지금까지 각각의 상태(state)의 isValid 상태(state)를 객체 구조 분해 할당 문법을 통해 값을 끌어낸 뒤 이것을 기반으로 `effect`를 수정했다. 이제 `effect`는 우리가 원하지 않을 때 재작동되지 않을 것이다. 실행 결과를 확인해보자.
 
 ![ezgif com-gif-maker (34)](https://user-images.githubusercontent.com/53133662/161537810-6aef651f-15ce-44fa-8839-1f82587df043.gif)
 
-- 실행 결과를 확인해보자. 시작할 때 input 창에 무언가를 쓰기 시작하면 `effect`가 작동을 시작한 뒤, 각각의 `emailValid`와 `passwordValid`가 한 번 작동하게 됐을 때 이 상태에서 새로운 문자가 추가되어도 `effect`가 재실행되지 않는 걸 알 수 있다. 이것은 isValid(유효성)가 한 번 작동된 이후부터는 변하지 않기 때문이다. (물론, 짧게 입력하거나 유효성에 맞지 않게 입력하면 isValid가 false가 되므로, 다시 `effect`가 작동될 것이다.)
+- 시작할 때 input 창에 무언가를 쓰기 시작하면 `effect`가 작동을 시작한 뒤, 각각의 `emailValid`와 `passwordValid`가 한 번 작동하게 됐을 때 이 상태에서 새로운 문자가 추가되어도 `effect`가 재실행되지 않는 걸 알 수 있다. 이것은 isValid(유효성)가 한 번 작동된 이후부터는 변하지 않기 때문이다. (물론, 짧게 입력하거나 유효성에 맞지 않게 입력하면 isValid가 false가 되므로, 다시 `effect`가 작동될 것이다.)
 
 ### 정리
 
-- 지금까지 `useReducer`를 이용해서 `useEffect`를 최적화하는 방법에 대해서 배워보았다. 이는 최적화에서 중요한 개념이며, 불필요한 `effect`의 수행을 방지하기 위한 일이기 때문에 반드시 이해하고 있어야 한다. (만약 `effect`의 의존성 값으로 props를 가지게 되었을 때 앞에서 배운 개념을 사용해서 최적화할 수도 있을 것이다.)
+- 지금까지 `useReducer`를 이용해서 `useEffect`를 최적화하는 방법에 대해서 배워보았다. 이는 최적화에서 중요한 개념이며, 불필요한 `effect`의 수행을 방지하기 위한 일이기 때문에 반드시 이해하고 넘어가야 한다. (만약 `effect`의 의존성 값으로 props를 가지게 되었을 때 앞에서 배운 개념을 사용해서 최적화할 수도 있을 것이다.)
 
 </br>
 
 ## 중첩 속성을 useEffect에 종속성으로 추가하기
 
-- 이전 강의에서 우리는 useEffect()에 객체 속성을 종속성으로 추가하기 위해 '구조 분해 할당'이라는 개념을 이용했다.
+- 이전 강의에서 우리는 `useEffect`에 객체 속성을 종속성으로 추가하기 위해서 '구조 분해 할당'이라는 개념을 이용했다.
 
 - [MDN 문서 참조 : Destructuring assignment ](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)
 - [모던 자바스크립트 문서 참조 : 구조 분해 할당 ](https://ko.javascript.info/destructuring-assignment)
@@ -1441,7 +1442,7 @@ useEffect(() => {
 }, [someObject.someProperty]);
 ```
 
-- 하지만 우리는 아래의 코드같은 방식은 절대적으로 지양해야 한다.
+- 반면 우리는 아래의 코드같은 방식은 절대적으로 지양해야 한다.
 
 ```js
 useEffect(() => {
@@ -1455,21 +1456,27 @@ useEffect(() => {
 
 ## State 관리를 위한 useReducer VS useState
 
-- `useState`와 `useReducer`는 언제 어떻게 사용해야 하는지 다시 한 번 요약해보려고 한다. 지금까지 우리는 `useReducer`를 언제 사용해야 하는지(물론 항상 적용되는 법칙은 아니겠지만)에 대해서 배웠다. 간단하게 예를 들어보자면, `useState`에서 수 많은 상태(state) 스냅 샷을 각각 따로 처리해야하는 일이 있을 것이고, 이것과 더불어 효과도 없는 업데이트를 할지도 모른다. 그리고 우리는 이때 `useReducer`를 사용하고 싶어질 것이다. 지금부터 `useState`와 `useReducer`를 언제 사용해야 할지 몇가지를 요약해서 적어보자면,
+- 지금까지 우리는 `useState`와 `useReducer`는 언제, 어떻게 사용해야 하는지에 대해서 배웠다. 특히나 `useReducer`는 언제 `useState`를 대체해서 사용해야 하는지(물론 항상 적용되는 법칙은 아니겠지만)에 대해서도 충분히 배웠을 것이라 생각한다.
 
 ### `useState`
 
-1.  `useState`는 주로 사용하는 상태 관리 방법이다. 우리는 거의 `useState`로 시작할 것이고, 대체로 `useState`만으로도 그럭저럭 가능하다.
-2.  상태(state)와 데이터의 독립된 부분을 다루기 좋으며, 간단한 상태(state)를 관리할 때도 좋다.
-3.  상태(state) 업데이트가 쉽고, 업데이트 종류가 적게 제한되어 있다면 `useState`를 사용하는 게 좋다. 특히나, 상태(state)를 변경하는 케이스가 적을 때 더 좋을 것이고, 상태 객체 같은 것이 없을 때 `useState`를 사용하면 좋을 것이다.
+1.  `useState`는 주로 사용하는 상태 관리 방법이다. 대부분의 사람들은 보통 `useState`로 시작할 것이고, 대체로 `useState`만으로도 그럭저럭 가능할 때도 많다.
+2.  상태(state)와 데이터의 독립된 부분을 다루기 좋으며, 간단한 상태(state)를 관리할 때 사용한다.
+3.  상태(state) 업데이트가 쉽고, 업데이트 종류가 적게 제한되어 있다면 `useState`를 사용하는 게 좋다. 특히나, 상태(state)를 변경하는 케이스가 적거나, 상태(state)가 복잡한 객체 형식으로 이루어지지 않았을 때 `useState`를 사용하면 된다.
 
 ### `useReducer`
 
-1. 상태(state)가 객체이거나, 그보다 더 복잡한 경우일 때 `useReducer`를 사용하는 게 더 좋다. 왜냐하면 보통 `useReducer`는 `useState`보다 더 많은 기능과 힘이 있기 때문이다. 이를 설명하자면, 더 복잡한 상태(state) 업데이트 로직을 포함할 수 있는 리듀서 함수를 사용할 수 있다는 뜻이며, 이 리듀서 함수를 사용함으로써 항상 최근의 상태(state) 스냅 샷 작업이 보장된다는 뜻이다. 또한, 잠재적으로는 더 복잡한 로직을 컴포넌트 함수 body 에서 별개의 리듀서 함수로 아웃소싱하여 옮길 수도 있다.
-2. 우리가 처리할 데이터가 관련된 상태 부분들로 이루어진 상태 데이터일 때 `useReducer`를 사용하는 게 좋을 것이다. 예를 들면, form input 상태(state)일 때를 생각해보자. 일반적으로 `useReducer`는 상태(state)가 복잡할 때나 다른 케이스, 다른 액션을 기반으로 상태(state) 혹은 케이스를 바꿀 수도 있을 때 도움이 된다. 여러 곳에서 관리하는 상태(state)이지만 관점만 다르거나 동시에 업데이트하면서 서로 관련이 있는 멀티플 상태(state)를 생각해보자.
+1. 상태(state)가 객체이거나, 그보다 더 복잡한 경우일 때 `useReducer`를 사용한다. 왜냐하면 보통 `useReducer`는 `useState`보다 더 많은 기능과 힘이 있기 때문이다. 추가로 설명하자면, `useReducer`는 더 복잡한 상태(state) 업데이트 로직을 포함할 수 있는 리듀서 함수를 사용할 수 있다는 뜻이며, 이 리듀서 함수를 사용함으로써 항상 최근의 상태(state)의 스냅 샷 작업이 보장된다는 뜻이다. 또한, 잠재적으로는 더 복잡한 로직을 컴포넌트 함수 body 에서 별개의 리듀서 함수로 아웃소싱하여 옮길 수도 있게 된다.
+2. 우리가 처리할 데이터가 관련된 여러 상태(state)를 기반으로 한 상태(state) 데이터일 때 `useReducer`를 사용한다. 예를 들면, form input 상태(state)일 때를 생각해보자. 일반적으로 `useReducer`는 상태(state)가 복잡할 때나 다른 케이스, 다른 액션을 기반으로 상태(state) 혹은 케이스를 변경할 일이 있을 때 도움이 된다. 여러 곳에서 관리하는 상태(state)이지만 관점만 다르거나 동시에 업데이트하면서 서로 관련이 있는 멀티플 상태(state)를 다룰 때 `useReducer`는 좋은 옵션이다.
 
 ### 결론
 
-- `useState`와 `useReducer`를 골라 사용하는 것에는 사실 어려운 규칙이란 건 없으며, 프로그래밍에서 늘 그렇듯 확실히 옳고 그른 것도 없을 것이다. 우리는 분명 `useState`와 함께 `useReducer`를 사용해서 케이스를 다룰 것이고, 특히 `useEffect`와 결합하면 훨씬 더 좋은 코드를 작성할 수 있게 될 뿐이다. 하지만 때로는 `useReducer`가 더 멋있고 간단해보이기도 한다. 물론 이러한 이유로 언제나 `useState` 대신 `useReducer`를 사용하는 건 지양해야 할 것이다. 왜냐하면 생각보다 `useReducer`를 선택하는 게 훨씬 과할 때가 많기 때문이다. 상태(state)가 단지 두 개의 다른 값을 변화시키만 하는 것에 목적이 있다면 확실히 `useReducer`를 대신 사용하는 것은 과할 수 있을 것이다.
+- `useState`와 `useReducer`의 사용여부를 따져서 사용하는데에는 사실 어려운 규칙이란 건 없으며, (프로그래밍에서 늘 그렇듯) 확실히 뭐가 더 낫고 옳고 그른 것도 없을 것이다. 우리는 분명 `useState`와 함께 `useReducer`를 사용해서 케이스를 다룰 것이고, 특히 `useEffect`와 결합하면 이전보다는 훨씬 더 좋은 코드를 작성할 수 있게 될 뿐이다. 하지만 때로는 `useReducer`가 더 멋있고 간단해보일 때도 있다. 물론, 이러한 이유로 언제나 `useState` 대신 `useReducer`를 사용하는 건 지양해야 할 것이다. 왜냐하면 `useReducer`를 선택하는 게 성능의 효율성보다 훨씬 과할 때가 많기 때문이다. 상태(state)가 단지 두 개의 다른 값을 변화시키만 하는 것에 목적이 있다면 확실히 `useReducer`를 대신 사용하는 것은 과한 선택일 수도 있을 것이다.
+
+</br>
+
+## 리액트 Context API 소개
+
+-
 
 </br>
