@@ -1477,6 +1477,156 @@ useEffect(() => {
 
 ## 리액트 Context API 소개
 
--
+- `useReducer`을 사용하면서 접할 수도 있는 문제를 살펴보자. 물론 흔하게 마주치는 문제는 아니며, 지금보다 훨씬 더 큰 React 어플리케이션에서 발생할 수 있는 문제라고 보면 될 것이다. 그리고 지금부터 조금 더 세련된 방식으로 이 문제를 해결하고자 한다.
 
-</br>
+### 우리가 마주치는 문제
+
+- 많은 컴포넌트들 사이를 props로 경유하여 지나가는 데이터들을 생각해보자. `App` 컴포넌트의 `isLoggedIn` 상태(state)와 `login`과 관련된 함수들이 좋은 예가 될 것이다.
+
+```js
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const storedUserLoggedInInformation = localStorage.getItem("isLoggedIn");
+
+    if (storedUserLoggedInInformation === "1") {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const loginHandler = (email, password) => {
+    localStorage.setItem("isLoggedIn", "1");
+    setIsLoggedIn(true);
+  };
+
+  const logoutHandler = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
+  return (
+    <React.Fragment>
+      <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+      <main>
+        {!isLoggedIn && <Login onLogin={loginHandler} />}
+        {isLoggedIn && <Home onLogout={logoutHandler} />}
+      </main>
+    </React.Fragment>
+  );
+}
+```
+
+- 위의 `App` 컴포넌트 함수를 살펴보면 `login`과 관련한 상태(state)를 `App` 컴포넌트에서 관리해주고 있는 걸 알 수 있다. 그렇기에 `isLoggedIn` 이라는 상태(state)를 변경하고 업데이트를 하기 위해서는 해당 상태와 `isLoggedIn` 의 상태를 업데이트해주는 함수가 현재 이 어플리케이션의 모든 곳에서 필요하다고 보면 될 것이다.
+
+```js
+<React.Fragment>
+  <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+  <main>
+    {!isLoggedIn && <Login onLogin={loginHandler} />}
+    {isLoggedIn && <Home onLogout={logoutHandler} />}
+  </main>
+</React.Fragment>
+```
+
+- `App` 컴포넌트 함수에서는 `MainHaeder` 컴포넌트에 `isLoggedIn` 상태(state)를 `isAuthenticated` 이라는 prop으로 넘겨주고 있다. 그리고 onLogout 을 위한 함수 `logoutHandler`도 prop으로 포인터를 이동시켜주었다.
+
+```js
+<main>
+  {!isLoggedIn && <Login onLogin={loginHandler} />}
+  {isLoggedIn && <Home onLogout={logoutHandler} />}
+</main>
+```
+
+- 또한 `isLoggedIn` 상태(state)는 다른 컴포넌트(`Login`, `Home`) 콘텐츠를 렌더하는 데도 사용되고 있다. 그리고 이 컴포넌트들은 각각 `loginHandler` 이나 `logoutHandler` 같은 `isLoggedIn` 상태(state)를 업데이트해주는 트리거 함수를 props로 받고 있다.
+
+#### Home.js
+
+```js
+const Home = (props) => {
+  return (
+    <Card className={classes.home}>
+      <h1>Welcome back!</h1>
+    </Card>
+  );
+};
+```
+
+![image](https://user-images.githubusercontent.com/53133662/161989027-28f693ab-2db7-4363-a074-653b34fca533.png)
+
+- `App` 컴포넌트에서 props로 내려준 `logoutHandler` 함수는 `Home` 컴포넌트에서 받아오고 있는데, 이렇게 함으로써 우리가 버튼 컴포넌트를 추가하여 사용자가 로그아웃을 할 수 있게 된다.
+
+```js
+const Home = (props) => {
+  return (
+    <Card className={classes.home}>
+      <h1>Welcome back!</h1>
+      <Button onClick={props.onLogout}>Logout</Button>
+    </Card>
+  );
+};
+```
+
+![ezgif com-gif-maker (35)](https://user-images.githubusercontent.com/53133662/161989529-5d65fa45-e149-4a5d-8462-68e2801731a6.gif)
+
+- 요약하자면, 우리는 이 `isLoggedIn` 상태(state)가 어플리케이션의 각기 다른 장소에서 필요하고 사용되어야 한다는 뜻이다. 물론 이 데모 어플리케이션은 아주 단순하고 간단한 어플리케이션이기 때문에 이런 식으로 상태(state)가 여러 컴포넌트 사이를 지나다니는 것은 큰 문제가 아닐 수도 있다. 그리고 데이터가 prop을 통과해서 다른 컴포넌트로 전달하여 사용되는 건 흔한 일이다. 하지만 상태(state)가 다수의 컴포넌트를 통과하는 건 분명 문제가 될 수 있다. 따라서 props를 효율적으로 잘 이용해서 데이터를 다른 컴포넌트에 전달해야 한다.
+
+```js
+<React.Fragment>
+  <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+  <main>
+    {!isLoggedIn && <Login onLogin={loginHandler} />}
+    {isLoggedIn && <Home onLogout={logoutHandler} />}
+  </main>
+</React.Fragment>
+```
+
+- 다시 현재 `App` 컴포넌트를 살펴보자. 해당 컴포넌트에서는 `isLoggedIn` 상태(state)가 `isAuthenticated` prop을 통과하여 `MainHeader` 컴포넌트로 가게 하고, 또 `logoutHandler`는 `onLogout` prop을 통과하여 똑같이 `MainHeader` 컴포넌트로 가도록 한 것을 알 수 있다.
+
+#### MainHeader.js
+
+```js
+const MainHeader = (props) => {
+  return (
+    <header className={classes["main-header"]}>
+      <h1>A Typical Page</h1>
+      <Navigation
+        isLoggedIn={props.isAuthenticated}
+        onLogout={props.onLogout}
+      />
+    </header>
+  );
+};
+```
+
+- 그렇지만 `MainHeader` 컴포넌트 내부에서는 `App` 컴포넌트에서 전달받은 두개의 props 모두 사용하지 않는 걸 볼 수 있다. 그저 props 들을 다시 `Navigation` 컴포넌트로 prop 하고 있을 뿐이다.
+
+#### Navigation.js
+
+```js
+const Navigation = (props) => {
+  return (
+    <nav className={classes.nav}>
+      <ul>
+        {props.isLoggedIn && (
+          <li>
+            <a href="/">Users</a>
+          </li>
+        )}
+        {props.isLoggedIn && (
+          <li>
+            <a href="/">Admin</a>
+          </li>
+        )}
+        {props.isLoggedIn && (
+          <li>
+            <button onClick={props.onLogout}>Logout</button>
+          </li>
+        )}
+      </ul>
+    </nav>
+  );
+};
+```
+
+  </br>
