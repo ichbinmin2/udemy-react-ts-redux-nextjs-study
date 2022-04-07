@@ -1629,4 +1629,8 @@ const Navigation = (props) => {
 };
 ```
 
+- `Navigation` 컴포넌트에서 `isLoggedIn` data는 다른 링크를 렌더하는데 필요하고, 또한 button에서 `App` 컴포넌트의 `logoutHandler` 함수를 실행시켜 사용자를 로그아웃 시키기 위해서는 `onLogout` prop data가 필요하다. 그리고 `MainHeader` 컴포넌트는 그저 중간에서 `Navigation` 컴포넌트에 props 데이터를 대신 전달하기 위해 존재한다. 물론 이런 방법이 꼭 문제가 되는 것은 아니다. 다만 지금보다 큰 어플리케이션에서는 이런 prop 체이닝을 사용하면 점점 길어지고 복잡해질 가능성이 높아질 뿐이다.
+
+- 어떤 컴포넌트는 parent 컴포넌트로부터 데이터가 필요하지만 이 데이터를 parent 에 전달하지는 않는데 심지어 parent는 데이터를 관리하지도 않고 필요하지 않을 수도 있다. 그래서 우리는 Component-wide "behind the scenes" State Storage를 생성한다. 앞으로 소개할 React Context 라는 개념에서는 Component-wide State Storage 에서 액션을 촉발할 수 있기 때문에 이전과 같은 prop chain 을 생성하지 않아도 컴포넌트로 직접 데이터를 전달할 수 있게 된다. 그리고 우리는 이 개념을 토대로 좀 더 세련된 방법으로 문제를 해결할 수 있다.
+
   </br>
