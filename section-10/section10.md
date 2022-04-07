@@ -14,6 +14,7 @@
 - [Adding Nested Properties As Dependencies To useEffect](#중첩-속성을-useEffect에-종속성으로-추가하기)
 - [useReducer vs useState for State Management](#State-관리를-위한-useReducer-VS-useState)
 - [Introducing React Context (Context API)](#리액트-Context-API-소개)
+- [Using the React Context API](#리액트-컨텍스트-API-사용하기)
 
 ## Side Effects 와 useEffect
 
@@ -1634,3 +1635,205 @@ const Navigation = (props) => {
 - 어떤 컴포넌트는 parent 컴포넌트로부터 데이터가 필요하지만 이 데이터를 parent 에 전달하지는 않는데 심지어 parent는 데이터를 관리하지도 않고 필요하지 않을 수도 있다. 그래서 우리는 Component-wide "behind the scenes" State Storage를 생성한다. 앞으로 소개할 React Context 라는 개념에서는 Component-wide State Storage 에서 액션을 촉발할 수 있기 때문에 이전과 같은 prop chain 을 생성하지 않아도 컴포넌트로 직접 데이터를 전달할 수 있게 된다. 그리고 우리는 이 개념을 토대로 좀 더 세련된 방법으로 문제를 해결할 수 있다.
 
   </br>
+
+## 리액트 컨텍스트 API 사용하기
+
+- `React Context`의 개념에서 우리는 어떤 컴포넌트에서든지 prop 체인을 만들지 않고도 직접 상태(state)를 전달하거나 이를 통해서 관리할 수 있다. 지금부터 실전을 통해 `React Context`의 개념을 이해하도록 해보자.
+
+### 리액트 컨텍스트 API 실전편
+
+- 먼저 `src` 폴더에 `store` 폴더를 새로 생성해보자.
+
+![image](https://user-images.githubusercontent.com/53133662/162215811-25819938-d035-409a-bf69-7d025ab3c771.png)
+
+- React Context 를 사용할 폴더를 생성할 때 보통은 `store`나 `context` 혹은 `state`로 이름을 짓는다. 그리고 이 폴더 안에 (우리는 authentication 상태(state)를 다룰 것이므로) `auth_context`라는 이름의 js 파일을 생성한다. `AuthContext`처럼 PascalCase 로 이름을 지어도 되지만 이것이 내포할 수 있는 의미는 컴포넌트에 가까우므로, 이번에는 kebab-case로 작성해주었다. 이제 `auth_context.js`는 다중 Context를 앱의 다중 전역 상태(state)에서 가질 수 있을 것이며, 하나의 context를 더 큰 상태(state)에서도 가질 수도 있을 것이다. 하지만 context가 작동하는 방법을 먼저 알아보는 게 좋을 것이다.
+
+### 리액트 컨텍스트 작동원리
+
+#### auth_context.js
+
+```js
+import React from "react";
+
+React.createContext();
+```
+
+- 먼저 React를 import 해온 뒤, React에 내장 API 인 `createContext()`를 불러온다. `createContext`는 default Context를 가지는데, 이 default Context는 `App` 컴포넌트나 다른 컴포넌트의 wide 상태(state)가 될 것이다. 따라서 이 상태(state)를 정하는 건 온전히 내 몫이다.
+
+```js
+import React from "react";
+
+React.createContext("simple string state");
+```
+
+- 이 default Context는 문자열처럼 단순한 상태(state)여도 괜찮다. 만약 `App` 컴포넌트나 다른 컴포넌트의 wide 상태(state)여야 하는 게 단순히 문자 몇 개라면 말이다.
+
+```js
+import React from "react";
+
+React.createContext({
+  isLoggedIn: false,
+});
+```
+
+- 이 default Context는 상태(state)가 객체일 수도 있다. 현재의 데모 어플리케이션에 대입해보자면 이 객체는 `isLoggedIn` 상태(state)를 관리한 객체가 될 것이다. 물론 `isLoggedIn` 상태(state)의 초기값도 설정해주도록 한다.
+
+```js
+import React from "react";
+
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+});
+
+export default AuthContext;
+```
+
+- Context에 `AuthContext` 라는 이름을 짓고 다른 컴포넌트에서 해당 Context를 사용할 수 있도록 export default 를 써서 밖으로 내보내도록 한다. 이제 우리는 이 `AuthContext` 라는 이름을 통해 Context 객체를 불러올 수 있게 되었으며, 다른 컴포넌트에서 해당 Context를 사용할 수 있는 자격이 주어지게 되었다. 물론 이 Context를 어플리케이션 모든 곳에서 사용하기 위해서는 최상위 컴포넌트인 `App` 에서 warpping을 해주는 작업이 필요할 것이다.
+
+### 리액트 컨텍스트의 공급자 `Provider`
+
+#### Before : App.js
+
+```js
+<React.Fragment>
+  <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+  <main>
+    {!isLoggedIn && <Login onLogin={loginHandler} />}
+    {isLoggedIn && <Home onLogout={logoutHandler} />}
+  </main>
+</React.Fragment>
+```
+
+#### After : App.js
+
+```js
+import AuthContext from "./store/auth-context";
+
+...
+<React.Fragment>
+  <AuthContext.Provider>
+    <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+    <main>
+      {!isLoggedIn && <Login onLogin={loginHandler} />}
+      {isLoggedIn && <Home onLogout={logoutHandler} />}
+    </main>
+  </AuthContext.Provider>
+</React.Fragment>
+```
+
+- `App` 컴포넌트가 렌더하는 모든 컴포넌트들에서 해당 Context 가 필요하므로, `AuthContext`로 감싸준다. 그리고 `AuthContext` 컴포넌트에서 `.Provider`를 불러올 수 있도록 한다. `.Provider`는 공급자의 역할을 하고, `AuthContext.Provider`는 JSX 코드 내에서만 사용할 수 있으며, 다른 컴포넌트를 warpping 해줄 수도 있다. 이렇게 warp 해주면 처음 감싸운 컴포넌트들의 자식 컴포넌트, 또 그 자식의 자식 컴포넌트들이 Context 에 접근할 수 있다.
+
+```js
+<AuthContext.Provider>
+  <MainHeader isAuthenticated={isLoggedIn} onLogout={logoutHandler} />
+  <main>
+    {!isLoggedIn && <Login onLogin={loginHandler} />}
+    {isLoggedIn && <Home onLogout={logoutHandler} />}
+  </main>
+</AuthContext.Provider>
+```
+
+- `AuthContext.Provider` 는 전체 코드를 감싸는 root 레벨의 컴포넌트 역할도 하기 때문에, `React.Fragment` 태그도 지워주었다. 이제 `AuthContext.Provider`로 warp 해준 컴포넌트들 그리고 그 컴포넌트들의 자식 컴포넌트는 `AuthContext`에 접근할 수 있을 것이다.
+
+### 리액트 컨텍스트를 듣는 `Consumer`
+
+```js
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+});
+```
+
+- `AuthContext`의 default context 값은 계속 default 값일 것이며, 절대 변하지 않을 것이다. 우리는 어쨌든 value 값에 접근하려면 리액트 컨텍스트를 리스닝해야하고, 이 리스닝하는 방법에는 두 가지 방법이 있다. 두 가지 방법 중에 먼저 `Consumer`를 살펴보려고 한다.
+
+#### Navigation.js
+
+```js
+<nav className={classes.nav}>
+  <ul>
+    {props.isLoggedIn && (
+      <li>
+        <a href="/">Users</a>
+      </li>
+    )}
+    {props.isLoggedIn && (
+      <li>
+        <a href="/">Admin</a>
+      </li>
+    )}
+    {props.isLoggedIn && (
+      <li>
+        <button onClick={props.onLogout}>Logout</button>
+      </li>
+    )}
+  </ul>
+</nav>
+```
+
+- 기존의 `Navigation` 컴포넌트에서 사용자의 로그인 인증 문제가 중요한 부분이라고 생각해보자. 이 `Navigation` 컴포넌트에서도 당연히 `AuthContext`를 사용할 수 있으며, 이 `Consumer`가 있는 데이터가 필요한 모든 곳을 warp 해줄 수 있다. 예를 들어, `Navigation`의 전체 태그들을 `AuthContext.Consumer`로 warp 할 수 있다.
+
+```js
+
+import AuthContext from "../../store/auth-context";
+...
+<AuthContext.Consumer>
+  <nav className={classes.nav}>
+    <ul>
+      {props.isLoggedIn && (
+        <li>
+          <a href="/">Users</a>
+        </li>
+      )}
+      {props.isLoggedIn && (
+        <li>
+          <a href="/">Admin</a>
+        </li>
+      )}
+      {props.isLoggedIn && (
+        <li>
+          <button onClick={props.onLogout}>Logout</button>
+        </li>
+      )}
+    </ul>
+  </nav>
+</AuthContext.Consumer>
+```
+
+- `Consumer`는 조금 다르게 작용한다. `Consumer`는 `{}` 사이에 함수가 있는 형태의 자식이 있다. 그리고 이 자식 함수의 전달인자로는 Context data가 전달될 것이다. 지금의 경우에는 이전에 설정한 AuthContext의 default 값인 객체를 전달인자로 갖게 된다는 의미이다.
+
+```js
+<AuthContext.Consumer>{(ctx) => {}}</AuthContext.Consumer>
+```
+
+- 그리고 이 자식 함수에서는 JSX 코드를 return 해야 하는데, 이 JSX 코드는 Context 데이터에 접근했어야 한다.
+
+```js
+<AuthContext.Consumer>
+  {(ctx) => {
+    return (
+      <nav className={classes.nav}>
+        <ul>
+          {ctx.isLoggedIn && (
+            <li>
+              <a href="/">Users</a>
+            </li>
+          )}
+          {ctx.isLoggedIn && (
+            <li>
+              <a href="/">Admin</a>
+            </li>
+          )}
+          {ctx.isLoggedIn && (
+            <li>
+              <button onClick={props.onLogout}>Logout</button>
+            </li>
+          )}
+        </ul>
+      </nav>
+    );
+  }}
+</AuthContext.Consumer>
+```
+
+- 그동안 props 로 받은 데이터들을 전부 함수의 매개변수로 설정한 ctx로 접근하여 받아올 수 있도록 수정해준다.
+
+</br>
