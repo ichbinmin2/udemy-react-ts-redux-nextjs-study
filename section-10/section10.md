@@ -16,6 +16,7 @@
 - [Introducing React Context (Context API)](#리액트-Context-API-소개)
 - [Using the React Context API](#리액트-컨텍스트-API-사용하기)
 - [Tapping Into Context with the useContext Hook](#useContext-훅으로-컨텍스트에-탭핑하기)
+- [Making Context Dynamic](#컨텍스트를-동적으로-만들기)
 
 ## Side Effects 와 useEffect
 
@@ -1957,7 +1958,7 @@ export default AuthContext;
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  (...)
+  ...
   <AuthContext.Provider
     value={{
       isLoggedIn: false,
@@ -1988,7 +1989,7 @@ function App() {
 </AuthContext.Provider>
 ```
 
-- 이렇게 하면 이 value 객체(`{ isLoggedIn: isLoggedIn }`)는 `isLoggedIn` 상태(state)가 변경이 될 때면 React가 자동으로 이 value 객체의 isLoggedIn 를 업데이트해줄 것이다. 그리고 새 객체인 Context 객체는 모든 리스닝 컴포넌트에게 이 업데이트된 Context 값을 전달할 것이다. 그러면 이 Context에서 Consumer하는 모든 컴포넌트로 전달될 것이다.
+- 이렇게 하면 이 value 객체(`{ isLoggedIn: isLoggedIn }`)는 `isLoggedIn` 상태(state)가 변경이 될 때면 React가 자동으로 이 value 객체의 isLoggedIn 를 업데이트해줄 것이다. 그리고 새 객체인 Context 객체는 모든 리스닝 컴포넌트에게 이 업데이트된 Context 값을 전달할 것이며, 이 Context에서 Consumer하는 모든 컴포넌트로 전달될 것이다.
 
 ####
 
@@ -2151,5 +2152,134 @@ const Navigation = (props) => {
 ```
 
 - 코드를 저장하고 라이브서버를 확인해보면 정상적으로 작동하는 것을 확인할 수 있다. 물론 Context를 사용하면서 말이다. `useContext` hook은 확실히 Consumer 코드 보다 간단하고, 편리하다. 물론 원한다면 이전의 방법대로 Consumer 코드를 사용할 수도 있을 것이다. 두 가지의 방법 모두 틀리지 않았지만 그저 `useContext` hook을 사용하면 조금 더 간결하고 편리하게 사용할 수 있을 뿐이다.
+
+</br>
+
+## 컨텍스트를 동적으로 만들기
+
+- 현재 `onLogout` props 와 `logoutHandler` 함수는 아직 포워딩하고 있는 중이지만 이상적인 방식이라고 말할 수는 없다.
+
+#### App.js
+
+```js
+<MainHeader onLogout={logoutHandler} />
+```
+
+#### MainHeader.js
+
+```js
+<Navigation isLoggedIn={props.isAuthenticated} onLogout={props.onLogout} />
+```
+
+#### Navigation.js
+
+```js
+{
+  ctx.isLoggedIn && (
+    <li>
+      <button onClick={props.onLogout}>Logout</button>
+    </li>
+  );
+}
+```
+
+- `MainHeader` 컴포넌트에 데이터를 넣지 않으면
+
+#### App.js
+
+```js
+<MainHeader />
+```
+
+#### MainHeader.js
+
+```js
+<Navigation />
+```
+
+-`onLogout`을 포워딩할 필요가 없다는 장점이 있지만, 지금은 작동하지 않는다. `App` 에서 `MainHeader` 컴포넌트에 prop으로 보내주던 `onLogout`을 지워버리면 현재는 로그아웃을 할 수 없다는 이야기다. 로그아웃 버튼을 눌러도 아무 일도 일어나지 않는다.
+
+### Dynamic Context를 설정하기
+
+- Dynamic Context를 설정해서 컴포넌트 뿐 아니라 함수에도 데이터를 생략할 수 있게 된다. 이제 우리가 할 일은 로그아웃이 동작할 수 있도록 `AuthContext.Provider`의 value 에 `onLogout`의 값을 추가하는 것이다.
+
+```js
+ <AuthContext.Provider
+      value={{
+        isLoggedIn: isLoggedIn,
+        onLogout: logoutHandler,
+      }}
+    >
+```
+
+- 이렇게 설정하면, `AuthContext`의 영향을 받는 모든 컴포넌트가 `logoutHandler` 함수를 이용할 수 있게 된다. 물론, `onLogout`이란 이름의 Context 를 통해서 말이다. 이제 `Navigation` 컴포넌트로 돌아가서,
+
+```js
+{
+  ctx.isLoggedIn && (
+    <li>
+      <button onClick={ctx.onLogout}>Logout</button>
+    </li>
+  );
+}
+```
+
+- `props.onLogout` 으로 들어가있던 데이터 값을 `ctx.onLogout` 으로 변경해준다. 우리는 `Navigation` 컴포넌트에서 ctx 라는 이름의 Context 객체에 `onLogout` 이라는 값에 접근할 수 있기 때문이다. 저장하면 로그아웃 버튼이 동작하면서 로그아웃이 실행되는 걸 알 수 있다.
+
+- 우리는 `App` 혹은 다른 컴포넌트에서 Context 객체를 통해 일반 코드와 함수를 관리할 수 있게 되었다. 그렇기에 `Navigation` 컴포넌트에 인자로 받아왔던 `props`는 필요 없어지게 된다.
+
+```js
+const Navigation = () => {...}
+```
+
+- 지금까지는 Context를 사용할 만한 좋은 예시를 통해 Context를 사용해봤다. 하지만 다른 경우라면 어떨까? 그때도 Context를 사용해야만 할까? 예시를 들어보자. `App` 컴포넌트에서 사용하고 있는 두개의 컴포넌트를 보면 알 수 있다.
+
+```js
+<main>
+  {!isLoggedIn && <Login onLogin={loginHandler} />}
+  {isLoggedIn && <Home onLogout={logoutHandler} />}
+</main>
+```
+
+- `Home` 컴포넌트에서는 `logoutHandler`를 pass 하고 `Login` 컴포넌트에서는 `loginHandler`를 pass 했는데, 이것들은 각각의 컴포넌트에서 직접 사용하는 함수들이다.
+
+#### Login.js
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+  props.onLogin(emailState.value, passwordState.value);
+};
+```
+
+#### Home.js
+
+```js
+<Button onClick={props.onLogout}>Logout</Button>
+```
+
+- `Login` 컴포넌트에서는 `props.onLogin`을 refer 했다. 포워딩을 하지 않고 `Login` 컴포넌트 내부에서 사용한 것이다. `Home` 컴포넌트의 경우도 마찬가지다. (`<Button>` 컴포넌트에 포워딩하긴 하지만 이것은 UI 를 위한 컴포넌트기 때문에 포워딩의 개념으로 치지 않는다.) 어쨌든 `Home` 컴포넌트에서 `onLogout`을 직접 사용하고 있는 걸 알 수 있다.
+
+### Button에 Context를 사용하지 않는 이유
+
+- 우리는 `<Button>` 컴포넌트를 `onLogout`과 엮기 위해서 Context를 사용하지 않을 것이다. Context를 사용하면 `onLogout`이 제거되기 때문이다. 이게 무슨 의미냐면, `<Button>` 에 Context를 사용하면서 `onLogout`이 제거된다면 버튼을 클릭할 때마다 항상 유저를 로그아웃 시키게 된다는 뜻이다.
+
+### 정리
+
+- 지금까지 props와 context를 써야만 하는 상황을 살펴보았다. 보통은 props로 데이터를 컴포넌트에 pass 한다. props로 컴포넌트를 설정하고 재활용할 수 있기 때문이다. 그런데 props를 이용해서 많은 컴포넌트들을 거쳐 포워딩을 할 때나 컴포넌트에 포워딩을 할 때는 특수한 경우가 생기기 마련이다. 앞서 `Navigation` 컴포넌트 내부에서 Button을 이용하여 사용자를 로그아웃시키는 것처럼 말이다. 그럴 때는 Context를 사용하는 게 조금 더 세련된 솔루션이 될 수 있다.
+
+#### Navigation.js
+
+```js
+{
+  ctx.isLoggedIn && (
+    <li>
+      <button onClick={ctx.onLogout}>Logout</button>
+    </li>
+  );
+}
+```
+
+- 물론 원한다면 prop chain 기술을 사용해도 무방하다. 그러나 prop chain 대신 Context를 사용함으로써 코드를 줄이고, 또한 `App` 컴포넌트와 관련된 코드를 관리하기가 쉬워지는 것은 사실이다.
 
 </br>
