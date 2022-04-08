@@ -19,6 +19,7 @@
 - [Making Context Dynamic](#컨텍스트를-동적으로-만들기)
 - [Building & Using a Custom Context Provider Component](#사용자-정의-컨텍스트-제공자-구성요소-빌드-및-사용)
 - [React Context Limitations](#리액트-컨텍스트-제한)
+- [Learning the "Rules of Hooks"](#Hooks의-규칙-배우기)
 
 ## Side Effects 와 useEffect
 
@@ -2643,5 +2644,62 @@ const Button = (props) => {
 ### 리액트 컨텍스트의 단점
 
 - 리액트 컨텍스트에는 단점이 있는데, 그것은 바로 리액트 컨텍스트가 자주 바뀌는 상태(state)에 맞는 기능이 아니라는 것이다. 예를 들어, 초마다 계속 바뀌는 상태(state)가 있다고 치자. 이런 상태(state)에는 리액트 컨텍스트가 정답이 아니다. 만약 이렇게 계속 바뀌는 상태(state)가 있을 때는 Context가 아니라, Redux 를 사용하면 된다. (리덕스는 강의 후반부에 나오는 전역상태관리 툴이다) 어쨌든 Context로 모든 컴포넌트와 props를 대체하지 말아야 한다. 컴포넌트 설정에 있어서 props 는 중요한 요소이고, 이런 중요한 요소인 props를 context로 대체하기 보다는 특정한 상황(길이가 긴 prop chain)일 때에만 선택하여 context를 사용하길 권장한다.
+
+</br>
+
+## Hooks의 규칙 배우기
+
+### React Hook의 규칙 첫 번째
+
+- React Hook 은 React 함수에서만 사용 가능하다. React Hook은 React 함수 그리고 Custom Hook 에서만 사용할 수 있다.
+
+### React Hook의 규칙 두 번째
+
+- React Hook 은 React 컴포넌트 함수나 Custom Hook 함수의 "Top Level" 에서만 사용할 수 있다. nested 함수나 block 문에서는 Hook을 사용할 수 없다.
+
+```js
+useEffect(() => {
+  console.log("EFFECT RUNNING");
+
+  useState(); // error 발생!
+  return () => {
+    console.log("EFFECT CLEANUP");
+  };
+}, []);
+```
+
+- 이 `useEffect` 함수 내에 `useContext` 나 `useState` 등의 Hook을 넣을 수 없다. 만약 넣는다해도 반드시 오류가 발생한다.
+
+```js
+if (true) {
+  useState(); // error 발생!
+}
+```
+
+- if 문 안에서도 hook을 호출할 수 없다.
+
+### React Hook의 규칙 세 번째 : `useEffect` 규칙
+
+- 컴포넌트 함수 내에 있는 데이터를 이용해서 `useEffect` 를 쓸 때, 이 데이터를 반드시 의존성 배열에 추가해야 한다.
+
+```js
+useEffect(() => {
+  const identifier = setTimeout(() => {
+    console.log("Checking form validity!");
+    setFormIsValid(emailValid && passwordValid);
+  }, 500);
+
+  return () => {
+    console.log("CLEANUP");
+    clearTimeout(identifier);
+  };
+}, [emailValid, passwordValid]);
+```
+
+- `useEffect` 의 첫번째 인자인 함수 내부에서 사용하고 있는 `emailValid`와 `passwordValid`는 확실히 컴포넌트에서 받은 데이터다. 즉, 컴포넌트 상태(state)의 일부이다. (혹은 컴포넌트의 props 이거나) 위의 `useEffect`의 경우에는 의존성 배열 값으로 `emailValid`와 `passwordValid`을 추가해야 한다.
+
+#### setFormIsValid 를 의존성 배열에 추가하지 않는 이유
+
+- 기술적으로는 `useEffect` 함수 내부에서 `setFormIsValid`를 사용하고 있기 때문에 의존성 배열에 추가해야만 한다. 하지만 이런 경우에는 예외로 둘 수 있다. `useReducer`, `useState`의 영향을 받는 함수는 React가 절대로 바꾸지 않기 때문이다. 그렇기에 의존성 배열에 추가를 해도 되지만, 굳이 추가를 하지 않아도 된다. 그러니까 '생략'이 가능하다는 이야기다. 이렇듯 상태(state)를 업데이트하는 함수(`setFormIsValid`와 같은), 브라우저 그리고 컴포넌트 함수를 통하지 않는 데이터는 예외로 치며 생략이 가능하다.
 
 </br>
