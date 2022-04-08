@@ -15,6 +15,7 @@
 - [useReducer vs useState for State Management](#State-관리를-위한-useReducer-VS-useState)
 - [Introducing React Context (Context API)](#리액트-Context-API-소개)
 - [Using the React Context API](#리액트-컨텍스트-API-사용하기)
+- [Tapping Into Context with the useContext Hook](#useContext-훅으로-컨텍스트에-탭핑하기)
 
 ## Side Effects 와 useEffect
 
@@ -2048,3 +2049,107 @@ function App() {
 - 물론, Consumer는 Context를 리스닝하는 방법의 하나일 뿐이다. 그럭저럭 괜찮은 방법이긴 하지만, 가지고 있던 함수를 다시 코드로 되돌리는 이 문법은 어쩐지 세련된 방법이라 보긴 어렵다. 앞으로 배울 Context Hook 에서는 지금보다 더 세련된 솔루션을 구현할 수 있을 것이다.
 
   </br>
+
+## useContext 훅으로 컨텍스트에 탭핑하기
+
+#### Navigation.js
+
+```js
+<AuthContext.Consumer>
+  {(ctx) => {
+    return (
+      <nav className={classes.nav}>
+        <ul>
+          {ctx.isLoggedIn && (
+            <li>
+              <a href="/">Users</a>
+            </li>
+          )}
+          {ctx.isLoggedIn && (
+            <li>
+              <a href="/">Admin</a>
+            </li>
+          )}
+          {ctx.isLoggedIn && (
+            <li>
+              <button onClick={props.onLogout}>Logout</button>
+            </li>
+          )}
+        </ul>
+      </nav>
+    );
+  }}
+</AuthContext.Consumer>
+```
+
+- 먼저, `Navigation` 컴포넌트에서 사용하던 `AuthContext.Consumer` 태그와 자식 함수들을 모두 지워준다.
+
+```js
+<nav className={classes.nav}>
+  <ul>
+    {ctx.isLoggedIn && (
+      <li>
+        <a href="/">Users</a>
+      </li>
+    )}
+    {ctx.isLoggedIn && (
+      <li>
+        <a href="/">Admin</a>
+      </li>
+    )}
+    {ctx.isLoggedIn && (
+      <li>
+        <button onClick={props.onLogout}>Logout</button>
+      </li>
+    )}
+  </ul>
+</nav>
+```
+
+- 이제 `Navigation` 컴포넌트에서 `ctx` 객체는 유효하지 않으므로, error가 발생할 것이다. 일단 그대로 놔두고, `useContext` hook을 사용하기 위해서 React에서 `useContext` hook을 import 해온다.
+
+```js
+import React, { useContext } from "react";
+import AuthContext from "../../store/auth-context";
+
+const Navigation = (props) => {
+  useContext();
+};
+```
+
+- `useContext()`은 이름이 의미하는 대로 이 hook으로 특정 Context를 가져다 사용할 수 있으며 사용법이 매우 간단하다. 먼저 `useContext()` hook에 받아올 인자로 사용고자 하는 Context 즉, 우리의 `AuthContext`을 넣어준다. 이렇게 `useContext` 인자로 `AuthContext`를 넣어주면 `AuthContext`의 값이 출력될 것이다. 물론 `Navigation` 컴포넌트 내부에서 이 Context를 사용할 수 있도록 생성자도 설정한다. 우리는 그간 ctx로 `.isLoggedIn`을 받아왔으므로 이 생성자를 ctx로 설정했다.
+
+```js
+import React, { useContext } from "react";
+import AuthContext from "../../store/auth-context";
+
+const Navigation = (props) => {
+  const ctx = useContext(AuthContext);
+
+  return (
+    <nav className={classes.nav}>
+      <ul>
+        {ctx.isLoggedIn && (
+          <li>
+            <a href="/">Users</a>
+          </li>
+        )}
+        {ctx.isLoggedIn && (
+          <li>
+            <a href="/">Admin</a>
+          </li>
+        )}
+        {ctx.isLoggedIn && (
+          <li>
+            <button onClick={props.onLogout}>Logout</button>
+          </li>
+        )}
+      </ul>
+    </nav>
+  );
+};
+```
+
+- 코드를 저장하고 라이브서버를 확인해보면 정상적으로 작동하는 것을 확인할 수 있다. 물론 Context를 사용하면서 말이다. `useContext` hook은 확실히 Consumer 코드 보다 간단하고, 편리하다. 물론 원한다면 이전의 방법대로 Consumer 코드를 사용할 수도 있을 것이다. 두 가지의 방법 모두 틀리지 않았지만 그저 `useContext` hook을 사용하면 조금 더 간결하고 편리하게 사용할 수 있을 뿐이다.
+
+</br>
