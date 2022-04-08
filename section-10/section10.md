@@ -17,6 +17,7 @@
 - [Using the React Context API](#리액트-컨텍스트-API-사용하기)
 - [Tapping Into Context with the useContext Hook](#useContext-훅으로-컨텍스트에-탭핑하기)
 - [Making Context Dynamic](#컨텍스트를-동적으로-만들기)
+- [Building & Using a Custom Context Provider Component](#사용자-정의-컨텍스트-제공자-구성요소-빌드-및-사용)
 
 ## Side Effects 와 useEffect
 
@@ -2281,5 +2282,336 @@ const submitHandler = (event) => {
 ```
 
 - 물론 원한다면 prop chain 기술을 사용해도 무방하다. 그러나 prop chain 대신 Context를 사용함으로써 코드를 줄이고, 또한 `App` 컴포넌트와 관련된 코드를 관리하기가 쉬워지는 것은 사실이다.
+
+</br>
+
+## 사용자 정의 컨텍스트 제공자 구성요소 빌드 및 사용
+
+### Context 사용 첫번째 팁 : 자동 완성 기능 사용하기
+
+- `AuthContext` 에 몇 가지를 더 추가해보자.
+
+```js
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout:
+});
+
+export default AuthContext;
+```
+
+- 먼저 `onLogout` 함수를 `AuthContext`에 추가한다. context 를 만들 때 default로 설정하는 게 좋다.
+
+```js
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout:,
+});
+```
+
+- 그리고, `onLogout`에 더미 함수를 값으로 넣어준다. 이는 자동 완성을 위해서 작성한 것이다. 만약 더미 함수를 default 값으로 넣어주지 않으면, `Navigation` 컴포넌트에서 `onLogout`을 호출할 때,
+
+![image](https://user-images.githubusercontent.com/53133662/162455210-6319a355-0f91-4374-aad8-08d9682c353c.png)
+
+- 자동 완성으로 `onLogout`이 뜨지 않기 때문이다. Context에서 `onLogout`의 존재를 모르는 것이다. `isLoggedIn`은 자동 완성으로 뜨는 이유가 React와 vscode 가 default Context 객체를 찾아서 접근할 수 있는 Context가 있는지 살펴보고 찾아내기 때문이다. 더 나은 자동 완성을 위해서는 `onLogout`을 default Context 객체 안에 더미 함수로 추가해야 할 것이다. 더미 함수를 넣는 이유는 어차피 `AuthContext`에서 `onLogout` 함수는 Context의 default 값으로만 작동될 것이고, 사용하지는 않을 것이기 때문이다.
+
+```js
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout: () => {}, // 자동 완성을 위해서 더미 함수 설정
+});
+```
+
+- `onLogout`의 값으로 더미 함수를 설정하고 나면,
+
+![image](https://user-images.githubusercontent.com/53133662/162456491-4dd5e169-58f7-4dfe-80ec-a4fa6ec62c86.png)
+
+- `Navigation` 컴포넌트에서 `onLogout`을 호출할 때, 자동 완성으로 `onLogout`이 뜨는 것을 확인할 수 있다. 이것은 꽤나 유용한 팁이다.
+
+### Context 사용 두번째 팁 : Custom Context Provider 컴포넌트 사용하기
+
+- 사용 가능 여부는 우리가 만든 어플리케이션의 구조와 데이터 관리에 달렸다. 예를 들어, `App` 컴포넌트에서 로직을 꺼내서 Context로 관리해주는 컴포넌트를 별개로 만들어줄 수도 있다는 이야기다.
+
+#### auth-context.js
+
+```js
+import React from "react";
+
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout: () => {},
+});
+
+const AuthContextProvider = (props) => {
+  return <AuthContext.Provider>{props.children}</AuthContext.Provider>;
+};
+
+export default AuthContext;
+```
+
+- 먼저, `auth-context.js` 로 이동하여 `AuthContextProvider` 컴포넌트를 만들고 `{props.childrem}`을 받아오는 `<AuthContext.Provider>`를 return 해준다.
+
+```js
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout: () => {},
+});
+
+export const AuthContextProvider = (props) => {
+  return <AuthContext.Provider>{props.children}</AuthContext.Provider>;
+};
+
+export default AuthContext;
+```
+
+- 그리고, `AuthContext` 와 함께 `AuthContextProvider` 컴포넌트도 내보낼 수 있도록 export 해준다. 그래야 `auth-context.js` 파일에 `useState`를 import 해올 수 있을 뿐만 아니라 `AuthContextProvider` 컴포넌트 내부에서 `isLoggedIn` 이라는 상태(state)를 `useState`로 관리해줄 수 있기 때문이다.
+
+```js
+export const AuthContextProvider = (props) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  return <AuthContext.Provider>{props.children}</AuthContext.Provider>;
+};
+```
+
+- `isLoggedIn` 상태(state)를 `useState`로 설정하고 `isLoggedIn`의 상태 초기값인 false 도 설정해준다.
+
+```js
+import React, { useState, useEffect } from "react";
+
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout: () => {}, // 자동 완성을 위해서 더미 함수 설정
+  onLogin: (email, password) => {},
+});
+
+export const AuthContextProvider = (props) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const storedUserLoggedInInformation = localStorage.getItem("isLoggedIn");
+
+    if (storedUserLoggedInInformation === "1") {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const loginHandler = (email, password) => {
+    localStorage.setItem("isLoggedIn", "1");
+    setIsLoggedIn(true);
+  };
+
+  const logoutHandler = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
+  return <AuthContext.Provider>{props.children}</AuthContext.Provider>;
+};
+```
+
+- `useEffect`와 `loginHandler` 함수 그리고 `logoutHandler` 함수도 추가해서, `App` 컴포넌트에서 실행해주었던 해당 함수들의 로직들을 모두 복사해서 붙여넣어준다. 이렇듯 인증문 전체를 Provider 컴포넌트 즉, `AuthContextProvider` 컴포넌트에서 관리해줄 수 있도록 한다.
+
+```js
+return (
+  <AuthContext.Provider
+    value={{
+      isLoggedIn: isLoggedIn,
+      onLogout: logoutHandler,
+    }}
+  >
+    {props.children}
+  </AuthContext.Provider>
+);
+```
+
+- `AuthContext.Provider`의 value 값도 `App` 컴포넌트에서 설정해주었던 것과 동일하게 Context 객체 값인 `isLoggedIn`과 `onLogout`을 설정해준다.
+
+```js
+return (
+  <AuthContext.Provider
+    value={{
+      isLoggedIn: isLoggedIn,
+      onLogout: logoutHandler,
+      onLogin: loginHandler,
+    }}
+  >
+    {props.children}
+  </AuthContext.Provider>
+);
+```
+
+- 마지막으로 `onLogin`을 `loginHandler` 함수로 설정해준다. 이렇게 추가한 것들을 다시 default Context인 `onLogin`의 더미함수로 넣어준다.
+
+```js
+const AuthContext = React.createContext({
+  isLoggedIn: false,
+  onLogout: () => {},
+  onLogin: (email, password) => {},
+});
+```
+
+- 정확성을 위해서 `onLogin`의 더미 함수의 인자로 `loginHandler` 함수와 동일하게 email과 password를 넣어준다. 이제 이 `auth-context.js` 파일 하나만으로 로그인 관련 코드를 관리할 수 있게 되었다. `AuthContextProvider` 컴포넌트로 말이다. 그리고 Context도 설정해주었다. 이는 팁이 될 만한 장점이 있는 기능이지만 물론 필수 사항의 기능은 아니다. 이렇게 사용할지 말지는 어플리케이션의 상황이나 시나리오 어플리케이션의 규모 등을 고려해서 선택하면 되는 것이다. 하지만 이러한 커스텀 컨텍스트 컴포넌트를 사용함으로써 `App`의 컴포넌트의 코드를 확연히 줄일 수가 있는 건 사실이다.
+
+#### App.js
+
+```js
+function App() {
+  return (
+    <React.Fragment>
+      <MainHeader />
+      <main>
+        {!isLoggedIn && <Login onLogin={loginHandler} />}
+        {isLoggedIn && <Home onLogout={logoutHandler} />}
+      </main>
+    </React.Fragment>
+  );
+}
+```
+
+> `AuthContext.Provider` 컴포넌트를 사용할 필요가 없기 때문에 지워주고, 다시 root 레벨의 컴포넌트를 사용하기 위해서 `<React.Fragment>` 를 가져왔다.
+
+- `AuthContextProvider`으로 사용자 인증 로직들을 모두 관리해주면서, 이렇게 `App` 컴포넌트의 코드는 간결하게 작성할 수 있다.
+
+### `AuthContextProvider` 컴포넌트를 사용하기
+
+#### index.js
+
+```js
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+- 이제 `AuthContextProvider`를 적용하기 위해서는 `App` 컴포넌트를 render 해주고 있는 `index.js`로 이동해야 한다.
+
+```js
+import { AuthContextProvider } from "./store/auth-context";
+
+ReactDOM.render(
+  <AuthContextProvider>
+    <App />
+  </AuthContextProvider>,
+  document.getElementById("root")
+);
+```
+
+- `index.js`에서 `AuthContextProvider` 컴포넌트를 import 해온 뒤, `App` 컴포넌트를 감싸준다. 드디어 코드를 관리할 수 있는 매니저 파일이 마련된 것이다. 이때 매니저 파일은 이제 `App`이 아니라, `AuthContextProvider` 와 Context 파일이 된다. 이런 식으로 하면 코드가 한데 모아지고, `App`이 가벼워지는 장점이 있다.
+
+```js
+function App() {
+  return (
+    <React.Fragment>
+      <MainHeader />
+      <main>
+        {!isLoggedIn && <Login onLogin={loginHandler} />}
+        {isLoggedIn && <Home onLogout={logoutHandler} />}
+      </main>
+    </React.Fragment>
+  );
+}
+```
+
+- `App` 컴포넌트에는 `isLoggedIn`이 있기 때문에 Context 정보가 필요할 것이다. `useContext`를 import 하고 `AuthContext` 객체를 받아오도록 설정하자. 이름은 ctx로 적어준다.
+
+```js
+import React, { useContext } from "react";
+
+function App() {
+  const ctx = useContext(AuthContext);
+}
+```
+
+- 이제 Context 정보를 받아올 수 있으니, `isLoggedIn`에도 접근할 수 있다.
+
+```js
+<React.Fragment>
+  <MainHeader />
+  <main>
+    {!ctx.isLoggedIn && <Login onLogin={loginHandler} />}
+    {ctx.isLoggedIn && <Home onLogout={logoutHandler} />}
+  </main>
+</React.Fragment>
+```
+
+- 그리고 `onLogin` 뿐만 아니라 `onLogout` props도 필요 없어진다.
+
+```js
+<React.Fragment>
+  <MainHeader />
+  <main>
+    {!ctx.isLoggedIn && <Login />}
+    {ctx.isLoggedIn && <Home />}
+  </main>
+</React.Fragment>
+```
+
+- 더이상 `loginHandler`나 `logoutHandler`를 `App`에서 관리해주지 않고 있기 때문이다. 이제 `Home`과 `Login` 컴포넌트에서도 동일하게 Context 정보를 받아올 수 있도록 `useContext`를 import 하고 `AuthContext` 객체를 받아오도록 설정한다.
+
+### before
+
+#### Home.js
+
+```js
+const Home = (props) => {
+  return (
+    <Card className={classes.home}>
+      <h1>Welcome back!</h1>
+      <Button onClick={props.onLogout}>Logout</Button>
+    </Card>
+  );
+};
+```
+
+#### Login.js
+
+```js
+const Login = (props) => {
+  ...
+  const submitHandler = (event) => {
+    event.preventDefault();
+    props.onLogin(emailState.value, passwordState.value);
+  };
+}
+```
+
+### after
+
+#### Home.js
+
+```js
+import React, { useContext } from "react";
+import AuthContext from "../../store/auth-context";
+
+const Home = (props) => {
+  const authCtx = useContext(AuthContext);
+  return (
+    <Card className={classes.home}>
+      <h1>Welcome back!</h1>
+      <Button onClick={authCtx.onLogout}>Logout</Button>
+    </Card>
+  );
+};
+```
+
+#### Login.js
+
+```js
+import React, { useState, useEffect, useReducer, useContext } from "react";
+import AuthContext from "../../store/auth-context";
+
+const Login = (props) => {
+  const authCtx = useContext(AuthContext);
+  ...
+  const submitHandler = (event) => {
+    event.preventDefault();
+    authCtx.onLogin(emailState.value, passwordState.value);
+  };
+}
+```
+
+- 수정을 마치고 라이브 서버를 열어보면, 어플리케이션이 정상적으로 작동될 것이다.
+
+### 정리
+
+- 이번 챕터에서의 모든 과정은 필수 사항은 아니지만 `App`이 가벼워진다는 장점이 있다는 걸 확인했다. `App`에서 `AuthContext.Provider`를 JSX 안에서 return 하는 것보다 가독성도 높다. 또한 코드 관리와 auth-context 관리를 한 파일에서 끝낼 수 있다. 무엇보다도 많은 개발자들이 파일을 별개로 관리하기보다 이런 방법을 선호한다. 한 컴포넌트에 여러 개가 아니라 하나의 작업만 할당하는 방식 말이다. React 개발자로서 성장하기 위해서는 이런 패턴을 이해하고 사용할 수 있어야 할 것이다.
 
 </br>
