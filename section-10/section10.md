@@ -20,6 +20,7 @@
 - [Building & Using a Custom Context Provider Component](#사용자-정의-컨텍스트-제공자-구성요소-빌드-및-사용)
 - [React Context Limitations](#리액트-컨텍스트-제한)
 - [Learning the "Rules of Hooks"](#Hooks의-규칙-배우기)
+- [Refactoring an Input Component](#입력-컴포넌트-리팩토링)
 
 ## Side Effects 와 useEffect
 
@@ -2701,5 +2702,156 @@ useEffect(() => {
 #### setFormIsValid 를 의존성 배열에 추가하지 않는 이유
 
 - 기술적으로는 `useEffect` 함수 내부에서 `setFormIsValid`를 사용하고 있기 때문에 의존성 배열에 추가해야만 한다. 하지만 이런 경우에는 예외로 둘 수 있다. `useReducer`, `useState`의 영향을 받는 함수는 React가 절대로 바꾸지 않기 때문이다. 그렇기에 의존성 배열에 추가를 해도 되지만, 굳이 추가를 하지 않아도 된다. 그러니까 '생략'이 가능하다는 이야기다. 이렇듯 상태(state)를 업데이트하는 함수(`setFormIsValid`와 같은), 브라우저 그리고 컴포넌트 함수를 통하지 않는 데이터는 예외로 치며 생략이 가능하다.
+
+</br>
+
+## 입력 컴포넌트 리팩토링
+
+- `Login` 컴포넌트 내부에서 사용하고 있는 input 태그들은 모두 반복되고 있는 걸 확인할 수 있다. 이를 `Button` 컴포넌트처럼 UI 컴포넌트화 하여 재활용할 수 있도록 리팩토링할 예정이다.
+
+#### Login.js 의 input 부분
+
+```js
+<div
+  className={`${classes.control} ${
+    emailState.isValid === false ? classes.invalid : ""
+  }`}
+>
+  <label htmlFor="email">E-Mail</label>
+  <input
+    type="email"
+    id="email"
+    value={emailState.value}
+    onChange={emailChangeHandler}
+    onBlur={validateEmailHandler}
+  />
+</div>
+<div
+  className={`${classes.control} ${
+    passwordState.isValid === false ? classes.invali : ""
+  }`}
+>
+  <label htmlFor="password">Password</label>
+  <input
+    type="password"
+    id="password"
+    value={passwordState.value}
+    onChange={passwordChangeHandler}
+    onBlur={validatePasswordHandler}
+  />
+</div>
+```
+
+- 먼저, UI 폴더에 `Input` 폴더를 생성하고, `Input.js` 파일을 만들어준다.
+
+#### Input.js
+
+```js
+const Input = (props) => {
+  return (
+    <div
+      className={`${classes.control} ${
+        emailState.isValid === false ? classes.invalid : ""
+      }`}
+    >
+      <label htmlFor="email">E-Mail</label>
+      <input
+        type="email"
+        id="email"
+        value={emailState.value}
+        onChange={emailChangeHandler}
+        onBlur={validateEmailHandler}
+      />
+    </div>
+  );
+};
+```
+
+- `Login` 컴포넌트 내부에서 사용해주었던 값들을 모두 props로 받아올 수 있도록 할 것이다. email과 password 에서 각각 설정해주었던 태그 속성과 상태(state) 값들을 전부 prop으로 수정해 준다.
+
+```js
+import classes from "./Input.module.css";
+
+const Input = (props) => {
+  return (
+    <div
+      className={`${classes.control} ${
+        props.isValid === false ? classes.invalid : ""
+      }`}
+    >
+      <label htmlFor={props.id}>{props.label}</label>
+      <input
+        type={props.type}
+        id={props.id}
+        value={props.value}
+        onChange={props.onChange}
+        onBlur={props.onBlur}
+      />
+    </div>
+  );
+};
+```
+
+- 물론, `Login` 컴포넌트에서 설정해주었던 스타일 값도 `Input.module.css`에 그대로 가져와서 `Input` 컴포넌트 내부의 스타일로 사용할 수 있도록 한다.
+
+#### Login.js 에서의 Input 컴포넌트 사용
+
+- 이제 `Login` 컴포넌트에서 `Input` 컴포넌트를 import 해오고, `Input` 컴포넌트에서 필요한 데이터들을 props 해줄 수 있도록 추가해야 한다.
+
+```js
+import Input from "../UI/Input/Input";
+
+...
+<Input
+  label="E-Mail"
+  id="email"
+  type="email"
+  value={emailState.value}
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+/>
+
+<Input
+  label="Password"
+  id="password"
+  type="password"
+  value={passwordState.value}
+  onChange={passwordChangeHandler}
+  onBlur={validatePasswordHandler}
+/>
+```
+
+- 각각의 isValid 값을 `Input` 컴포넌트에 props 해줘야 하므로, `emailState` 에서 구조분해할당을 이용하여 가져온 isValid 값 `emailValid`와 `passwordState` 에서 구조분해할당을 이용하여 가져온 isValid 값 `passwordValid`를 사용하여
+
+```js
+const { isValid: emailValid } = emailState;
+const { isValid: passwordValid } = passwordState;
+```
+
+- `Input` 컴포넌트에 각각의 용도에 맞는 `isValid`로 prop pass 해준다.
+
+```js
+<Input
+  label="E-Mail"
+  id="email"
+  type="email"
+  value={emailState.value}
+  isValid={emailValid} // emailState 에서 구조분해할당을 이용하여 가져온 isValid 값
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+/>
+
+<Input
+  label="Password"
+  id="password"
+  type="password"
+  value={passwordState.value}
+  isValid={passwordValid} // passwordState 에서 구조분해할당을 이용하여 가져온 isValid 값
+  onChange={passwordChangeHandler}
+  onBlur={validatePasswordHandler}
+/>
+```
+
+- 이전과 동일하게 정상적으로 작동하는 걸 확인해볼 수 있다.
 
 </br>
