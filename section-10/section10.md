@@ -18,6 +18,7 @@
 - [Tapping Into Context with the useContext Hook](#useContext-훅으로-컨텍스트에-탭핑하기)
 - [Making Context Dynamic](#컨텍스트를-동적으로-만들기)
 - [Building & Using a Custom Context Provider Component](#사용자-정의-컨텍스트-제공자-구성요소-빌드-및-사용)
+- [React Context Limitations](#리액트-컨텍스트-제한)
 
 ## Side Effects 와 useEffect
 
@@ -2613,5 +2614,34 @@ const Login = (props) => {
 ### 정리
 
 - 이번 챕터에서의 모든 과정은 필수 사항은 아니지만 `App`이 가벼워진다는 장점이 있다는 걸 확인했다. `App`에서 `AuthContext.Provider`를 JSX 안에서 return 하는 것보다 가독성도 높다. 또한 코드 관리와 auth-context 관리를 한 파일에서 끝낼 수 있다. 무엇보다도 많은 개발자들이 파일을 별개로 관리하기보다 이런 방법을 선호한다. 한 컴포넌트에 여러 개가 아니라 하나의 작업만 할당하는 방식 말이다. React 개발자로서 성장하기 위해서는 이런 패턴을 이해하고 사용할 수 있어야 할 것이다.
+
+</br>
+
+## 리액트 컨텍스트 제한
+
+- 리액트 컨텍스트는 훌륭한 기능이지만 항상 사용할 수는 없다. `App`이나 여러 컴포넌트에 영향을 미치는 상태(state)에서는 사용해도 괜찮지만 configuration 컴포넌트에는 사용할 수 없기 때문이다. 이것의 한 예시로 UI 폴더에 있는 `Button` 컴포넌트를 살펴보자.
+
+#### Button.js
+
+```js
+const Button = (props) => {
+  return (
+    <button
+      type={props.type || "button"}
+      className={`${classes.button} ${props.className}`}
+      onClick={props.onClick}
+      disabled={props.disabled}
+    >
+      {props.children}
+    </button>
+  );
+};
+```
+
+- `Button` 컴포넌트는 여러 곳에서 재활용해야 한다. 그러나 `Button` 컴포넌트에 Context를 사용한다면, 우리가 유저를 로그아웃 시키기 위해 Context를 사용할 때도 있지만 유저를 로그아웃시키는 것과는 다른 의도로 `Button`을 사용하고자 할 때는 반드시 문제가 생길 것이다. `Button` 컴포넌트의 기능이 (우리의 의도와는 다르게) 유저 로그아웃으로 한정될 것이기 때문이다. 그래서 `Button` 컴포넌트에 Context를 사용하면 안된다는 것이다. 이렇게 여러 곳에서 재활용해야 하는 UI 컴포넌트인 `Button`과 같은 컴포넌트들은 Context 가 아닌 props를 사용해야 한다. Context는 전체 `App` 상태(state) 관리에만 사용하는 게 좋다.
+
+### 리액트 컨텍스트의 단점
+
+- 리액트 컨텍스트에는 단점이 있는데, 그것은 바로 리액트 컨텍스트가 자주 바뀌는 상태(state)에 맞는 기능이 아니라는 것이다. 예를 들어, 초마다 계속 바뀌는 상태(state)가 있다고 치자. 이런 상태(state)에는 리액트 컨텍스트가 정답이 아니다. 만약 이렇게 계속 바뀌는 상태(state)가 있을 때는 Context가 아니라, Redux 를 사용하면 된다. (리덕스는 강의 후반부에 나오는 전역상태관리 툴이다) 어쨌든 Context로 모든 컴포넌트와 props를 대체하지 말아야 한다. 컴포넌트 설정에 있어서 props 는 중요한 요소이고, 이런 중요한 요소인 props를 context로 대체하기 보다는 특정한 상황(길이가 긴 prop chain)일 때에만 선택하여 context를 사용하길 권장한다.
 
 </br>
