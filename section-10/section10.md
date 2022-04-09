@@ -21,6 +21,7 @@
 - [React Context Limitations](#리액트-컨텍스트-제한)
 - [Learning the "Rules of Hooks"](#Hooks의-규칙-배우기)
 - [Refactoring an Input Component](#입력-컴포넌트-리팩토링)
+- [Diving into "Forward Refs"](#Forward-Refs에-대해-알아보기)
 
 ## Side Effects 와 useEffect
 
@@ -684,7 +685,7 @@ const passwordChangeHandler = (event) => {
 };
 ```
 
-- `useEffect`를 주석 처리하고 이전에 `emailChangeHandler`와 `passwordChangeHandler`에서 관리해주었던 form 유효성 체크 로직을 다시 살려놓는다. 이 방법은 이전에도 말했다시피 작동은 하지만, 코드를 여러번 재사용하는 좋지 않은 코드이다. (그래서 우리는 `useEffect`를 사용했을 것이다.) 하지만 어떤 이유에서인지 라우트를 `useEffect`에 가져오고 싶지 않다고 가정해보자. 그리고 이때 우리는 어떤 문제를 맞닿드리게 된다.
+- `useEffect`를 주석 처리하고 이전에 `emailChangeHandler`와 `passwordChangeHandler`에서 관리해주었던 form 유효성 체크 로직을 다시 살려놓는다. 이 방법은 이전에도 말했다시피 작동은 하지만, 코드를 여러번 재사용하는 좋지 않은 코드이다. (그래서 우리는 `useEffect`를 사용했을 것이다.) 하지만 어떤 이유에서인지 라우트를 `useEffect`에 가져오고 싶지 않다고 가정해보자. 그리고 이때 우리는 어떤 문제를 맞딱뜨리게 된다.
 
 ```js
 const passwordChangeHandler = (event) => {
@@ -732,7 +733,7 @@ const validatePasswordHandler = () => {
 
 ### `useReducer`를 이론적 측면으로 접근해보기
 
-> [React 공식문서 참조: useReducer)](https://ko.reactjs.org/docs/hooks-reference.html#usereducer)
+> [React 공식문서 참조 : useReducer](https://ko.reactjs.org/docs/hooks-reference.html#usereducer)
 
 ```js
 const [state, dispatchFn] = useReducer(reducerFn, initialState, initFn);
@@ -2853,5 +2854,374 @@ const { isValid: passwordValid } = passwordState;
 ```
 
 - 이전과 동일하게 정상적으로 작동하는 걸 확인해볼 수 있다.
+
+</br>
+
+## Forward Refs에 대해 알아보기
+
+- 이번 챕터에서 배울 hook은 명령을 통해 input 컴포넌트들끼리 상호작용을 할 수 있게 만들어준다. 즉 state 를 전달해서 컴포넌트 내에서 무언가가 변경되는 방식이 아니라, 컴포넌트 안으로 함수를 불러오는 방식이라는 뜻이다. 물론 지금부터 소개될 이 기능은 전형적인 React 패턴이라고 할 수 없기 때문에 자주 사용할 일은 별로 없을 것이고, 또 자주 사용해서도 안되기 때문에 때때로 마주칠 어떤 특정한 이슈를 해결하려면 이런 유용한 솔루션이 있다는 정도만 기억하면 좋을 것이다.
+
+#### Login.js
+
+```js
+<form onSubmit={submitHandler}>
+  ...
+  <Button type="submit" className={classes.btn} disabled={!formIsValid}>
+    Login
+  </Button>
+  ...
+</form>
+```
+
+- 특정한 시나리오를 예시로 보여주기 위해서 먼저 `Login` 컴포넌트에서 사용하고 있는 `Button` 컴포넌트의 `disabled` 속성을 지워주자. 이 버튼 기능을 비활성화하는 것이 아니라 우리가 앞으로 작업할 Input 포커싱을 위해서 항상 버튼을 클릭할 수 있도록 사전 작업을 해주는 용도이다.
+
+```js
+<Button type="submit" className={classes.btn}>
+  Login
+</Button>
+```
+
+- 그리고 `submitHandler` 함수로 돌아가 어떤 조건식을 추가해줘야 한다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+  authCtx.onLogin(emailState.value, passwordState.value);
+};
+```
+
+- 지금은 버튼을 누르면 언제든 로그인을 할 수 있도록 되어있다. 우리는 여기서 form 의 형식이 유효한지를 먼저 확인하고 난 뒤에, form 형식이 유효한 경우에만 로그인을 할 수 있도록 설정할 것이다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  if (formIsValid) {
+    authCtx.onLogin(emailState.value, passwordState.value);
+  }
+};
+```
+
+- 그리고 `formIsValid`가 아닐 경우의 수들을 else if 로 처리해줘야 한다. 먼저 첫 번째 Input 의 입력값(이메일)이 유효하지 않은 경우부터 체크해주자.
+
+![image](https://user-images.githubusercontent.com/53133662/162569864-ec253616-4ca4-4d4e-b23e-17a43e563a9c.png)
+
+- 현재의 페이지를 보면 `Button`의 `disabled` 속성을 지워주었기 때문에 언제나 입력값을 전송할 수 있도록 로그인 버튼이 활성화되어 있는 걸 확인할 수 있다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  if (formIsValid) {
+    authCtx.onLogin(emailState.value, passwordState.value);
+  } else if (!emailValid) {
+    // 이메일 값이 유효하지 않을 때~ 한다
+  }
+};
+```
+
+- else if 로 로그인 버튼을 눌렀을 때 이메일 Input 값이 유효하지 않은 경우를 먼저 체크할 것이다. 그래서 만약 유효하지 않다면, 이메일 Input 창으로 커서가 포커싱 되도록 해줄 예정이다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  if (formIsValid) {
+    authCtx.onLogin(emailState.value, passwordState.value);
+  } else if (!emailValid) {
+    // 이메일 값이 유효하지 않을 때~ 한다
+  } else {
+    // 비밀번호 값이 유효하지 않을 때~ 한다
+  }
+};
+```
+
+- 두번째 Input 값(비밀번호)도 체크해 줘야 한다. 이메일 값은 유효하지만 비밀번호 값은 유효하지 않을 때를 가정하는 것이다.
+
+  > 물론 둘 다 유효하지 않은 경우의 수도 추가해야되지 않을까 라고 생각할 수 있다. 하지만 이미 첫 번째 입력 값(이메일)의 유효성 체크에 대한 로직을 작성해줬기에, 둘 다 유효하지 않을 때에는 첫 번째 입력창(이메일)으로 포커싱될 것이기 때문에 굳이 로직을 추가할 필요는 없을 것이다.
+
+- 이제 input 값에 집중할 것이다. 정규식 형태로 input 을 나타내고 싶다면, 우리는 여기서 `ref`를 사용해야 한다.
+
+### `useRef`를 기반으로 `focus()` 메소드 사용하기
+
+- `Input` 컴포넌트의 input 태그에 `ref` 속성을 지정해줄 차례다. `useRef`를 import 하고 `ref`를 연결시켜주자.
+  > `ref` 속성은 모든 HTML 컴포넌트에서 지원하는 기능이다.
+
+#### Input.js
+
+```js
+import React, { useRef } from "react";
+
+const Input = (props) => {
+  const inputRef = useRef();
+
+  return (
+    <div
+      className={`${classes.control} ${
+        props.isValid === false ? classes.invalid : ""
+      }`}
+    >
+      <label htmlFor={props.id}>{props.label}</label>
+      <input
+        ref={inputRef}
+        type={props.type}
+        id={props.id}
+        value={props.value}
+        onChange={props.onChange}
+        onBlur={props.onBlur}
+      />
+    </div>
+  );
+};
+```
+
+- `Input` 컴포넌트가 렌더링된 이후에 `focus` 되어야 하기 때문에, `useEffect`를 사용해서 해당 컴포넌트가 렌더링 된 후에 `focus` 해줄 수 있도록 코드를 작성해준다.
+
+```js
+useEffect(() => {
+  inputRef.current.focus();
+}, []);
+```
+
+- `useEffect`에 함수를 전달하면, 모든 컴포넌트가 렌더링 된 이후에 이 함수가 실행될 것이다. 일단 컴포넌트가 처음 렌더링 되었을 때, 한 번만 실행할 수 있도록 의존성 배열을 빈 값으로 비워둔다.
+  > `focus()` 메소드는 Input `DOM` 객체 모델에만 사용할 수 있다. 그리고 `ref`를 통해서 접근할 수 있는 메소드이다.
+- 이제 이메일과 비밀번호에 입력한 값이 렌더링될 것이고, 이후에 비밀번호 입력 값을 focus 할 것이다. 왜냐하면 비밀번호 입력 값은 렌더링 된 최종 입력값이기 때문이다!
+
+![image](https://user-images.githubusercontent.com/53133662/162573995-8a716be1-9bb6-4ea3-b762-0ee6e6e4bc24.png)
+
+- 다시 리로딩을 하면, 이메일 input 창은 유효하지 않은 것으로 보이는데(유효하지 않을 때만 적용되는 스타일, 빨간색으로 채워졌다) 일시적으로 focus가 지정되었기 때문이다. 하지만 비밀번호 input 창은 끝까지 focus가 지정되어 있는 걸 알 수 있다.
+
+- 여기까지 봤을 때 분명히 우리가 원하는 기능에 대한 구현은 아닐지언정 `ref`와 리액트의 내장된 기능만을 이용해서 이런 방식으로도 사용해볼 수 있다는 사실 하나는 배웠을 것이다.
+
+  > focus() 메소드는 리액트의 기능이 아니라, 자바스크립트의 `DOM` 객체 모델에 내장된 기능이다. 정확하게는 input `DOM` 객체 모델이라고 할 수 있다.
+
+- 우리가 의도했던 focus 기능은 사실 input이 렌더링 된 후에 하려는 것은 아니기에, `useEffect`로 구현해주었던 로직은 다시 삭제해준다. 대신 `activate` 라는 이름의 함수를 작성해주자.
+
+```js
+const activate = () => {
+  inputRef.current.focus();
+};
+```
+
+- 여기서 `activate` 함수는 input 내에서 불러오는 게 아니라, 외부에서 불러올 수 있도록 해야한다. 참고로 이런 경우는 흔하지 않은 시나리오다. 왜냐하면 이런 식으로 리액트 프로젝트의 코드를 작성하지 않기 때문이다. 보통은 prop이나 상태(state)를 사용하거나 데이터 컴포넌트에 전송해서 무언가를 변경하는 방식이 훨씬 흔한 방식이다. 하지만 지금의 예시처럼 특이한 경우에는 이 input 에 focus 를 지정하는 것이 기발한 방법일 수 있다. focus나 `activate`를 호출할 때 우리의 `Input` 컴포넌트를 사용할 수 있다. 내장된 함수를 사용하거나 아니면, 앞서 작성한 `Input` 컴포넌트에서 `activate` 함수를 사용해도 된다는 이야기다. 드문 일이긴 하지만 언젠가 이런 경우를 맞닥뜨리게 될 수도 있다.
+
+### 왜 `Login` 컴포넌트(parent)에서 `useRef`를 사용하지 않을까?
+
+- 하지만 우리는 `Input` 컴포넌트 내부가 아니라 `Login` 컴포넌트에서 `useRef`를 사용하지 않을까 의문을 가질 수도 있다. 왜 `Login` 컴포넌트(parent)에서 `useRef`를 이용하지 않는지에 대해 알기 위해서는 예시가 필요하다.
+
+#### Login.js
+
+```js
+const emailInputRef = useRef();
+const passwordInputRef = useRef();
+```
+
+- 각각의 input 에 연결시켜줄 `useRef`를 생성하고, 해당하는 `Input` 컴포넌트에 `ref` 속성으로 연결시켜준다.
+
+```js
+<Input
+  ref={emailInputRef}
+  label="E-Mail"
+  id="email"
+  type="email"
+  value={emailState.value}
+  isValid={emailValid}
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+/>
+
+<Input
+  ref={passwordInputRef}
+  label="Password"
+  id="password"
+  type="password"
+  value={passwordState.value}
+  isValid={passwordValid}
+  onChange={passwordChangeHandler}
+  onBlur={validatePasswordHandler}
+/>
+```
+
+- 그러면 이제 `submitHandler` 함수 로직(유효하지 않을 때)에 각각 `ref`로 연결한 `useRef` 값들을 넣어주고, `Input` 컴포넌트 내부의 함수인 `activate`를 이용해서 focus 메소드를 사용할 수 있도록 작업해주자.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  if (formIsValid) {
+    authCtx.onLogin(emailState.value, passwordState.value);
+  } else if (!emailValid) {
+    emailInputRef.current.activate();
+  } else {
+    passwordInputRef.current.activate();
+  }
+};
+```
+
+- 이렇게 간단한 방법으로 focus 메소드를 사용할 수 있을 것이라고 생각했을 것이다. 하지만 우리의 의도대로 작동되지 않는다. 리로드해보면 콘솔에 에러가 발생하는 것을 알 수 있다.
+
+![image](https://user-images.githubusercontent.com/53133662/162575289-37adb00d-2657-4290-9319-4c1a6274d8c5.png)
+
+- 에러 메세지를 살펴보자. "Warning: Function components cannot be given refs." 즉, 함수형 컴포넌트는 `ref`를 전달하는 것이 불가능하다는 이야기다. 그렇기 때문에 `Login` 컴포넌트에서 `Input` 컴포넌트에 전달한 `ref` 속성을 가지고는 `Input` 컴포넌트 내부에서 아무 것도 할 수 없게 된다. prop 객체에선 `ref` 속성 값을 사용할 수 없기 때문이다.
+
+  > 만약, prop 객체에서 `ref` 속성 값을 사용한다고 해도 `ref`는 예약어 이기 때문에 또 다시 에러메세지가 발생할 것이다. 이런 접근법으로는 focus 메소드를 작동할 수 없다.
+
+### 우리가 시도할 수 있는 솔루션은 있다
+
+- 그럼에도 불구하고, 우리가 해결할 방법은 언제나 존재한다. 이 솔루션을 위해서는 딱 두가지가 필요한데 첫 번째로, `Input` 컴포넌트에서 또 다른 hook을 import 해서 사용해야 한다. 바로 `useImperativeHandle` 이라는 hook 이다.
+
+### `useImperativeHandle` hook
+
+> [React 공식문서 참조 : useImperativeHandle](https://ko.reactjs.org/docs/hooks-reference.html#useimperativehandle)
+
+- `useImperativeHandle`은 컴포넌트 내부 기능을 외부에서 명령형으로 사용할 수 있도록 만들어주는 React Hook 이다. 그말인 즉슨, 일반적으로 우리가 사용하는 상태(state)나 prop을 거치지 않고서도 부모 컴포넌트에서 상태(state)를 관리하고 조작할 필요 없이 자식 컴포넌트에서 바로 무언가를 호출하거나 조작할 수 있게 된다는 뜻이다.
+  > 물론 `useImperativeHandle` hook 을 사용해야만 하는 경우는 드물다. 그러므로 프로젝트에서 자주 사용할 일이 없을 것이며, 또 자주 사용해서도 안된다. 일반적으로 이런 경우에 우리가 사용하는 방법인 상태(state)나 prop으로 접근하여 작업해주는 것이 낫기 때문이다. 그럼에도 불구하고 우리의 현재 프로젝트를 한정하여 맞닥뜨렸던 이 문제를 해결하기엔 꽤 좋은 솔루션이라고 말할 수 있다.
+
+```js
+useImperativeHandle(ref, createHandle, [deps]);
+```
+
+- 이 `useImperativeHandle`을 사용하기 위해서는 먼저 import를 해와야 한다. `Input` 컴포넌트에서 `useImperativeHandle`을 호출 해온 뒤, 로직을 작성한다.
+
+```js
+  useImperativeHandle(첫 번째 매개변수, () => {})
+```
+
+- `useImperativeHandle`은 두개의 인자를 전달받는다. 첫 번째 매개변수는 나중에 작성하는 걸로하고, 먼저 두 번째 인자인 함수부터 작성해보자. 이 함수는 반드시 객체를 반환하는 함수여야 한다.
+
+```js
+  useImperativeHandle( , () => {
+    return {
+
+    };
+  })
+```
+
+- 그리고 반환하는 객체는 "밖에서도 사용할 수 있는 모든 데이터"를 포함하고 있어야 할 것이다.
+
+```js
+  useImperativeHandle( , () => {
+    return{
+      focus: 해당 컴포넌트 내부에 있는 함수나 변수,
+    }
+  })
+```
+
+- 우리는 이 객체 안에 `Input` 컴포넌트 내부의 '함수'나 '변수' 등을 포함시킬 수 있다. 예를 들어, `activate` 함수(`Input` 컴포넌트 내부에 있는 함수)를 값으로 받는 `focus`를 객체 안에 포함시킬 수 있을 것이다. (물론 이름은 우리가 마음대로 지정하면 된다.) 이렇듯 해당 컴포넌트 내부에 있는 함수나 변수 등을 포함시켜서 이 객체를 통해서 외부에서도 접근할 수 있도록 해야 한다.
+
+```js
+  useImperativeHandle( , () => {
+    return{
+      focus: activate,
+    }
+  })
+```
+
+- 우리는 `activate` 함수를 객체 안에 담아서 밖에서 접근할 수 있도록 해야하기 때문에 `focus` 값으로 `activate` 함수를 할당해주었다. 즉 `useImperativeHandle` 내부의 함수에서 반환되는 객체는 자식 컴포넌트(`Input`) 내부에 있는 기능과 외부의 부모 컴포넌트(`Login`) 사이를 번역해주는 역할이라고 보면 될 것이다.
+
+- `useImperativeHandle` hook 에서 아직 할 일이 남았다. 지금은 비어있는 `useImperativeHandle` hook의 첫 번째 인자를 설정해주어야 한다. 그리고 이 첫 번째로 제공해주어야 할 인자는 `Input` 컴포넌트의 함수 인자 리스트에서 얻어내야 한다.
+
+```js
+const Input = (props) => {
+  ...
+}
+```
+
+- 지금까지 props 만 가지고도 거의 대부분의 문제는 해결해왔다. 하지만 이번에는 props를 포함한 두 번째 인자를 가져와볼까 한다. 바로 `ref` 이다.
+
+```js
+const Input = (props, ref) => {
+  ...
+}
+```
+
+- `Input` 컴포넌트에서 받아올 인자로 `ref`가 있다면 당연히 외부에서 `ref`를 전달해주어야 할 것이다. 이전에 우리가 `Login` 컴포넌트에서 `Input` 컴포넌트에 속성으로 달아준 `ref`를 생각해보자. 아마도 여기서 전달한 `ref`를 우리가 `Input` 컴포넌트에서 받아와 사용해줄 수 있을 것이다.
+
+#### Login.js
+
+```js
+<Input
+  ref={emailInputRef}
+  label="E-Mail"
+  id="email"
+  type="email"
+  value={emailState.value}
+  isValid={emailValid}
+  onChange={emailChangeHandler}
+  onBlur={validateEmailHandler}
+  >
+<Input
+  ref={passwordInputRef}
+  label="Password"
+  id="password"
+  type="password"
+  value={passwordState.value}
+  isValid={passwordValid}
+  onChange={passwordChangeHandler}
+  onBlur={validatePasswordHandler}
+/>
+```
+
+- `Login` 컴포넌트에서 전달 받은 `ref` 인자는 `Input` 컴포넌트에서 바인딩 해줘야 한다. 그러기 위해서는 `useImperativeHandle` hook 의 첫 번째 인자로 `ref` 전달해주는 일부터 시작해야 할 것이다.
+
+#### Input.js
+
+```js
+useImperativeHandle(ref, () => {
+  return {
+    focus: activate,
+  };
+});
+```
+
+- 그래도 아직 부족하다. 이것만으로는 제대로 작동할 수 없기 때문이다. `Input` 컴포넌트에서 `ref` 를 인자로 전달받고 사용하기 위해서는 한 가지 작업을 처리해줘야 한다. `Input` 컴포넌트 함수를 특별한 방식으로 내보내는 작업 말이다. 이 작업을 하기 위해서는 React 에서 `forwardRef` 메소드를 가져와서 `Input` 컴포넌트를 내보낼 수 있도록 해야한다.
+
+### `React.forwardRef()` 사용하기 (중요!)
+
+> React.forwardRef는 전달받은 ref 어트리뷰트를 하부 트리 내의 다른 컴포넌트로 전달하는 React 컴포넌트를 생성합니다.
+
+```js
+const Input = React.forwardRef((props, ref) => {
+  ...
+})
+
+```
+
+- `forwardRef()` 메소드로 컴포넌트 함수를 전달할 수 있도록 함수를 감싸주었다. `Input` 컴포넌트 함수는 `forwardRef`에서 첫 번째 인자가 될 것이다. 그리고 `forwardRef`는 리액트 컴포넌트를 반환해줄 것이다. 이제 리액트 컴포넌트는 `ref`와 바인딩할 수 있게 되었다. 이제 `Input` 컴포넌트는 외부에서 지정한 `ref` 속성 값을 인자로 가질 수 있게 되었다. 또한 자식 컴포넌트에서 `ref` 를 노출시킬 것이고 부모 컴포넌트에서 자식 컴포넌트의 `ref`를 제어하거나 사용할 수 있을 것이다. 물론 우리는 `useImperativeHandle` hook을 통해서 `ref`를 노출시킬 것이다.
+
+1.  [React 공식문서 참조 : React.forwardRef](https://ko.reactjs.org/docs/react-api.html#reactforwardref)
+2.  [React 공식문서 참조 : Forwarding Refs](https://ko.reactjs.org/docs/forwarding-refs.html#forwarding-refs-in-higher-order-components)
+
+```js
+useImperativeHandle(ref, () => {
+  return {
+    focus: activate,
+  };
+});
+```
+
+- `useImperativeHandle`의 내부 함수가 반환하는 객체 안에 `focus`(`activate()`) 함수를 통해 노출시켜 보자.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  if (formIsValid) {
+    authCtx.onLogin(emailState.value, passwordState.value);
+  } else if (!emailValid) {
+    emailInputRef.current.focus();
+  } else {
+    passwordInputRef.current.focus();
+  }
+};
+```
+
+- 저장한 뒤 리로딩해보면, 제대로 동작하고 있는 걸 알 수 있다.
+
+![ezgif com-gif-maker (38)](https://user-images.githubusercontent.com/53133662/162577982-6417982e-a3f7-48eb-ad7a-22be3405c7ef.gif)
+
+### 정리
+
+- 현재의 프로젝트처럼 input에 focus를 지정하고자 하는 경우일 때는 앞서 작업한 방법들은 꽤나 유용하고 적합한 방식이었다. `useImperativeHandle` hook 과 `React.forwardRef()`를 가지고서 리액트 컴포넌트 기능을 부모 컴포넌트에 유출할 수 있게 되었으며 `ref`를 통해서 자식 컴포넌트를 부모 컴포넌트에서 사용할 수 있도록 했기 때문이다. (`ref`를 통해서 함수 뿐만이 아니라 값도 노출시킬 수 있다.) 물론, 이런 방식은 지금과 같은 특이한 케이스일 때 시도해볼 만한 솔루션이긴 하다. 그러나 우리에게 꼭 필요한 기능이나 방법이라고 말하기는 어려울 것이다. 실은 어떻게든 이런 케이스를 피하는 것이 더 좋기 때문이다. 하지만 focus 뿐만 아니라, 앞으로 scroll 을 사용할 때에도 언제든지 적용할 수 있는 유용한 방법이기에 한 번쯤은 알아두면 좋을 기능들이다.
 
 </br>
