@@ -9,6 +9,7 @@
 - [Practice | Adding Individual Meal Items & Displaying Them](#개별-식사-항목-추가-및-표시하기)
 - [Practice | Adding a Form](#양식-추가하기)
 - [Practice | Working on the "Shopping Cart" Component](#장바구니-컴포넌트-작업하기)
+- [Practice | Adding a Modal via a React Portal](#리액트-Portal을-통해-모달-추가하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -340,3 +341,94 @@ const cartItems = (
 ```
 
 </br>
+
+## 리액트 Portal을 통해 모달 추가하기
+
+#### index.html
+
+```html
+<div id="overlays"></div>
+<div id="root"></div>
+```
+
+#### Modal.js
+
+```js
+const BackDrop = (props) => {
+  return <div className={classes.backdrop} />;
+};
+
+const ModalOverlay = (props) => {
+  return (
+    <div className={classes.modal}>
+      <div className={classes.content}>{props.children}</div>
+    </div>
+  );
+};
+
+const Modal = (props) => {
+    return(
+    <React.Fragment>
+        {ReactDOM.createPortal(<BackDrop />, document.getElementById("overlays"))}
+        {ReactDOM.createPortal(
+        <ModalOverlay>{props.children}</ModalOverlay>,
+      document.getElementById("overlays")
+        )}
+    </React.Fragment>;
+    )
+};
+```
+
+- `<ModalOverlay>` 사이에 `{props.children}`를 넣는 이유는 `<ModalOverlay>`에서 `{props.children}`를 사용해서 받아오고 있기 때문이다.
+
+```js
+const portalElement = document.getElementById("overlays");
+
+const Modal = (props) => {
+  return (
+    <React.Fragment>
+      {ReactDOM.createPortal(<BackDrop />, portalElement)}
+      {ReactDOM.createPortal(
+        <ModalOverlay>{props.children}</ModalOverlay>,
+        portalElement
+      )}
+    </React.Fragment>
+  );
+};
+```
+
+- 상수로 만들어서 JSX 코드를 깔끔하게 정리할 수도 있다.
+
+#### Cart.js
+
+```js
+<Modal>
+  {cartItems}
+  <div className={classes.total}>
+    <span>Total Amout</span>
+    <span>35.62</span>
+  </div>
+  {/* cart button */}
+  <div className={classes.actions}>
+    <button className={classes["button--alt"]}>Close</button>
+    <button className={classes.button}>Order</button>
+  </div>
+</Modal>
+```
+
+- 기존의 `<div>` 태그를 `Modal` 컴포넌트로 수정해주고 전체 JSX 코드를 감싸준다.
+
+#### App.js
+
+```js
+<Fragment>
+  <Cart />
+  <Header />
+  <main>
+    <Meals />
+  </main>
+</Fragment>
+```
+
+- 마지막으로 `Haeder` 컴포넌트 위에 `Cart` 컴포넌트를 import 해서 올려준다. (이미 React Portal로 위치를 지정해주었으므로 사실 `Cart` 컴포넌트의 위치는 어디에 넣어도 상관없다.)
+  </br>
