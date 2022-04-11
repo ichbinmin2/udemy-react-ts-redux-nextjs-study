@@ -5,6 +5,7 @@
 - [Practice | Adding a "Header" Component](#헤더-컴포넌트-추가하기)
 - [Practice | Adding the "Cart" Button Component](#장바구니-버튼-컴포넌트-추가하기)
 - [Practice | Adding a "Meals" Component](#Meals-컴포넌트-추가하기)
+- [Practice | Adding Individual Meal Items & Displaying Them](#개별-식사-항목-추가-및-표시하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -81,5 +82,17 @@ const AvailableMeals = () => {
   );
 };
 ```
+
+</br>
+
+## 개별 식사 항목 추가 및 표시하기
+
+```js
+const price = `$${props.price.toFixed(2)}`;
+```
+
+- `toFixed(2)`를 사용해서 소숫점 두자리만 표기될 수 있도록 함
+
+> [MDN 문서 참조 : toFixed()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed)
 
 </br>
