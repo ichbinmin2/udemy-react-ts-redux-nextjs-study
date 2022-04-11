@@ -11,6 +11,7 @@
 - [Practice | Working on the "Shopping Cart" Component](#장바구니-컴포넌트-작업하기)
 - [Practice | Adding a Modal via a React Portal](#리액트-Portal을-통해-모달-추가하기)
 - [Practice | Managing Cart & Modal State](#Cart-및-모달-state-관리)
+- [Practice | Adding a Cart Context](#장바구니-컨텍스트-추가)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -595,3 +596,144 @@ const BackDrop = (props) => {
 - 리액트 컨텍스트를 사용할 수도 있지만 이번 경우에는 사용하지 않는다. 리액트 컨텍스트를 사용하려면 Cart 모달을 닫기 위해서 onClick을 배경에 바인딩해야 되고, 특정한 스펙트럼 역시 필요하다. 그렇게 되면 다른 컨텐츠에 이 Modal을 사용할 수 없기 때문에 prop chain 으로 처리해주었다.
 
   </br>
+
+## 장바구니 컨텍스트 추가
+
+### Cart Context 만들기
+
+- 이제 Cart에 데이터와 항목을 추가할 수 있도록 Cart에 리액트 컨텍스트를 추가해보자. 어플리케이션 모든 곳에서 사용할 것이므로, 컨텍스트로 cart 데이터 전체를 관리해줄 것이다. 나중에는 cart 안에 항목을 추가하거나 삭제하는 등의 기능도 추가해줄 것이기 때문에 컨텍스트로 관리가 필요하다.
+
+#### `src/store/cart-context.js`
+
+```js
+import React from "react";
+
+React.createContext({
+  items: [],
+  totalAmount: 0,
+  addItem: (item) => {},
+  removeItem: (id) => {},
+});
+```
+
+- 먼저 store 폴더를 생성하고, `cart-context.js`을 생성해서 cart context에 초기화한 데이터를 넣어준다. 컨텍스트를 기본 데이터로 초기화 해주는 이유는 (이 값을 실제로 사용하지는 않을 것이지만) 나중에 자동완성 기능을 편리하게 사용하기 위해서다. 여러 cart 항목을 관리해줄 items에 빈 배열 값을 넣고, 총량을 표기할 totalAmount도 0으로 초기화해준다. 그런 다음 함수 두 개를 사용해서 컨텍스트 상태(state)를 업데이트 해줄 생각이다.
+
+```js
+import React from "react";
+
+const CartContext = React.createContext({
+  items: [],
+  totalAmount: 0,
+  addItem: (item) => {},
+  removeItem: (id) => {},
+});
+
+export default CartContext;
+```
+
+- 그리고 이 컨텍스트를 `CartContext` 상수에 담아서 export 해준다.
+
+### Cart Provier 만들기
+
+- `Provier`를 Context를 생성한 파일(`cart-context.js`)에서 관리해줄 수도 있지만, 가독성을 위해 같은 폴더 안에서 새로운 파일(`CartProvider`)을 만들어 생성해준다.
+
+#### `src/store/CartProvider.js`
+
+```js
+import CartContext from "./cart-context";
+
+const CartProvider = (props) => {
+  <CartContext.Provider>{props.children}</CartContext.Provider>;
+};
+
+export default CartProvider;
+```
+
+- 이 `CartProvider`는 `CartContext`와 데이터를 관리해주는 것이 목적으로 생성되었다. `CartProvider`를 제공하는 역할이라는 뜻이다. `CartContext.Provider` 사이에 `props.children`을 넣어줌으로써 이 컨텍스트(`CartContext`)에 접근할 수 있도록 모든 컴포넌트를 `CartContext.Provider`가 감싸는 것이다.
+
+- 컴포넌트에 컨텍스트 데이터를 관리하는 로직도 추가해주어야 한다. 이때 한 컴포넌트 요소에만 포함되고 다른 컴포넌트 요소에는 포함되지 않는다.
+
+```js
+const cartContext = {};
+
+return <CartContext.Provider>{props.children}</CartContext.Provider>;
+```
+
+- 이제 `CartProvider` 컴포넌트에 `cartContext` 라는 헬퍼 상수를 추가한다. `CartContext.Provider` 의 value 속성 값으로 들어갈 객체를 작성해주면 된다. 구체적으로 컨텍스트 필드를 설정해주는 것이다. (나중에 이 값을 기반으로 업데이트해줄 것이다.)
+
+```js
+const cartContext = {
+  items: [],
+  totalAmount: 0,
+  addItem: 함수 필요,
+  removeItem: 함수 필요,
+};
+```
+
+- 이제 `cartContext` 에 함수로 들어갈 함수들을 설정해준다.
+
+```js
+const addItemToCartHandler = (item) => {};
+
+const removeItemToCartHandler = (id) => {};
+
+const cartContext = {
+  items: [],
+  totalAmount: 0,
+  addItem: addItemToCartHandler,
+  removeItem: removeItemToCartHandler,
+};
+
+return <CartContext.Provider>{props.children}</CartContext.Provider>;
+```
+
+- 그리고 `CartContext.Provider`에 value prop 값으로 `cartContext`을 포인터 해준다.
+
+```js
+const cartContext = {
+  items: [],
+  totalAmount: 0,
+  addItem: addItemToCartHandler,
+  removeItem: removeItemToCartHandler,
+};
+
+<CartContext.Provider value={cartContext}>
+  {props.children}
+</CartContext.Provider>;
+```
+
+- 이제 `CartProvider` 컴포넌트를 사용할 수 있다. cart의 데이터를 사용하는 모든 컴포넌트를 감싸야 한다.
+
+#### App.js
+
+```js
+return (
+  <Fragment>
+    {cartIsShown && <Cart onClose={hideCartHandler} />}
+    <Header onShowCart={showCarthandler} />
+    <main>
+      <Meals />
+    </main>
+  </Fragment>
+);
+```
+
+- `App` 컴포넌트를 살펴보면, 우리의 어플리케이션의 컴포넌트들에서 `CartContext` 데이터가 필요하다는 걸 알 수 있다. 그동안 전체 컴포넌트를 감싸주던 `Fragment`를 삭제하고 이 자리를 `CartProvider`로 변경해주자.
+
+```js
+import CartProvider from "./store/CartProvider";
+
+return (
+  <CartProvider>
+    {cartIsShown && <Cart onClose={hideCartHandler} />}
+    <Header onShowCart={showCarthandler} />
+    <main>
+      <Meals />
+    </main>
+  </CartProvider>
+);
+```
+
+- 이제 `CartContext` 전체를 `App.js`에서 관리해줄 수 있게 되었다. 또한 `CartProvider` 컴포넌트를 사용하면 `App` 컴포넌트도 깔끔해지고 모든 컴포넌트마다 cart 상태(state) 관리에 대한 로직을 삽입할 필요가 없어진다.
+
+</br>
