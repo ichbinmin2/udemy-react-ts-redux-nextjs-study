@@ -6,6 +6,7 @@
 - [Practice | Adding the "Cart" Button Component](#장바구니-버튼-컴포넌트-추가하기)
 - [Practice | Adding a "Meals" Component](#Meals-컴포넌트-추가하기)
 - [Practice | Adding Individual Meal Items & Displaying Them](#개별-식사-항목-추가-및-표시하기)
+- [Practice | Adding Individual Meal Items & Displaying Them](#개별-식사-항목-추가-및-표시하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -87,6 +88,8 @@ const AvailableMeals = () => {
 
 ## 개별 식사 항목 추가 및 표시하기
 
+#### MealItem.js
+
 ```js
 const price = `$${props.price.toFixed(2)}`;
 ```
@@ -95,4 +98,27 @@ const price = `$${props.price.toFixed(2)}`;
 
 > [MDN 문서 참조 : toFixed()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed)
 
-</br>
+#### AvailableMeals.js
+
+```js
+const mealsList = DUMMY_MEALS.map((meal) => (
+  <MealItem
+    key={meal.id}
+    name={meal.name}
+    description={meal.description}
+    price={meal.price}
+  />
+));
+
+return (
+  <section className={classes.meals}>
+    <Card>
+      <ul>{mealsList}</ul>
+    </Card>
+  </section>
+);
+```
+
+- `MealItem` 컴포넌트에 props로 `meal` 전달. 주어진 `id`로 key 값 설정.
+
+  </br>
