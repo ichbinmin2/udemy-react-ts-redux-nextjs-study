@@ -10,6 +10,7 @@
 - [Practice | Adding a Form](#양식-추가하기)
 - [Practice | Working on the "Shopping Cart" Component](#장바구니-컴포넌트-작업하기)
 - [Practice | Adding a Modal via a React Portal](#리액트-Portal을-통해-모달-추가하기)
+- [Practice | Managing Cart & Modal State](#Cart-및-모달-state-관리)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -431,4 +432,166 @@ const Modal = (props) => {
 ```
 
 - 마지막으로 `Haeder` 컴포넌트 위에 `Cart` 컴포넌트를 import 해서 올려준다. (이미 React Portal로 위치를 지정해주었으므로 사실 `Cart` 컴포넌트의 위치는 어디에 넣어도 상관없다.)
+
+</br>
+
+## Cart 및 모달 state 관리
+
+- 최상위 컴포넌트인 `App` 컴포넌트에서 cart의 상태(state)를 관리해줄 요량이다.
+
+#### App.js
+
+```js
+const [cartIsShown, setCartIsShown] = useState(false);
+
+const showCarthandler = () => {
+  setCartIsShown(true);
+};
+
+const hideCartHandler = () => {
+  setCartIsShown(false);
+};
+```
+
+- cart의 상태(state)의 초기값을 false로 지정하고 상태(state) 업데이트 함수를 이용하여 상태(state)를 업데이트하는 트리거 함수를 작성한다.
+
+```js
+<Fragment>
+  {cartIsShown && <Cart />}
+  <Header onShowCart={showCarthandler} />
+  <main>
+    <Meals />
+  </main>
+</Fragment>
+```
+
+- `Cart` 컴포넌트는 `cartIsShow`이 true 일 때만 띄워줄 것이기 때문에 중괄호 `{}` 안에 `cartIsShow` 상태 여부에 따라 `Cart` 컴포넌트를 렌더링하는 조건식을 작성한다. `showCarthandler` 트리거 함수는 `Header` 컴포넌트에서 사용할 것이기 때문에 `Header` 컴포넌트에 `onShowCart`이라는 이름의 prop으로 넘겨주고,
+
+#### Header.js
+
+```js
+<Fragment>
+  <header className={classes.header}>
+    <h1>ReactMeals</h1>
+    <HeaderCartButton onClick={props.onShowCart} />
+  </header>
+  <div className={classes["main-image"]}>
+    <img src={mealsImage} alt="mealsImage" />
+  </div>
+</Fragment>
+```
+
+- `App` 컴포넌트에서 prop으로 전달받은 트리거 함수 `showCarthandler`를 다시 `HeaderCartButton` 컴포넌트에 `onClick` 이란 이름으로 prop 체이닝을 해준다.
+
+#### HeaderCartButton.js
+
+```js
+<button className={classes.button} onClick={props.onClick}>
+  <span className={classes.icon}>
+    <CartIcon />
+  </span>
+  <span>Your Cart</span>
+  <span className={classes.badge}>3</span>
+</button>
+```
+
+- `HeaderCartButton` 컴포넌트의 `<button>` 에 onClick 이벤트를 달아주고, `Header` 컴포넌트로부터 prop으로 전달받은 `onClick` 을 값으로 넣어준다.
+
+- 이렇게 prop chain이 있으면 여러 수준의 구성 요소를 통해 prop 을 전달할 수 있고, 이를 바탕으로 컨텍스트를 사용하여 교체도 할 수 있게 된다.
+
+#### App.js
+
+```js
+const hideCartHandler = () => {
+  setCartIsShown(false);
+};
+```
+
+- `Modal`을 닫는 기능도 필요하다. `hideCartHandler` 함수를 어디에 전달해야 할까?
+
+```js
+{
+  cartIsShown && <Cart onClose={hideCartHandler} />;
+}
+```
+
+- 먼저 `Cart` 컴포넌트 내부에 모달을 close 해줄 버튼을 마크업해줬기 때문에, `Cart` 컴포넌트에 해당 `hideCartHandler` 트리거 함수를 `onClose` 라는 이름의 prop 으로 전달한다.
+
+#### Cart.js
+
+```js
+<button className={classes["button--alt"]} onClick={props.onClose}>
+  Close
+</button>
+```
+
+- Close 해줄 용도로 만든 `<button>` 태그에 onClick 이벤트 속성을 추가한 뒤 `App` 컴포넌트에서 전달받은 prop인 `onClose`를 값으로 넣어준다.
+
+![ezgif com-gif-maker (39)](https://user-images.githubusercontent.com/53133662/162683031-e7cd0920-42e9-47b5-b3cf-f69fa4a9a9fd.gif)
+
+- 마지막으로 모달을 띄웠을 때 모달의 뒷배경(back drop)을 클릭하면 모달이 닫히는 기능까지 추가해보자.
+
+#### App.js
+
+```js
+{
+  cartIsShown && <Cart onClose={hideCartHandler} />;
+}
+```
+
+- 이미 `Cart` 컴포넌트에 `hideCartHandler` 함수가 `onClose`라는 prop 으로 전달되었으므로, `Cart` 컴포넌트로 다시 돌아가서,
+
+#### Cart.js
+
+```js
+<Modal onClose={props.onClose}>
+  {cartItems}
+  <div className={classes.total}>
+    <span>Total Amout</span>
+    <span>35.62</span>
+  </div>
+  <div className={classes.actions}>
+    <button className={classes["button--alt"]} onClick={props.onClose}>
+      Close
+    </button>
+    <button className={classes.button}>Order</button>
+  </div>
+</Modal>
+```
+
+- `Modal` 컴포넌트에 해당 트리거 함수를 `onClose` 라는 이름으로 다시 prop chain 해준다.
+
+#### Modal.js
+
+```js
+const Modal = (props) => {
+  return (
+    <React.Fragment>
+      {ReactDOM.createPortal(
+        <BackDrop onClose={props.onClose} />,
+        portalElement
+      )}
+      {ReactDOM.createPortal(
+        <ModalOverlay>{props.children}</ModalOverlay>,
+        portalElement
+      )}
+    </React.Fragment>
+  );
+};
+```
+
+- props 으로 전달받은 값을 또 다시 `BackDrop` 컴포넌트에 `onClose` 라는 이름으로 넘겨주고,
+
+```js
+const BackDrop = (props) => {
+  return <div className={classes.backdrop} onClick={props.onClose} />;
+};
+```
+
+- `BackDrop` 컴포넌트의 `<div>` 태그에 onClick 이벤트 값으로 props로 전달받은 `onClose`를 넣어준다.
+
+![ezgif com-gif-maker (40)](https://user-images.githubusercontent.com/53133662/162685169-15c4bb0a-cd03-453b-9002-36d9bc0016a6.gif)
+
+- 리액트 컨텍스트를 사용할 수도 있지만 이번 경우에는 사용하지 않는다. 리액트 컨텍스트를 사용하려면 Cart 모달을 닫기 위해서 onClick을 배경에 바인딩해야 되고, 특정한 스펙트럼 역시 필요하다. 그렇게 되면 다른 컨텐츠에 이 Modal을 사용할 수 없기 때문에 prop chain 으로 처리해주었다.
+
   </br>
