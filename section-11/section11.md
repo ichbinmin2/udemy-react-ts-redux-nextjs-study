@@ -8,6 +8,7 @@
 - [Practice | Adding Individual Meal Items & Displaying Them](#개별-식사-항목-추가-및-표시하기)
 - [Practice | Adding Individual Meal Items & Displaying Them](#개별-식사-항목-추가-및-표시하기)
 - [Practice | Adding a Form](#양식-추가하기)
+- [Practice | Working on the "Shopping Cart" Component](#장바구니-컴포넌트-작업하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -280,3 +281,62 @@ import Input from "../../UI/Input";
 ```
 
  </br>
+
+## 장바구니 컴포넌트 작업하기
+
+#### Cart.js
+
+```js
+const cartItems = [{ id: "c1", name: "Sushi", amount: 2, price: 12.99 }].map(
+  (item) => <li>{item.name}</li>
+);
+
+return (
+  <div>
+    CartItem
+    <div></div>
+    <div></div>
+  </div>
+);
+```
+
+- 상수를 추가해서 모든 `cartItems`을 JSX 요소에 매핑할 예정이다. 지금은 `cartItmes`가 없으므로 더미 데이터를 배열로 만들어서 매핑해준다.
+
+```js
+const cartItems = [{ id: "c1", name: "Sushi", amount: 2, price: 12.99 }].map(
+  (item) => <li>{item.name}</li>
+);
+return (
+  <div>
+    {cartItems}
+    <div></div>
+    <div></div>
+  </div>
+);
+```
+
+- `<li>` 태그 요소는 정렬되지 않았기 때문에, `<ul>`태그와 중괄호 `{}`로 감싸서 매핑(감싸줄 식이 자바스크립트 식이기 때문)해주도록 한다.
+
+```js
+const cartItems = (
+  <ul>
+    {[{ id: "c1", name: "Sushi", amount: 2, price: 12.99 }].map((item) => (
+      <li>{item.name}</li>
+    ))}
+  </ul>
+);
+```
+
+- 스타일 값도 추가해준다.
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {[{ id: "c1", name: "Sushi", amount: 2, price: 12.99 }].map((item) => (
+      <li>{item.name}</li>
+    ))}
+  </ul>
+);
+```
+
+</br>
