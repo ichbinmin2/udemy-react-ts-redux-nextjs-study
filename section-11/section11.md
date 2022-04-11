@@ -4,6 +4,7 @@
 
 - [Practice | Adding a "Header" Component](#헤더-컴포넌트-추가하기)
 - [Practice | Adding the "Cart" Button Component](#장바구니-버튼-컴포넌트-추가하기)
+- [Practice | Adding a "Meals" Component](#Meals-컴포넌트-추가하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -37,6 +38,48 @@ const CartIcon = () => {
 <span className={classes.icon}>
   <CartIcon />
 </span>
+```
+
+</br>
+
+## Meals 컴포넌트 추가하기
+
+#### AvailableMeals.js
+
+```js
+const AvailableMeals = () => {
+  return (
+    <section>
+      <ul>{DUMMY_MEALS.map()}</ul>
+    </section>
+  );
+};
+```
+
+- 헬퍼 상수를 이용해서 JSX 스니펫이 깔끔해지도록 작성.
+
+```js
+const AvailableMeals = () => {
+  const mealsList = DUMMY_MEALS.map();
+  return (
+    <section>
+      <ul>{mealsList}</ul>
+    </section>
+  );
+};
+```
+
+- `melasList`를 마저 작성.
+
+```js
+const AvailableMeals = () => {
+  const mealsList = DUMMY_MEALS.map((meal) => <li>{meal.name}</li>);
+  return (
+    <section>
+      <ul>{mealsList}</ul>
+    </section>
+  );
+};
 ```
 
 </br>
