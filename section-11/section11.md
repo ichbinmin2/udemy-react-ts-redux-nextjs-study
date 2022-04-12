@@ -12,6 +12,7 @@
 - [Practice | Adding a Modal via a React Portal](#리액트-Portal을-통해-모달-추가하기)
 - [Practice | Managing Cart & Modal State](#Cart-및-모달-state-관리)
 - [Practice | Adding a Cart Context](#장바구니-컨텍스트-추가)
+- [Practice | Using the Context](#컨텍스트-사용)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -735,5 +736,79 @@ return (
 ```
 
 - 이제 `CartContext` 전체를 `App.js`에서 관리해줄 수 있게 되었다. 또한 `CartProvider` 컴포넌트를 사용하면 `App` 컴포넌트도 깔끔해지고 모든 컴포넌트마다 cart 상태(state) 관리에 대한 로직을 삽입할 필요가 없어진다.
+
+</br>
+
+## 컨텍스트 사용
+
+### 장바구니 항목의 갯수 출력하기
+
+```js
+import React, { useContext } from "react";
+import CartContext from "../../store/cart-context";
+
+const HeaderCartButton = (props) => {
+  const ctx = useContext(CartContext);
+};
+```
+
+- `useContext`로 `CartContext` 불러오기
+
+```js
+const numberOfCartItems = ctx.items.legnth;
+```
+
+- `ctx.items.legnth`로 하지 않는 이유는, 아이템 항목에 상관없이 아이템의 갯수를 추가해도 즉 항목 하나에 갯수가 여러개일 떄도 총합으로 장바구니 항목의 갯수를 계산해야하기 때문이다. `ctx.items.legnth`는 하나의 아이템의 갯수가 여러개일지라도 하나로만 계산될 것이기 때문에 사용하지 않았다.
+
+```js
+const numberOfCartItems = ctx.items.reduce(() => {});
+```
+
+- 장바구니 항목의 갯수를 `reduce` 메소드로 `curNumber`를 누적 계산했다. `reduce` 메소드를 사용하는 이유는 데이터 배열을 단일 값으로 변환할 수 있기 때문이다.
+
+```js
+const numberOfCartItems = ctx.items.reduce(() => {}, 0);
+```
+
+- `reduce` 메소드에 인수를 두개 추가하는데, 첫번째는 나중에 호출할 함수이고 두번째는 시작 값이다. 우리는 계산을 0부터 시작할 것이기 때문에 0으로 초기화해주었다.
+
+```js
+const numberOfCartItems = ctx.items.reduce((curNumber, item) => {}, 0);
+```
+
+- `reduce`에 첫 번째 인수로 전달된 함수는 자동으로 자바스크립트를 사용하여 인수 두개를 받는다. `reduce` 배열에 있는 모든 항목을 위해 함수를 호출하는 것이다. 누적의 용도로 사용할 `curNumber`를 추가하고, 작업해야 할 `item`을 두번째 인자로 추가한다. `curNumber`는 기본적으로 값의 갯수를 상징한다.
+
+```js
+const numberOfCartItems = ctx.items.reduce((curNumber, item) => {
+  return curNumber + item.amount;
+}, 0);
+```
+
+- 이제 반환 값을 작성한다. 누적할 이전 값 `curNumber`에 `item.amount`를 더해주는 식을 반환한다. 장바구니 항목 객체(`item`)에 항목 별로 항목 수를 저장하는 작은 필드(`amount`)를 사용할 예정이다. 이제 `reduce`로 반환된 배열은 단일 숫자가 된다.
+
+```js
+import React, { useContext } from "react";
+import CartContext from "../../store/cart-context";
+
+const HeaderCartButton = (props) => {
+  const ctx = useContext(CartContext);
+
+  const numberOfCartItems = ctx.items.reduce((curNumber, item) => {
+    return curNumber + item.amount;
+  }, 0);
+
+  return (
+    <button className={classes.button} onClick={props.onClick}>
+      <span className={classes.icon}>
+        <CartIcon />
+      </span>
+      <span>Your Cart</span>
+      <span className={classes.badge}>{numberOfCartItems}</span>
+    </button>
+  );
+};
+```
+
+- 기존에 하드 코딩으로 작성해주었던 `<span>`태그 사이에 `numberOfCartItems` 값을 넣어준다. 장바구니에 아이템 갯수가 증가할 때마다 `reduce`가 장바구니 아이템 갯수를 반환해줄 것이다.
 
 </br>
