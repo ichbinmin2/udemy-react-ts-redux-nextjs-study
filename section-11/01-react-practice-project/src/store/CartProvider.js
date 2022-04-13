@@ -51,6 +51,38 @@ const cartReducer = (state, action) => {
       totalAmount: updatedTotalAmount,
     };
   }
+
+  if (action.type === "REMOVE") {
+    // item이 카트에 이미 있는지 없는지를 체크해야 한다.
+    // .findIndex()는 배열 안의 item index를 찾아주는 메소드이다.
+    // .findIndex()의 인자 item을 찾고, item이면 ture고 아니면 false를 return 한다.
+    const existingCartItemIndex = state.items.findIndex(
+      (item) => item.id === action.id
+    );
+    // state.items 배열에서 살펴본 인자 item이 action 에서 새로 추가한 item 과 id가 동일하다면 true 를 리턴할 것이다.
+    // true 를 리턴한다는 것은 앞의 조건이 만족해서 true가 된다면 그 item의 index 를 리턴한다는 뜻이다.
+
+    const existingItem = state.items[existingCartItemIndex];
+
+    // 수량과 가격을 업데이트해야 한다.
+    // 이미 가지고 있는 item의 총 가격에 지워진 item의 가격을 빼야할 것이다.
+    const updatedTotalAmount = state.totalAmount - existingItem.price;
+
+    let updatedItems;
+
+    if (existingItem.amount === 1) {
+      updatedItems = state.items.filter((item) => item.id !== action.id);
+    } else {
+      const updatedItem = { ...existingItem, amount: existingItem.amount - 1 };
+      updatedItems = [...state.items];
+      updatedItems[existingCartItemIndex] = updatedItem;
+    }
+
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
   return defaultCartState;
 };
 

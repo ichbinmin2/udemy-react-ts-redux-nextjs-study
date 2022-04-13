@@ -17,6 +17,7 @@
 - [Practice | Working with Refs & Forward Refs](#Refs-및-Forward-Refs-작업하기)
 - [Practice | Outputting Cart Items](#장바구니-항목-출력하기)
 - [Practice | Working on a More Complex Reducer Logic](#더-복잡한-리듀서-로직-작업하기)
+- [Practice | Making Items Removable](#동적인-아이템들로-만들기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -1106,5 +1107,9 @@ const cartReducer = (state, action) => {
 </br>
 
 ## 더 복잡한 리듀서 로직 작업하기
+
+</br>
+
+## 동적인 아이템들로 만들기
 
 </br>

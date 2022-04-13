@@ -12,9 +12,17 @@ const Cart = (props) => {
   const totalAmount = `$${cartCxt.totalAmount.toFixed(2)}`;
   const hasItems = cartCxt.items.length > 0;
 
-  const cartItemAdd = (item) => {};
+  // 카트 내부에서 아이템의 갯수를 추가하는 함수
+  const cartItemAdd = (item) => {
+    cartCxt.addItem({
+      ...item, // 그대로 item 을 받아서 컨텍스트에 전달하면 => 리듀서 함수에서 action 을 받아 중복 유효성을 처리해줄 것이기에 item 그대로 복사해서 전달
+      amount: 1, // 수량만 추가함
+    });
+  };
 
-  const cartItemRemove = (id) => {};
+  const cartItemRemove = (id) => {
+    cartCxt.removeItem(id);
+  };
 
   const cartItems = (
     <ul className={classes["cart-items"]}>
