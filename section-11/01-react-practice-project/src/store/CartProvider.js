@@ -29,11 +29,10 @@ const CartProvider = (props) => {
   const addItemToCartHandler = (item) => {
     dispatchCartAction({
       type: "ADD",
-      item: item,
+      item: item, // 하나의 item 마다 item의 데이터(id, name, amount, price)들이 포함된 묶음 객체로 들어올 것이다.
     });
   };
 
-  
   const removeItemToCartHandler = (id) => {
     dispatchCartAction({
       type: "REMOVE",

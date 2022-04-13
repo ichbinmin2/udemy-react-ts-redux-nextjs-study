@@ -14,6 +14,7 @@
 - [Practice | Adding a Cart Context](#장바구니-컨텍스트-추가)
 - [Practice | Using the Context](#컨텍스트-사용)
 - [Practice | Adding a Cart Reducer](#장바구니-리듀서-추가)
+- [Practice | Working with Refs & Forward Refs](#Refs-및-Forward-Refs-작업하기)
 
 ## 헤더 컴포넌트 추가하기
 
