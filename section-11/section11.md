@@ -13,6 +13,7 @@
 - [Practice | Managing Cart & Modal State](#Cart-및-모달-state-관리)
 - [Practice | Adding a Cart Context](#장바구니-컨텍스트-추가)
 - [Practice | Using the Context](#컨텍스트-사용)
+- [Practice | Adding a Cart Reducer](#장바구니-리듀서-추가)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -600,6 +601,8 @@ const BackDrop = (props) => {
 
 ## 장바구니 컨텍스트 추가
 
+- 이제 리액트 컨텍스트를 이용해서 cart에 데이터와 항목을 추가할 수 있게 해보자. (어플리케이션 곳곳에 cart 데이터를 사용할 것이므로, 전역 상태관리가 필요하기 때문이다.) 리액트를 사용해서 어플리케이션 전체 상태(state)를 관리할 때는 이름을 store로 짓는 게 관례이다. 먼저 store 폴더를 만들고, `cart-context.js` 파일을 생성하자.
+
 ### Cart Context 만들기
 
 - 이제 Cart에 데이터와 항목을 추가할 수 있도록 Cart에 리액트 컨텍스트를 추가해보자. 어플리케이션 모든 곳에서 사용할 것이므로, 컨텍스트로 cart 데이터 전체를 관리해줄 것이다. 나중에는 cart 안에 항목을 추가하거나 삭제하는 등의 기능도 추가해줄 것이기 때문에 컨텍스트로 관리가 필요하다.
@@ -632,11 +635,11 @@ const CartContext = React.createContext({
 export default CartContext;
 ```
 
-- 그리고 이 컨텍스트를 `CartContext` 상수에 담아서 export 해준다.
+- 그리고 이 컨텍스트를 `CartContext` 상수에 담아서 export 해준다. 이제 cart context를 사용하고자 하는 컴포넌트 내부에서 `useState`나 `useReducer`를 사용하여 컨텍스트를 관리해주자. (그러면 나중에 컨텍스트를 변경하고, 어플리케이션을 업데이트 해줄 수 있다.)
 
 ### Cart Provier 만들기
 
-- `Provier`를 Context를 생성한 파일(`cart-context.js`)에서 관리해줄 수도 있지만, 가독성을 위해 같은 폴더 안에서 새로운 파일(`CartProvider`)을 만들어 생성해준다.
+- `Provier`를 Context를 생성한 파일(`cart-context.js`)에서 관리해줄 수도 있지만, 가독성을 위해 같은 폴더 안에서 새로운 파일(`CartProvider`) 컴포넌트를 만들어 생성해준다.
 
 #### `src/store/CartProvider.js`
 
@@ -650,9 +653,9 @@ const CartProvider = (props) => {
 export default CartProvider;
 ```
 
-- 이 `CartProvider`는 `CartContext`와 데이터를 관리해주는 것이 목적으로 생성되었다. `CartProvider`를 제공하는 역할이라는 뜻이다. `CartContext.Provider` 사이에 `props.children`을 넣어줌으로써 이 컨텍스트(`CartContext`)에 접근할 수 있도록 모든 컴포넌트를 `CartContext.Provider`가 감싸는 것이다.
+- 이 `CartProvider`는 `CartContext`와 cart 데이터를 관리해주는 것이 목적으로 생성되었다. 즉 `CartContext`를 제공하는 역할이라는 뜻이다. `CartContext.Provider` 사이에 `props.children`을 넣어줌으로써 이 컨텍스트(`CartContext`)에 접근할 수 있도록 모든 컴포넌트를 `CartContext.Provider`가 감싸준다.
 
-- 컴포넌트에 컨텍스트 데이터를 관리하는 로직도 추가해주어야 한다. 이때 한 컴포넌트 요소에만 포함되고 다른 컴포넌트 요소에는 포함되지 않는다.
+- 컴포넌트에 컨텍스트 데이터를 관리하는 로직도 추가해주어야 한다. 이때 감싸는 컴포넌트 요소에만 포함되고 다른 컴포넌트 요소에는 포함되지 않는다.
 
 ```js
 const cartContext = {};
@@ -660,7 +663,7 @@ const cartContext = {};
 return <CartContext.Provider>{props.children}</CartContext.Provider>;
 ```
 
-- 이제 `CartProvider` 컴포넌트에 `cartContext` 라는 헬퍼 상수를 추가한다. `CartContext.Provider` 의 value 속성 값으로 들어갈 객체를 작성해주면 된다. 구체적으로 컨텍스트 필드를 설정해주는 것이다. (나중에 이 값을 기반으로 업데이트해줄 것이다.)
+- 이제 `CartProvider` 컴포넌트에 `cartContext` 라는 헬퍼 상수를 추가한다. `CartContext.Provider` 의 value 속성 값으로 들어갈 객체를 작성해주면 된다. 구체적으로 컨텍스트 필드를 설정해주는 것이다. (나중에 이 초기 값을 기반으로 업데이트해줄 것이다.)
 
 ```js
 const cartContext = {
@@ -671,7 +674,7 @@ const cartContext = {
 };
 ```
 
-- 이제 `cartContext` 에 함수로 들어갈 함수들을 설정해준다.
+- 이제 `cartContext`의 `addItem`와 `removeItem`에 함수로 들어갈 함수들을 설정해준다.
 
 ```js
 const addItemToCartHandler = (item) => {};
@@ -688,7 +691,7 @@ const cartContext = {
 return <CartContext.Provider>{props.children}</CartContext.Provider>;
 ```
 
-- 그리고 `CartContext.Provider`에 value prop 값으로 `cartContext`을 포인터 해준다.
+- 그리고 `CartContext.Provider`에 value prop 값으로 `cartContext`을 포인터 해준다. 이 value 값은 나중에 동적으로 업데이트될 것이다.
 
 ```js
 const cartContext = {
@@ -703,7 +706,7 @@ const cartContext = {
 </CartContext.Provider>;
 ```
 
-- 이제 `CartProvider` 컴포넌트를 사용할 수 있다. cart의 데이터를 사용하는 모든 컴포넌트를 감싸야 한다.
+- `CartProvider` 컴포넌트는 사용하기 위한 준비를 마쳤다. 이제 cart의 데이터를 사용하는 모든 컴포넌트를 감싸야 한다.
 
 #### App.js
 
@@ -719,7 +722,7 @@ return (
 );
 ```
 
-- `App` 컴포넌트를 살펴보면, 우리의 어플리케이션의 컴포넌트들에서 `CartContext` 데이터가 필요하다는 걸 알 수 있다. 그동안 전체 컴포넌트를 감싸주던 `Fragment`를 삭제하고 이 자리를 `CartProvider`로 변경해주자.
+- `App` 컴포넌트를 살펴보면, 우리의 어플리케이션의 컴포넌트들 곳곳에서 `CartContext` 데이터가 필요하다는 걸 알 수 있다. 그동안 전체 컴포넌트를 감싸주던 `Fragment`를 삭제하고 이 자리를 `CartProvider`로 변경해주자.
 
 ```js
 import CartProvider from "./store/CartProvider";
@@ -741,10 +744,15 @@ return (
 
 ## 컨텍스트 사용
 
+- 앞서 설정해준 `CartContext`를 사용해볼 차례다.
+
 ### 장바구니 항목의 갯수 출력하기
+
+#### HeaderCartButton.js
 
 ```js
 import React, { useContext } from "react";
+
 import CartContext from "../../store/cart-context";
 
 const HeaderCartButton = (props) => {
@@ -752,13 +760,17 @@ const HeaderCartButton = (props) => {
 };
 ```
 
-- `useContext`로 `CartContext` 불러오기
+- `useContext`로 `CartContext` 불러오고, 상수의 이름은 `ctx`로 설정한다. 여기서 `useContext`를 사용하면 컨텍스트가 변경될 때 `HeaderCartButton` 컴포넌트가 React로 다시 렌더링-업데이트 된다.
+
+  > 컨텍스트는 `CartProvider` 컴포넌트에서 업데이트할 때 변경될 것이다.
+
+- 이제 `HeaderCartButton` 컴포넌트에서 cart 항목의 갯수를 출력할 수 있게 되었다
 
 ```js
 const numberOfCartItems = ctx.items.legnth;
 ```
 
-- `ctx.items.legnth`로 하지 않는 이유는, 아이템 항목에 상관없이 아이템의 갯수를 추가해도 즉 항목 하나에 갯수가 여러개일 떄도 총합으로 장바구니 항목의 갯수를 계산해야하기 때문이다. `ctx.items.legnth`는 하나의 아이템의 갯수가 여러개일지라도 하나로만 계산될 것이기 때문에 사용하지 않았다.
+- cart 항목의 갯수를 출력하기 위해서 `numberOfCartItems` 이라는 상수를 하나 더 추가한다. `ctx.items.legnth`로 계산하지 않는 이유는, 아이템 항목에 상관없이 아이템의 갯수를 추가해도 즉 항목 하나에 갯수가 여러개일 떄도 총합으로 장바구니 항목의 갯수를 계산해야하기 때문이다. `ctx.items.legnth`는 하나의 아이템의 갯수가 여러개일지라도 하나로만 계산될 것이기 때문에 사용하지 않았다.
 
 ```js
 const numberOfCartItems = ctx.items.reduce(() => {});
@@ -810,5 +822,274 @@ const HeaderCartButton = (props) => {
 ```
 
 - 기존에 하드 코딩으로 작성해주었던 `<span>`태그 사이에 `numberOfCartItems` 값을 넣어준다. 장바구니에 아이템 갯수가 증가할 때마다 `reduce`가 장바구니 아이템 갯수를 반환해줄 것이다.
+
+</br>
+
+## 장바구니 리듀서 추가
+
+- cart item을 추가하기 위해서는 먼저 `CartProvider`으로 돌아가야 한다. 여기서 cart 데이터를 관리하기 때문이다.
+
+#### CartProvider.js
+
+```js
+const addItemToCartHandler = (item) => {};
+
+const removeItemToCartHandler = (id) => {};
+```
+
+- 함수들을 하나씩 살펴보자. `addItemToCartHandler` 함수는 호출 될 때마다 cart 에 추가될 item 을 받을 것이다. 그리고 item이 이미 cart에 있는지 역시 확인할 것이다. (item 이 이미 카트에 들어있다면, 이미 존재하고 있는 item 을 업데이트하고, 이 item이 없다면 새로 해당 item을 추가해야 하기 때문이다.)
+- `CartProvider` 컴포넌트와 cart context, 그리고 cart context의 영향을 받는 모든 컴포넌트가 cart 데이터가 변화할 때마다 다시 리렌더링 할 것이다. `CartProvier` 컴포넌트에서는 우리의 cart 데이터를 상태(state)로 관리해줄 것이며, 이 복잡한 데이터의 상태(state)를 조금 더 편리하게 관리해주도록 `useReducer`를 사용할 것이다. 물론 이 상태(state)는 cart의 item이 있는지 없는지를 체크해주기 위한 용도로 사용할 것이다.
+
+```js
+const cartReducer = (state, action) => {
+  return;
+};
+```
+
+- 먼저 `CartProvider` 함수 외부에서 리듀서 함수(`cartReducer`)를 작성한다. 앞서 설명했다시피, `cartReducer`에 필요한 데이터는 `CartProvider` 컴포넌트 내부에 없기 때문에 굳이 컴포넌트 내부에서 작성해서 컴포넌트가 리렌더링할 때마다 불필요한 재생성을 하지 않도록 하자. 리듀서 함수의 첫번째 인자인 `state`는 리듀서가 관리하는 마지막 스냅샷(가장 최신의 상태)이고 `action`은 우리가 리듀서 함수에 보내는 명령을 받는 역할을 할 것이다. (이 `cartReducer`의 state와 action을 리액트가 자동으로 전달해줄 것이다.)
+  > section-10 의 `useReducer` 섹션 참조
+
+```js
+import React, { useReducer } from "react";
+
+const cartReducer = (state, action) => {
+  return;
+};
+
+const CartProvider = (props) => {
+  useReducer(cartReducer);
+  ...
+}
+```
+
+- 그리고 `useReducer` 를 import 한 뒤, `useReducer` hook 에 넣어줄 첫번째 리듀서 함수(`cartReducer`)를 포인터해준다.
+
+### 초기 상태(state) 값 지정하기
+
+```js
+const defaultCartState = {
+  items: [],
+  totalAmount: 0,
+};
+
+const cartReducer = (state, action) => {
+  return defaultCartState;
+};
+```
+
+- `defaultCartState` 는 리듀서의 상태(state) 초기값을 설정해주기 위해 작성한 것이다. 이 또한 컴포넌트 내부에 없어도 되므로, 컴포넌트 외부에 작성한다. `items`는 빈 배열 값으로 설정하여 비워두고, `totalAmount`도 0으로 초기화하였다.
+
+```js
+const CartProvider = (props) => {
+  const [cartState, dispatchCartAction] = useReducer(
+    cartReducer,
+    defaultCartState
+  );
+  ...
+};
+```
+
+- `CartProvider` 컴포넌트 함수 최상위에 `useReducer`를 작성한다. 첫번째 인자로 리듀서 함수(`cartReducer`)를 전달하고, 두번째 인자로 상태(state)를 초기화해주는 상수 값인 `defaultCartState`를 포인터한다. (물론, 상수로 만들지 않고 그대로 초기 값 객체를 넣어줘도 상관없다.)
+- `useReducer`는 두가지 요소와 함께 배열을 리턴하기 때문에 요소를 배열 밖으로 끌어내 별개의 정수에 보관(배열 구조 분해 할당)해야 한다. 첫번째는 최신 상태(state)값 즉 "스냅 샷"을 담는 `cartState`이고, 리듀서에 "action을 전송하는 역할을 하는 함수"인 `dispatchCartAction` 이다.
+
+### `cartContext`를 리듀서 상태(state) 값으로 교체하기
+
+#### before
+
+```js
+const cartReducer = (state, action) => {
+  const cartContext = {
+    items: [],
+    totalAmount: 0,
+    addItem: addItemToCartHandler,
+    removeItem: removeItemToCartHandler,
+  };
+  ...
+};
+```
+
+#### after
+
+```js
+const defaultCartState = {
+  items: [],
+  totalAmount: 0,
+};
+
+const cartReducer = (state, action) => {
+  const [cartState, dispatchCartAction] = useReducer(
+    cartReducer,
+    defaultCartState
+  );
+
+  const cartContext = {
+    items: cartState.items,
+    totalAmount: cartState.totalAmount,
+    addItem: addItemToCartHandler,
+    removeItem: removeItemToCartHandler,
+  };
+};
+```
+
+- 이제부터 item을 상태(state)로 관리해줄 것이기 때문에, 기존에 작성했던 `cartContext`를 `useReducer`에서 `cartState`로 관리하는 상태(state) 값으로 교체한다.
+  > `cartState.items`과 `cartState.totalAmount`는 `cartState`에 리듀서로 설정해준 초기 값(`defaultCartState`)을 기반으로 접근한 값이다.
+
+### 리듀서 함수에 action 을 전송하기
+
+- 일단 item 을 추가한 뒤에 `cartReducer` 에 "action" 을 보낼 생각이다.
+
+```js
+const addItemToCartHandler = (item) => {
+  dispatchCartAction();
+};
+```
+
+- 먼저 item 을 추가하는 함수 `addItemToCartHandler` 내부에 "action" 을 전달하는 함수 `dispatchCartAction()`을 가져온다.
+
+```js
+const addItemToCartHandler = (item) => {
+  dispatchCartAction({});
+};
+```
+
+- `useReducer` 섹션에서 다룬 이야기지만, 사실 무슨 "action" 을 쓸지는 개발자의 자유이다. 문자열이나 숫자도 가능하다. 그러나 보통은 속성이 있는 객체를 사용해서 action을 확인한다. (아마도 훨씬 접근이 쉽고, 복잡한 구성 요소들을 처리하기에도 좋을 것이다.) 그렇기에 이번에도 객체를 추가했다.
+
+```js
+const addItemToCartHandler = (item) => {
+  dispatchCartAction({
+    type: "ADD",
+  });
+};
+```
+
+- `dispatchCartAction()`의 객체 내부에 속성과 값을 추가한다. `cartReducer` 함수에서 받을 이 action은 어떤 action 으로 전송되었느냐에 따라서 다른 코드를 사용할 수 있다. action을 확인하는 속성 이름은 늘 그렇듯이 type 으로 지정했다. 간단한 문자열(관습에 따라 대문자)로 값도 지정해주었다.
+
+```js
+const addItemToCartHandler = (item) => {
+  dispatchCartAction({
+    type: "ADD",
+    item: item,
+  });
+};
+```
+
+- 리듀서(`cartReducer`) 함수에 item 을 추가하려면 "action" 의 값에 넣어주어야 한다. item 속성을 추가하고 그 값으로 (`addItemToCartHandler`가 받아오는 cart에 추가될) item 인자를 포인터해준다. 이제 리듀서 함수(`cartReducer`)에 action이 전송될 것이다.
+
+### item 을 추가하는 로직 완성하기
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+  }
+  return defaultCartState;
+};
+```
+
+- action 을 받았으니 다시 `cartReducer` 리듀서 함수로 돌아가자. 이 리듀서 함수 안에서 item 을 추가하는 로직을 완성할 것이다. `cartReducer` 함수는 if 문을 통해서 action.type이 'ADD' 와 같은지를 확인(item 을 추가하는 로직은 type이 'ADD' 일 때만 사용하기 때문이다.)하고, cart에 item 을 추가할 것이다.
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items;
+  }
+  return defaultCartState;
+};
+```
+
+- if 문을 통과하면 item 을 `items` 배열에 새로 추가할 수 있도록 하자. 그런데 같은 제품끼리 묶어서 나타내고 가격을 제품 하나 기준으로 나타내야 한다. 게다가 cart에 들어간 아이템들의 총 값인 `totalAmount`도 업데이트를 해야한다.
+- 먼저, 가장 최신의 스냅샷인 `state`(상태) 에서 `state.items`로 접근하여 '현재' cart에 들어있는 아이템들을 모두 구할 수 있도록 하자. (React가 리듀서 함수의 첫 번째 인자로 보낸 상태(state) 값을 기준으로 한다.) 이름은 `updatedItems`로 지정한다.
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items.concat(action.item);
+  }
+  return defaultCartState;
+};
+```
+
+- 그리고 `concat()` 메소드를 사용해서 `addItemToCartHandler` 함수가 트리거 될 때 받아오는 action의 item 으로 접근하여(`action.item`) 이것들이 기존의 cart 바구니(`state.items`)에 추가될 수 있도록 한다. `concat()` 메소드는 `push()` 메소드와는 달리, 기존의 배열을 수정하지 않고, "새로운 배열"로 반환한다.
+
+  - `concat()`은 인자로 주어진 배열이나 값들을 기존 배열에 합쳐서 새 배열을 반환해주는 메소드이다.
+    > [MDN 문서 참조 : Array.prototype.concat()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
+
+- 이는 아주 중요한 포인트인데, 상태(state)의 불변성을 유지하면서 업데이트를 하려면 기존의 최신 상태(state) 스냅샷을 수정해서는 안되기 때문이다! (만약 `push()`로 기존의 배열을 수정한다면, 메모리의 기존 데이터가 React 도 모르게 수정이 될 것이다.)
+- 새로운 item 을 추가하는 함수(`addItemToCartHandler`) 가 실행되면, 리듀서 함수에 자동으로 action이 들어오고 이 "action" 값의 item 필드에 저장된 item 에 모든 데이터가 새로이 들어올 것이다. 그렇기 때문에 `action.item`로 접근하여 `concat()` 메소드에 인자로 넣어준다.
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items.concat(action.item);
+
+    const updatedTotalAmount =
+      state.totalAmount + action.item.price * action.item.amount;
+  }
+  return defaultCartState;
+};
+```
+
+- "아이템 항목 당 갯수"와 "아이템 항목의 갯수", 그리고 "아이템 항목 하나당 가격"을 모두 계산하는 `updatedTotalAmount` 는 cart에 들어있는 아이템 항목의 갯수인 기존 상태(state)의 최신 스냅샷인 `state.totalAmount`에 아이템 항목당 갯수인 `action.item.amount`와 아이템의 가격인 `action.item.price`을 곱한 값을 더해준 것이다. 이렇게 접근하기 위해서는 `action`으로 들어오는 `item`에 `amount`와 `price` 필드가 필요할 것이다. `action.item.amount`와 `action.item.price`를 곱하면 아이템 항목 당 `totalAmount`의 계산 값을 알 수 있을 것이다.
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items.concat(action.item);
+    const updatedTotalAmount =
+      state.totalAmount + action.item.price * action.item.amount;
+
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
+  return defaultCartState;
+};
+```
+
+- 이제 새로운 상태(state)를 받을 수 있게 되었다. 동일한 item이 cart에 들어있는지에 대한 여부는 아직 체크하지 않았지만 나중에 추가할 예정이다.
+
+```js
+const defaultCartState = {
+  items: [],
+  totalAmount: 0,
+};
+
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items.concat(action.item);
+    const updatedTotalAmount =
+      state.totalAmount + action.item.price * action.item.amount;
+
+    return {};
+  }
+  return defaultCartState;
+};
+```
+
+- 이제 새로운 상태(state) 스냅샷을 return 할 것이다. 이 반환되는 객체는 기존의 `defaultCartState`의 필드(초기 값)를 기반으로 작성한다.
+
+```js
+const defaultCartState = {
+  items: [],
+  totalAmount: 0,
+};
+
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items.concat(action.item);
+
+    const updatedTotalAmount =
+      state.totalAmount + action.item.price * action.item.amount;
+
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
+  return defaultCartState;
+};
+```
+
+- 새로운 아이템이 추가될 때마다 (`action.type === "ADD"`일 때) `items`에는 action 으로 받은 새로운 item을 추가하는 `updatedItems`으로 업데이트될 것이고, `totalAmount`는 기존에 존재하고 있는 총합에 action 으로 받은 새로운 item 의 데이터를 기반으로 접근한 price 와 amount 를 곱한 값을 더한 `updatedTotalAmount`으로 업데이트 될 것이다.
 
 </br>
