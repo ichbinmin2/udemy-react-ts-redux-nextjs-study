@@ -15,6 +15,7 @@
 - [Practice | Using the Context](#컨텍스트-사용)
 - [Practice | Adding a Cart Reducer](#장바구니-리듀서-추가)
 - [Practice | Working with Refs & Forward Refs](#Refs-및-Forward-Refs-작업하기)
+- [Practice | Outputting Cart Items](#장바구니-항목-출력하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -1092,5 +1093,13 @@ const cartReducer = (state, action) => {
 ```
 
 - 새로운 아이템이 추가될 때마다 (`action.type === "ADD"`일 때) `items`에는 action 으로 받은 새로운 item을 추가하는 `updatedItems`으로 업데이트될 것이고, `totalAmount`는 기존에 존재하고 있는 총합에 action 으로 받은 새로운 item 의 데이터를 기반으로 접근한 price 와 amount 를 곱한 값을 더한 `updatedTotalAmount`으로 업데이트 될 것이다.
+
+</br>
+
+## Refs 및 Forward Refs 작업하기
+
+</br>
+
+## 장바구니 항목 출력하기
 
 </br>
