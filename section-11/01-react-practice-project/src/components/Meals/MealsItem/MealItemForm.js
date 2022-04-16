@@ -3,24 +3,20 @@ import Input from "../../UI/Input";
 import classes from "./MealItemForm.module.css";
 
 const MealItemForm = (props) => {
-  const [amountIsValid, setAmountIsValid] = useState(true); // form이 유효한지에 대해서만 체크하는 간단한 상태 state
+  const [amountIsValid, setAmountIsValid] = useState(true);
   const amountInpuntRef = useRef();
 
   const submitHandler = (event) => {
     event.preventDefault();
 
     const enteredAmount = amountInpuntRef.current.value;
-    const enteredAmountNumber = +enteredAmount; // 문자열을 숫자로 변경하는 아주 간단한 방법.
+    const enteredAmountNumber = +enteredAmount;
 
     if (
-      // 문자로 입력된 값인 enteredAmount 에 공백을 없앤 길이가 0 이거나(값이 공백이거나),
       enteredAmount.trim().length === 0 ||
-      // 숫자로 변환한 값인 enteredAmountNumber 가 1보다 작거나,
       enteredAmountNumber < 1 ||
-      // 숫자로 변환한 값인 enteredAmountNumber 가 5보다 크면
       enteredAmountNumber > 5
     ) {
-      // 이 ||(or) 에 작성된 세가지 조건 중에 '두가지' 조건이 충족되면 if 문 내부의 로직이 실행될 것이다.
       setAmountIsValid(false);
       return;
     }

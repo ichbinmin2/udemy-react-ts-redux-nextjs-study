@@ -1100,6 +1100,226 @@ const cartReducer = (state, action) => {
 
 ## Refs 및 Forward Refs 작업하기
 
+```js
+const addItemToCartHandler = (item) => {
+  dispatchCartAction({
+    type: "ADD",
+    item: item, // 하나의 item 마다 item의 데이터(id, name, amount, price)들이 포함된 묶음 객체로 들어올 것이다.
+  });
+};
+
+...
+
+const cartContext = {
+  items: cartState.items,
+  totalAmount: cartState.totalAmount,
+  addItem: addItemToCartHandler,
+  removeItem: removeItemToCartHandler,
+};
+```
+
+- 이제 `addItemToCartHandler` 함수를 호출해야 하니 Context 에서 `addItem`을 호출해야 한다. 최종적으로는 `MealItemFrom`에 도달할 것이다.
+
+#### MealItemForm.js
+
+```js
+<form className={classes.form}>
+  <Input
+    label="Amount"
+    input={{
+      id: "amount_" + props.id,
+      type: "number",
+      min: "1",
+      max: "5",
+      step: "1",
+      defaultValue: "1",
+    }}
+  />
+  <button>+ Add</button>
+</form>
+```
+
+- `MealItemForm` 컴포넌트에서 버튼을 누르면 item 이 하나씩 Cart에 추가되는 형태이다. 가장 첫 번째로 해야할 일은 `submitHandler` 함수를 생성하는 일이다.
+
+```js
+const submitHandler = (event) => {};
+```
+
+- `submitHandler` 함수를 호출 할 때 event를 인자로 받도록 작성하면, 이 함수를 호출할 때마다 자동으로 event가 일어나는 위치를 인자로 전달받을 수 있게 된다.
+
+```js
+<form className={classes.form} onSubmit={submitHandler}>
+  ...
+  <button>+ Add</button>
+</form>
+```
+
+- 이 `submitHandler` 함수를 `onSubmit` 이벤트나 form 이벤트가 발생할 때마다 호출할 수 있도록 `<form>` 태그에 `onSubmit` 이벤트 prop 을 달아 `submitHandler` 함수를 포인터해준다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+};
+```
+
+- 먼저, 해당 함수 안에 `event.preventDefault()`를 추가해서 페이지가 다시 로드되는 현상을 방지한다. 그리고 해당 함수에서 받은 event 인자를 이용하여, 이벤트가 발생한 위치의 value 값을 추출해야 한다. 이때 우리는 `ref`를 사용할 수 있을 것이다.
+
+```js
+import React, { useRef, useState } from "react";
+
+...
+const amountInpuntRef = useRef();
+```
+
+- `useRef`를 선언하고, `ref`를 `Input` 컴포넌트에 달아주어야 한다. `Input` 에서 발생한 event의 value 값을 받아와야 하기 때문이다. 하지만 `Input`은 태그가 아니라 별개의 컴포넌트이고, 별개의 컴포넌트에는 `ref`를 prop으로 전달할 수 없다.
+
+```js
+<Input
+  ref={amountInpuntRef}
+  label="Amount"
+  input={{
+    id: "amount_" + props.id,
+    type: "number",
+    min: "1",
+    max: "5",
+    step: "1",
+    defaultValue: "1",
+  }}
+/>
+```
+
+- 우리가 앞서 공부했던 방법으로 별개의 컴포넌트인 `Input` 에서도 `ref` 속성을 prop으로 전달 받을 수 있도록 작업해줘야 한다. 별개의 컴포넌트(커스텀 컴포넌트)에 `ref` prop이 작동되기 위해서는 `ref`를 내려받는 컴포넌트로 이동해서 `React.forwardRef`로 컴포넌트 로직을 감싸주는 작업을 추가로 진행해줄 필요가 있다.
+
+#### Input.js
+
+```js
+const Input = (props) => {
+  return (
+    <div className={classes.input}>
+      <label htmlFor={props.input.id}>{props.label}</label>
+      <input {...props.input} />
+    </div>
+  );
+};
+```
+
+- `ref` 를 prop으로 받아올 `Input` 컴포넌트이다. 우리는 이 컴포넌트 로직을 `React.forwardRef()`로 감싸주어야 `ref` prop을 작동시킬 수 있다.
+
+```js
+const Input = React.forwardRef((props, ref) => {
+  return (
+    <div className={classes.input}>
+      <label htmlFor={props.input.id}>{props.label}</label>
+      <input ref={ref} {...props.input} />
+    </div>
+  );
+});
+```
+
+- `Input` 컴포넌트(커스텀 컴포넌트)는 상위 컴포넌트에서 내려준 `ref` prop을 작동할 수 있게 되었다. 함수 컴포넌트는 `forwardRef`의 인자가 된 셈이다. 포워딩 된 `ref`를 `input` 태그의 `ref` 속성과 연결되도록 작업해주면 이제 `ref`를 통해 `Input` 컴포넌트 내부의 `<input>` 태그 값에 접근 가능해진다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+  const enteredAmount = amountInpuntRef.current.value;
+};
+```
+
+- `submitHandler` 함수가 작동될 때마다 `amountInpuntRef`의 value 값에 접근하는 변수를 선언해준다. `amountInpuntRef.current`가 `ref`에 저장된 `<input>` 요소를 point 할 것이다. 그리고 이렇게 얻은 value 값은 언제나 '문자열'이다. 그래서 우리가 이 값을 계산을 하기 위한 용도로 사용하기 위해서는 반드시 숫자형으로 변경을 해주어야 할 것이다.
+  > `useRef`로 `ref`를 만들 때에는 `current`를 붙여서 속성 값에 접근해야 한다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+  const enteredAmount = amountInpuntRef.current.value;
+
+  const enteredAmountNumber = +enteredAmount;
+};
+```
+
+- `ref.current`로 받은 value 값인 `enteredAmount`에 `+`를 붙여줌으로써 간단하게 문자열인 숫자 값(ex. `"1"`)을 숫자타입(ex. `1`)으로 변형해준다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  const enteredAmount = amountInpuntRef.current.value;
+  const enteredAmountNumber = +enteredAmount;
+
+  if (enteredAmount.trim().length ==== 0) {}
+};
+```
+
+- 전달 받은 값의 유효성을 판별하기 위해 `if` 문을 작성한다. 먼저 문자열로 입력된 값에 `trim()` 메소드로 양 앞뒤로의 공백을 제거한 `enteredAmount`의 길이가 0일 때를 체크한다. 값이 0 일때를 판별해주는 것이다.
+
+```js
+if (enteredAmount.trim().length === 0 || enteredAmountNumber < 1) {
+}
+```
+
+- 숫자로 변환한 값인 `enteredAmountNumber` 가 1보다 작거나,
+
+```js
+if (
+  enteredAmount.trim().length === 0 ||
+  enteredAmountNumber < 1 ||
+  enteredAmountNumber > 5
+) {
+}
+```
+
+- 숫자로 변환한 값인 `enteredAmountNumber` 가 5보다 큰지를 확인한다.
+
+```js
+if (
+  enteredAmount.trim().length === 0 ||
+  enteredAmountNumber < 1 ||
+  enteredAmountNumber > 5
+) {
+  setAmountIsValid(false);
+  return;
+}
+```
+
+- 이런 유효성을 판단하는 과정에서 세가지 조건 중에 '두가지' 조건이 충족되면 `submitHandler` 함수의 실행을 멈출 수 있도록 return 을 작성해준다.
+
+- 앞서 세가지 요건 중에 '두가지' 조건이 충족된다는 것은 우리가 원하는 결과 값이 아니라는 소리일 것이다. 이런 조건에 해당할 때마다 오류 메세지가 뜨도록 추가하는 게 좋을지도 모른다.
+
+```js
+const [amountIsValid, setAmountIsValid] = useState(true);
+```
+
+- `MealItemForm` 컴포넌트 내부에 `useState`를 import 하고 앞서 오류메세지의 가시화 여부를 업데이트해줄 수 있는 상태(state)를 추가한다. form이 유효한지에 대해서만 체크하는 간단한 상태(state)이다. 초기 설정은 true로 하고 상태(state) 스냅샷과 상태(state) 업데이트 함수를 작성한다.
+
+```js
+const submitHandler = (event) => {
+  event.preventDefault();
+
+  const enteredAmount = amountInpuntRef.current.value;
+  const enteredAmountNumber = +enteredAmount;
+
+  if (
+    enteredAmount.trim().length === 0 ||
+    enteredAmountNumber < 1 ||
+    enteredAmountNumber > 5
+  ) {
+    setAmountIsValid(false);
+    return;
+  }
+};
+```
+
+- 우리가 앞서 작성한 유효하지 않은 input 값일 때 바로 반환을 해주었던 걸 기억할 것이다. input의 값이 유효하지 않을 때마다 `amountIsValid` 상태 값을 상태 업데이트 함수`setAmountIsValid` 를 이용하여 fasle 로 업데이트해주고, 다시 `submitHandler` 함수의 실행을 멈출 수 있도록 return 을 작성한다.
+
+```js
+<button>+ Add</button>;
+{
+  !amountIsValid && <p>상품의 갯수를 1개 이상 5개 이하로 입력해주세요.</p>;
+}
+```
+
+- 마지막으로 `button` 태그 아래에 조건식을 작성한다. `amountIsValid`가 false 일 때(input 값이 유효하지 않을 때)마다 오류 메세지가 출력될 수 있도록 한다.
+
 </br>
 
 ## 장바구니 항목 출력하기
