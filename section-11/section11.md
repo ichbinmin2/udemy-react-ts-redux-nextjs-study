@@ -774,7 +774,7 @@ const HeaderCartButton = (props) => {
 const numberOfCartItems = ctx.items.legnth;
 ```
 
-- cart 항목의 갯수를 출력하기 위해서 `numberOfCartItems` 이라는 상수를 하나 더 추가한다. `ctx.items.legnth`로 계산하지 않는 이유는, 아이템 항목에 상관없이 아이템의 갯수를 추가해도 즉 항목 하나에 갯수가 여러개일 떄도 총합으로 장바구니 항목의 갯수를 계산해야하기 때문이다. `ctx.items.legnth`는 하나의 아이템의 갯수가 여러개일지라도 하나로만 계산될 것이기 때문에 사용하지 않았다.
+- cart 항목의 갯수를 출력하기 위해서 `numberOfCartItems` 이라는 상수를 하나 더 추가한다. `ctx.items.legnth`로 계산하지 않는 이유는, 아이템 항목에 상관없이 아이템의 갯수를 추가해도 즉 항목 하나에 갯수가 여러개일 때도 총합으로 장바구니 항목의 갯수를 계산해야하기 때문이다. `ctx.items.legnth`는 하나의 아이템의 갯수가 여러개일지라도 하나로만 계산될 것이기 때문에 사용하지 않았다.
 
 ```js
 const numberOfCartItems = ctx.items.reduce(() => {});
@@ -1318,7 +1318,97 @@ const submitHandler = (event) => {
 }
 ```
 
-- 마지막으로 `button` 태그 아래에 조건식을 작성한다. `amountIsValid`가 false 일 때(input 값이 유효하지 않을 때)마다 오류 메세지가 출력될 수 있도록 한다.
+- 마지막으로 `button` 태그 아래에 조건식을 작성한다. `amountIsValid`가 false 일 때(input 값이 유효하지 않을 때)마다 오류 메세지가 출력될 수 있도록 한다. 여기서 form의 양식 제출은 input 값이 유효할 때만 완성된다는 사실이 가장 중요하다.
+
+```js
+if (
+  enteredAmount.trim().length === 0 ||
+  enteredAmountNumber < 1 ||
+  enteredAmountNumber > 5
+) {
+  setAmountIsValid(false);
+  return;
+}
+
+props.onAddToCart();
+```
+
+- `MealItemForm` 컴포넌트에는 `amount` 만 있다. item의 `id` 나 `name`, `price` 데이터는 존재하지 않는다. 그래서 Context를 직접 가져와서 사용할 필요가 없었으며, props로 받은 함수를 대신 호출하는 것이다.
+
+```js
+props.onAddToCart(enteredAmountNumber);
+```
+
+- `ref.current`로 받은 value 값이 if 문을 통과하고 나면, 이 값을 props 로 받은 `onAddToCart` 함수에 넣어준다. 이 함수를 통해서 조건식을 통과한 유효한 `amount` 값을 parse 할 것이다. if 문을 통과할 때만 form 제출을 할 수 있는 것이다. 이제 cart 에 item 을 추가하기 위해 Context method 를 실행해야 한다. 그러기 위해서는 상위 컴포넌트(`MealItem`)로 이동하여, Context 함수를 props 으로 내려주고, 이를 해당 `MealItemForm` 컴포넌트에서 props로 받아와 호출해야 할 것이다.
+
+#### MealItem.js
+
+```js
+import React, { useContext } from "react";
+import CartContext from "../../../store/cart-context";
+
+const MealItem = (props) => {
+  const cartCtx = useContext(CartContext);
+  const addToCartHandler = (amount) => {
+
+  };
+  ...
+};
+```
+
+- 먼저 `MealItem` 컴포넌트에서 CartContext를 받아오고 `amount`를 인자로 받아오는 `addToCartHandler` 함수를 추가해보자.
+
+```js
+<MealItemForm onAddToCart={addToCartHandler} />
+```
+
+- 그 다음 포인터를 `MealItemForm` 컴포넌트에 `onAddToCart` 이란 prop으로 parse 한다.
+
+```js
+const addToCartHandler = (amount) => {
+  cartCtx.addItem({
+    name: props.name,
+    amount: amount,
+    price: props.price,
+  });
+};
+```
+
+- `cartCtx`를 호출하고, `addItem` 라는 메소드 함수 안에 전달할 객체 값(item 데이터)들을 모두 넣어준다. `amount`는 `MealItemForm` 컴포넌트에서 인자로 받아오기 때문에 props 가 아닌, 인자 `amount`를 값으로 넣어준다. `MealItemForm` 컴포넌트에서 제출한 form 의 데이터 `amount`는 `MealItem` 컴포넌트의 `addToCartHandler` 함수의 인자로 들어온다. 그리고 그 값은 Context의 `addItem` 함수에 전달될 것이다.
+
+```js
+const addToCartHandler = (amount) => {
+  cartCtx.addItem({
+    id: props.id,
+    name: props.name,
+    amount: amount,
+    price: props.price,
+  });
+};
+```
+
+- `id`는 props를 통해서 받을 것이기 때문에 `props.id`로 설정해준다. `id`는 상위 컴포넌트인 `AvailableMeals` 에서 받아오기 때문에 `AvailableMeals`로 이동해서 `id`를 prop 해줄 수 있도록 추가한다.
+
+#### AvailableMeals.js
+
+```js
+const AvailableMeals = () => {
+  const mealsList = DUMMY_MEALS.map((meal) => (
+    <MealItem
+      key={meal.id}
+      id={meal.id}
+      name={meal.name}
+      description={meal.description}
+      price={meal.price}
+    />
+  ));
+  ...
+};
+```
+
+- 실행 결과를 확인해보면 Add 버튼을 누를 때마다 Cart 에 담긴 item 갯수(`amount`)가 증가하는 것을 확인할 수 있다.
+
+![ezgif com-gif-maker (41)](https://user-images.githubusercontent.com/53133662/163715814-e60cc329-3f32-4b19-9826-732976610615.gif)
 
 </br>
 
