@@ -18,5 +18,6 @@
 - [Diving Deeper: Working with Fragments, Portals & "Refs"](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-09/section09.md)
 - [Advanced: Handling Side Effects, Using Reducers & Using the Context API](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-10/section10.md)
 - [Second Practice Project: Building a Food Order App](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-11/section11.md)
+- [A Look Behind The Scenes Of React & Optimization Techniques](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-12/section12.md)
 
 </br>
