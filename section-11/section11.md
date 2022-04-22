@@ -1625,3 +1625,197 @@ const CartItem = (props) => {
 ```
 
 - `CartItem` 컴포넌트 내부에서 아이템 가격의 소숫점이 제대로 출력되고 있지 않았기 때문에 `toFixed(2)` 메소드를 사용해서 수정해주도록 한다.
+
+## 더 복잡한 리듀서 로직 작업하기
+
+- item 의 갯수 및 중복 아이템 체크를 통한 정상적인 추가 작동을 위해서는 `CartProvider`에서 `cartReducer` 로직을 수정해야 한다.
+
+#### 중복 item 추가시, Cart 내 item 갯수만 증가하도록 수정하기
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    const updatedItems = state.items.concat(action.item);
+    const updatedTotalAmount =
+      state.totalAmount + action.item.price * action.item.amount;
+
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
+  return defaultCartState;
+};
+```
+
+- `cartReducer`의 로직을 보면, 지금은 새로운 item이 추가될 때마다 `items` 배열에 추가되는 것을 알 수 있다. item 을 추가할 때, Cart에 이미 동일한 item이 있더라도 `updatedTotalAmount`을 계산해서 `items` 배열에 추가하고 있는 것이다.
+- 이것을 수정하기 위해서는 먼저 `updatedItems`을 얻기 전에 추가하려는 item이 Cart에 이미 동일한 item이 들어있는지는 확인하는 조건식 로직을 작성해야 할 것이다.
+
+```js
+const existingCartItemIndex = state.items.findIndex((item) =>);
+```
+
+- 이미 들어있는 cart의 item(`state.items`)을 불러오고, `findIndex` 메소드를 사용하여 우리가 원하는 item의 index를 찾을 수 있도록 추가해주는 `existingCartItemIndex` 정수를 하나 만든다. `findIndex` 메소드는 true인 것만 return 하는 함수를 받는데, 만약 우리가 찾는 인자(item)이 아니면 false를 반환한다.
+  ✓ findIndex() 메서드 : 주어진 판별 함수를 만족하는 배열의 첫 번째 요소에 대한 인덱스를 반환합니다. 만족하는 요소가 없으면 -1을 반환합니다.
+
+  > [MDN 문서 참조 : Array.prototype.findIndex()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
+
+```js
+const existingCartItemIndex = state.items.findIndex(
+  (item) => item.id === action.item.id
+);
+```
+
+- 그리고, 이 안에서 `item`의 `id`와 `action`으로 받은 `id`가 동일(true 면)하다면 index 번호를 찾아주는 `existingCartItemIndex` 정수를 하나 만든다.
+
+```js
+const existingCartItemIndex = state.items.findIndex(
+  (item) => item.id === action.item.id
+);
+const existingCartItem = state.items[existingCartItemIndex];
+```
+
+- 그리고, `state.items`에 우리가 `findIndex()`로 찾아낸 index 값, `existingCartItemIndex`를 담은 정수 `existingCartItem`을 만든다. 이 `existingCartItemIndex`는 Cart에 동일한 item이 있을 때만 활성화되는 정수이다.
+
+```js
+let updatedItem;
+let updatedItems;
+```
+
+- `updatedItem`과 `updatedItems` 변수를 선언한다.
+
+```js
+let updatedItem;
+let updatedItems;
+
+if (existingCartItem) {
+}
+```
+
+- if 문을 추가해서 동일한 item이 Cart에 추가될 때마다 활성화되는 변수인 `existingCartItem`가 true 일 때를 가정하고 로직을 추가한다. 이미 Cart에 동일한 아이템이 있다면, `items`의 아이템에는 변화가 없어야 할 것이고, 갯수만 추가가 되어야 할 것이다.
+
+```js
+let updatedItem;
+let updatedItems;
+
+if (existingCartItem) {
+  const updatedItem = {};
+}
+```
+
+- `updatedItem`에 새로운 객체를 생성해서 반환할 것이기에, 새로운 빈 객체를 먼저 생성한다.
+
+```js
+const existingCartItem = state.items[existingCartItemIndex];
+
+let updatedItem;
+let updatedItems;
+
+if (existingCartItem) {
+  updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+}
+```
+
+- 우리가 `state.items` 안에서 찾은 `existingCartItem`을 spread operator 로 그대로 복사하고 `amount` 속성을 추가한다. `existingCartItem`의 갯수와 `action`으로 받은 `item`의 갯수를 추가해서 동일한 아이템이 추가될 때마다 갯수만 추가가 되도록 하는 것이다.
+
+```js
+if (existingCartItem) {
+  updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+
+  updatedItems = [...state.items];
+}
+```
+
+- 그리고 `updatedItems`에 기존의 Cart 안에 담긴 items 를 spread operator로 복사해서 담고, Cart에 담긴 item이 변화하지 않도록 업데이트했다. 메모리의 기존 배열을 건드려서 업데이트하는 대신 기존 객체를 그대로 복사해서 새로운 배열을 만들 수 있도록 한 것이다.
+
+```js
+if (existingCartItem) {
+  updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+}
+```
+
+- 그리고 `updatedItems`의 `existingCartItemIndex`(우리가 찾은 index 번호)를 `updatedItem`에 겹쳐서 사용하도록 했다. Cart 배열에서 확인한 기존 item을 골라서 `updatedItem`과 겹쳐쓰는 것이다.
+
+```js
+if (existingCartItem) {
+  updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+} else {
+}
+```
+
+- Cart 에 추가한 item이 없을 경우의 로직을 작성할 else 케이스도 추가한다.
+
+```js
+if (existingCartItem) {
+  updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+} else {
+  updatedItems = state.items.concat(action.item);
+}
+```
+
+- 처음 item이 Cart에 추가되는 경우에는 `updatedItems`에 `action`에서 받아온 `item`을 추가해주면 되므로, `concat()` 메소드를 사용해서 `action.item`을 추가해서 새로운 배열로 반환할 수 있도록 작성해준다.
+
+```js
+let updatedItems;
+
+if (existingCartItem) {
+  const updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+} else {
+  updatedItems = state.items.concat(action.item);
+}
+```
+
+- if 문 바깥에 선언된 `updatedItem`을 정수로 수정하면 가독성이 더 높아질 것이다.
+
+```js
+if (existingCartItem) {
+  const updatedItem = {
+    ...existingCartItem,
+    amount: existingCartItem.amount + action.item.amount,
+  };
+
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+} else {
+  updatedItems = state.items.concat(action.item);
+}
+
+return {
+  items: updatedItems,
+  totalAmount: updatedTotalAmount,
+};
+```
+
+- 이제 `cartReducer` 함수에서 `action.type`이 "ADD" 일 떄 여기서 return 해주는 새로운 객체는 조건식 내의 어느 쪽이든 `updatedItems`를 택하는 새로운 상태(state) 스냅샷이 return 된다.
+
+</br>
