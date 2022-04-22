@@ -1819,3 +1819,240 @@ return {
 - 이제 `cartReducer` 함수에서 `action.type`이 "ADD" 일 떄 여기서 return 해주는 새로운 객체는 조건식 내의 어느 쪽이든 `updatedItems`를 택하는 새로운 상태(state) 스냅샷이 return 된다.
 
 </br>
+
+## 동적인 아이템들로 만들기
+
+- Cart 내부에 담겨있는 item 을 추가하거나 삭제할 수 있도록 해보자.
+
+#### Cart 내 item 갯수 추가
+
+```js
+const cartItemAdd = (item) => {};
+const cartItemRemove = (id) => {};
+
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <CartItem
+        key={item.id}
+        name={item.name}
+        amount={item.amount}
+        price={item.price}
+        onAdd={cartItemAdd.bind(null, item)}
+        onRemove={cartItemRemove.bind(null, item.id)}
+      />
+    ))}
+  </ul>
+);
+```
+
+- 이미 `Cart.js`에는 우리가 필요한 기능을 담을 수 있는 두가지 함수가 있다. 바로 `cartItemRemove`와 `cartItemAdd` 함수다. `cartItemAdd` 함수는 + 버튼을 누르면 갯수가 증가되고, `cartItemRemove`는 - 버튼을 누르면 갯수가 감소하는 기능을 처리할 것이다.
+
+```js
+const cartItemAdd = (item) => {
+  cartCtx.addItem({});
+};
+```
+
+- `cartItemAdd` 함수부터 처리해보자. `cartItemAdd` 함수는 `item`을 인자로 받는 함수이다. `cartCtx`의 `addItem`(action)을 호출하여, 새로운 객체 안에 item을 담아 전달한다. `CartProvider`의 `addItem`을 함수를 작동시킬 것이다.
+
+```js
+const addItemToCartHandler = (item) => {
+  dispatchCartAction({
+    type: "ADD",
+    item: item,
+  });
+};
+
+const cartContext = {
+  items: cartState.items,
+  totalAmount: cartState.totalAmount,
+  addItem: addItemToCartHandler,
+  removeItem: removeItemToCartHandler,
+};
+```
+
+- 그리고 `addItemToCartHandler`은 (reducer 함수인) `cartReducer` 에 action을 전달할 것이다.
+
+![ezgif com-gif-maker (43)](https://user-images.githubusercontent.com/53133662/164706402-d7767a1b-6113-4a8a-a1f2-e80a90aa9f53.gif)
+
+- 저장하고 로드해서 확인해보면, Cart 내 담긴 item 들의 갯수가 추가 버튼에 의해서 증가되고 있음을 확인할 수 있다.
+
+#### Cart 내 item 갯수 삭제(감소)
+
+- Cart 내 item의 갯수를 '추가' 하는 것까지 해보았으니 이제 item의 갯수를 감소시키고, 갯수가 0일 때 Cart 내에서 삭제되는 기능까지 구현해볼까 한다.
+
+#### CartProvider.js
+
+```js
+const removeItemToCartHandler = (id) => {
+  dispatchCartAction({
+    type: "REMOVE",
+    id: id,
+  });
+};
+
+const cartContext = {
+  items: cartState.items,
+  totalAmount: cartState.totalAmount,
+  addItem: addItemToCartHandler,
+  removeItem: removeItemToCartHandler,
+};
+```
+
+- `CartProvider`에서 작성한 `removeItemToCartHandler` 트리거 함수는 `id` 값을 받아와 action 으로 전달하는 함수이다. 하지만 이 action을 전달받아서 처리해주는 리듀서 함수(`cartReducer`)에는 해당 "REMOVE" action을 처리해주고 있지 않다. 먼저 `cartReducer`에 이 "REMOVE" action 타입을 처리해주는 if 문을 추가해야 할 것이다.
+
+```js
+const cartReducer = (state, action) => {
+  if (action.type === "ADD") {
+    ...
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
+
+  if (action.type === "REMOVE") {
+    return {
+      items: updatedItems,
+      totalAmount: updatedTotalAmount,
+    };
+  }
+  return defaultCartState;
+};
+```
+
+- 먼저, `action.type`이 "REMOVE"인지를 체크하는 if 문을 작성하고, 새로운 객체를 반환해줄 수 있도록 return 문도 "ADD" 일 때의 값과 동일하게 복사해서 붙여넣기 해준다. 이제 if문 내부에서 Cart를 업데이트해줄 수 있도록 해주자.
+- Cart 내부에서 item을 감소하는 일은 Cart items의 최신 스냅샷 값을 기준으로 계산되어야 할 것이다. 또한, 감소 버튼을 누르고 갯수가 1보다 작을 때는 Cart 에서 삭제될 수 있도록 로직을 작성하고 싶다.
+
+```js
+if (action.type === "REMOVE") {
+  const existingCartItemIndex = state.items.findIndex(
+    (item) => item.id === action.id
+  );
+
+  return {
+    items: updatedItems,
+    totalAmount: updatedTotalAmount,
+  };
+}
+```
+
+- 먼저 Cart의 item을 찾아야 한다. 이는 "ADD" 타입일 때 작성해주었던 로직과 동일하기에 그대로 가져와 복사넣기 해주자.
+
+```js
+const existingCartItemIndex = state.items.findIndex(
+  (item) => item.id === action.id
+);
+const existingItem = state.items[existingCartItemIndex];
+```
+
+- 그리고 해당 index를 찾아서 `index` 값을 반환해주는 `existingCartItemIndex`를 이용해서 `state.items` 내부의 index 번호로 할당하여 `existingCartItemIndex`가 true 일 때만 작동이 되는 `existingItem` 변수를 선언해준다.
+
+```js
+const existingCartItemIndex = state.items.findIndex(
+  (item) => item.id === action.id
+);
+const existingItem = state.items[existingCartItemIndex];
+const updatedTotalAmount = state.totalAmount - existingItem.price;
+```
+
+- 수량도 업데이트 해준다. Cart 내부에 저장되어있는 `state.totalAmount` 가격에서 `existingItem`의 가격만 빼줄 수 있도록 하는 것이다.
+
+```js
+let updatedItems;
+if (existingItem.amount === 1) {
+}
+```
+
+- 앞서 목표했던 기능 두가지, Cart items 배열에서 완전히 삭제하거나 item 의 수량만 감소할 수 있도록 if문을 작성한다. 첫번째 if 문은 `existingItem`의 갯수가 1일 때를 가정(즉, Cart에서 지우는 게 이 type의 마지막 아이템이라는 뜻)하고, `updatedItems`을 반환할 수 있도록 해보자.
+
+```js
+let updatedItems;
+if (existingItem.amount === 1) {
+  updatedItems = state.items.filter((item) => item.id !== action.id);
+}
+```
+
+- `updatedItems`에는 `state.items`에 `filter` 메소드를 사용해서 `item.id`가 `action`으로 받은 `id` 값과 동일하지 않는 것만 남긴 값을 담도록 했다. 그래야 Cart에 담긴 모든 아이템의 `id`가 `action`으로 넘겨받은 `id`와 다른지 알 수 있다.
+
+```js
+let updatedItems;
+if (existingItem.amount === 1) {
+  updatedItems = state.items.filter((item) => item.id !== action.id);
+} else {
+}
+```
+
+- 나머지 else는 `existingItem`의 갯수가 1보다 클 때를 가정하는 것이다. 아이템을 Cart 배열에서 지우지 않고, 수량만 조절해야 한다.
+
+```js
+let updatedItems;
+
+if (existingItem.amount === 1) {
+  updatedItems = state.items.filter((item) => item.id !== action.id);
+} else {
+  const updatedItem = { ...existingItem };
+}
+```
+
+- Cart에 담긴 item의 갯수가 1보다 많으면 item을 Cart의 items 배열에서 지우지 않고, 그대로 업데이트를 해야한다. spread operator로 `existingItem`를 담아 업데이트 해주고,
+
+```js
+let updatedItems;
+
+if (existingItem.amount === 1) {
+  updatedItems = state.items.filter((item) => item.id !== action.id);
+} else {
+  const updatedItem = { ...existingItem, amount: existingItem.amount - 1 };
+}
+```
+
+- `amount` 속성은 `existingItem.amount`에서 -1을 해준다.
+
+```js
+let updatedItems;
+
+if (existingItem.amount === 1) {
+  updatedItems = state.items.filter((item) => item.id !== action.id);
+} else {
+  const updatedItem = { ...existingItem, amount: existingItem.amount - 1 };
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+}
+```
+
+- `updatedItems`은 기존의 Cart에 담긴 items 배열의 복사본으로 기존 item을 새로운 배열로 반환하는 변수이며, 이 `updatedItems`에 `existingCartItemIndex`라는 index 값을 설정해주고, 이 item이 `updatedItem`으로 할당될 수 있도록 해준다.
+
+```js
+if (existingItem.amount === 1) {
+  updatedItems = state.items.filter((item) => item.id !== action.id);
+} else {
+  const updatedItem = { ...existingItem, amount: existingItem.amount - 1 };
+  updatedItems = [...state.items];
+  updatedItems[existingCartItemIndex] = updatedItem;
+}
+
+return {
+  items: updatedItems,
+  totalAmount: updatedTotalAmount,
+};
+```
+
+- 마지막으로 새로운 객체를 return 해주면 `action.type`이 "REMOVE" 일 때 돌아가는 로직은 모두 구현한 셈이다. 이제 이 로직을 전부 Cart 내부에 있는 item의 수량 조절 버튼과 연결시킬 수 있도록 작업해주자.
+
+#### Cart.js
+
+```js
+const cartItemRemove = (id) => {
+  cartCtx.removeItem(id);
+};
+```
+
+- `cartItemRemove` 트리거 함수는 `id`를 인자로 받는다. 여기서 `cartCtx.removeItem`으로 접근하여, (객체가 아닌) `id` 자체로 `removeItem` 함수에 인자로 전달할 수 있도록 추가해주자.
+
+![ezgif com-gif-maker (44)](https://user-images.githubusercontent.com/53133662/164717027-d713ead4-f6c7-4d6e-b1d0-b4fc54260391.gif)
+
+- 이제 Cart 안에 담긴 item의 - 버튼을 누르면, 해당 item의 갯수는 감소하고 갯수가 1보다 작을 경우 Cart 내에서 해당 item이 완전히 사라지는 것을 알 수 있다.
+
+ </br>
