@@ -831,13 +831,12 @@ const HeaderCartButton = (props) => {
 
 ## 장바구니 리듀서 추가
 
-- cart item을 추가하기 위해서는 먼저 `CartProvider`으로 돌아가야 한다. 여기서 cart 데이터를 관리하기 때문이다.
+- cart item을 추가하기 위해서는 먼저 `CartProvider`으로 돌아가야 한다. 여기서 복잡한 cart 데이터 상태(state)를 관리하기 때문이다.
 
 #### CartProvider.js
 
 ```js
 const addItemToCartHandler = (item) => {};
-
 const removeItemToCartHandler = (id) => {};
 ```
 
@@ -935,7 +934,7 @@ const cartReducer = (state, action) => {
 };
 ```
 
-- 이제부터 item을 상태(state)로 관리해줄 것이기 때문에, 기존에 작성했던 `cartContext`를 `useReducer`에서 `cartState`로 관리하는 상태(state) 값으로 교체한다.
+- 이제부터 items 을 상태(state)로 관리해줄 것이기 때문에, 기존에 작성했던 `cartContext`를 `useReducer`에서 `cartState`로 관리하는 상태(state) 값으로 교체한다.
   > `cartState.items`과 `cartState.totalAmount`는 `cartState`에 리듀서로 설정해준 초기 값(`defaultCartState`)을 기반으로 접근한 값이다.
 
 ### 리듀서 함수에 action 을 전송하기
@@ -1104,7 +1103,7 @@ const cartReducer = (state, action) => {
 const addItemToCartHandler = (item) => {
   dispatchCartAction({
     type: "ADD",
-    item: item, // 하나의 item 마다 item의 데이터(id, name, amount, price)들이 포함된 묶음 객체로 들어올 것이다.
+    item: item,
   });
 };
 
@@ -1171,7 +1170,7 @@ import React, { useRef, useState } from "react";
 const amountInpuntRef = useRef();
 ```
 
-- `useRef`를 선언하고, `ref`를 `Input` 컴포넌트에 달아주어야 한다. `Input` 에서 발생한 event의 value 값을 받아와야 하기 때문이다. 하지만 `Input`은 태그가 아니라 별개의 컴포넌트이고, 별개의 컴포넌트에는 `ref`를 prop으로 전달할 수 없다.
+- `useRef`를 선언하고, `ref`를 `Input` 컴포넌트에 달아주어야 한다. `Input` 에서 발생한 event의 value 값을 받아와야 하기 때문이다. 하지만 `Input`은 태그가 아니라 별개의 컴포넌트 즉 커스텀 컴포넌트이고, 이 컴포넌트에는 `ref`를 prop으로 전달할 수 없다.
 
 ```js
 <Input
@@ -1188,9 +1187,9 @@ const amountInpuntRef = useRef();
 />
 ```
 
-- 우리가 앞서 공부했던 방법으로 별개의 컴포넌트인 `Input` 에서도 `ref` 속성을 prop으로 전달 받을 수 있도록 작업해줘야 한다. 별개의 컴포넌트(커스텀 컴포넌트)에 `ref` prop이 작동되기 위해서는 `ref`를 내려받는 컴포넌트로 이동해서 `React.forwardRef`로 컴포넌트 로직을 감싸주는 작업을 추가로 진행해줄 필요가 있다.
+- 우리가 앞서 공부했던 방법으로 별개의 컴포넌트인 `Input` 에서도 `ref` 속성을 prop으로 전달 받을 수 있도록 작업해줘야 한다. 별개의 컴포넌트(커스텀 컴포넌트)에 `ref` prop이 작동되기 위해서는 `ref`를 내려받는 컴포넌트로 이동해서 `React.forwardRef`로 컴포넌트 로직을 감싸주는 작업을 추가로 진행해야 한다.
 
-#### Input.js
+#### `ref`를 포워딩 해주기
 
 ```js
 const Input = (props) => {
@@ -1203,7 +1202,7 @@ const Input = (props) => {
 };
 ```
 
-- `ref` 를 prop으로 받아올 `Input` 컴포넌트이다. 우리는 이 컴포넌트 로직을 `React.forwardRef()`로 감싸주어야 `ref` prop을 작동시킬 수 있다.
+- `ref` 를 prop으로 받아올 `Input` 컴포넌트이다. 우리는 이 컴포넌트 로직을 `React.forwardRef()`로 감싸주어야 `ref` prop 을 작동시킬 수 있게 된다.
 
 ```js
 const Input = React.forwardRef((props, ref) => {
@@ -1216,9 +1215,11 @@ const Input = React.forwardRef((props, ref) => {
 });
 ```
 
-- `Input` 컴포넌트(커스텀 컴포넌트)는 상위 컴포넌트에서 내려준 `ref` prop을 작동할 수 있게 되었다. 함수 컴포넌트는 `forwardRef`의 인자가 된 셈이다. 포워딩 된 `ref`를 `input` 태그의 `ref` 속성과 연결되도록 작업해주면 이제 `ref`를 통해 `Input` 컴포넌트 내부의 `<input>` 태그 값에 접근 가능해진다.
+- `ref`는 이제 `React.forwardRef` 으로 포워딩 되었기 때문에 `Input` 컴포넌트(커스텀 컴포넌트)는 상위 컴포넌트에서 내려준 `ref` prop을 작동할 수 있게 되었다. (함수 컴포넌트는 `forwardRef`의 인자가 된 셈이다.)포워딩 된 `ref`를 `input` 태그의 `ref` 속성과 연결되도록 작업해주면 이제 `ref`를 통해 `Input` 컴포넌트 내부의 `<input>` 태그 값에 접근 가능해진다.
 
 ```js
+const amountInpuntRef = useRef();
+
 const submitHandler = (event) => {
   event.preventDefault();
   const enteredAmount = amountInpuntRef.current.value;
@@ -1237,7 +1238,9 @@ const submitHandler = (event) => {
 };
 ```
 
-- `ref.current`로 받은 value 값인 `enteredAmount`에 `+`를 붙여줌으로써 간단하게 문자열인 숫자 값(ex. `"1"`)을 숫자타입(ex. `1`)으로 변형해준다.
+- `ref.current`로 받은 가장 최신의 value 값인 `enteredAmount`에 `+`를 붙여줌으로써 간단하게 문자열인 숫자 값(ex. `"1"`)을 숫자타입(ex. `1`)으로 변형해준다.
+
+#### input 의 `value` 값 유효성 판별하기
 
 ```js
 const submitHandler = (event) => {
@@ -1285,6 +1288,8 @@ if (
 
 - 앞서 세가지 요건 중에 '두가지' 조건이 충족된다는 것은 우리가 원하는 결과 값이 아니라는 소리일 것이다. 이런 조건에 해당할 때마다 오류 메세지가 뜨도록 추가하는 게 좋을지도 모른다.
 
+#### 유효성에 따른 오류 메시지 추가하기
+
 ```js
 const [amountIsValid, setAmountIsValid] = useState(true);
 ```
@@ -1292,6 +1297,8 @@ const [amountIsValid, setAmountIsValid] = useState(true);
 - `MealItemForm` 컴포넌트 내부에 `useState`를 import 하고 앞서 오류메세지의 가시화 여부를 업데이트해줄 수 있는 상태(state)를 추가한다. form이 유효한지에 대해서만 체크하는 간단한 상태(state)이다. 초기 설정은 true로 하고 상태(state) 스냅샷과 상태(state) 업데이트 함수를 작성한다.
 
 ```js
+const [amountIsValid, setAmountIsValid] = useState(true);
+
 const submitHandler = (event) => {
   event.preventDefault();
 
@@ -1320,6 +1327,8 @@ const submitHandler = (event) => {
 
 - 마지막으로 `button` 태그 아래에 조건식을 작성한다. `amountIsValid`가 false 일 때(input 값이 유효하지 않을 때)마다 오류 메세지가 출력될 수 있도록 한다. 여기서 form의 양식 제출은 input 값이 유효할 때만 완성된다는 사실이 가장 중요하다.
 
+#### Cart 에 item 추가하기
+
 ```js
 if (
   enteredAmount.trim().length === 0 ||
@@ -1339,7 +1348,7 @@ props.onAddToCart();
 props.onAddToCart(enteredAmountNumber);
 ```
 
-- `ref.current`로 받은 value 값이 if 문을 통과하고 나면, 이 값을 props 로 받은 `onAddToCart` 함수에 넣어준다. 이 함수를 통해서 조건식을 통과한 유효한 `amount` 값을 parse 할 것이다. if 문을 통과할 때만 form 제출을 할 수 있는 것이다. 이제 cart 에 item 을 추가하기 위해 Context method 를 실행해야 한다. 그러기 위해서는 상위 컴포넌트(`MealItem`)로 이동하여, Context 함수를 props 으로 내려주고, 이를 해당 `MealItemForm` 컴포넌트에서 props로 받아와 호출해야 할 것이다.
+- `ref.current`로 받은 value 값이 if 문을 통과하고 나면, 이 값을 props 로 받은 `onAddToCart` 함수에 숫자 타입으로 변환한 `enteredAmountNumber` 값을 넣어준다. 이 함수를 통해서 조건식을 통과한 유효한 `amount` 값을 parse 할 것이다. if 문을 통과할 때만 form 제출을 할 수 있는 것이다. 이제 cart 에 item 을 추가하기 위해 Context method 를 실행해야 한다. 그러기 위해서는 상위 컴포넌트(`MealItem`)로 이동하여, Context 함수를 props 으로 내려주고, 이를 해당 `MealItemForm` 컴포넌트에서 props로 보내서 호출해야 할 것이다.
 
 #### MealItem.js
 
@@ -1349,14 +1358,13 @@ import CartContext from "../../../store/cart-context";
 
 const MealItem = (props) => {
   const cartCtx = useContext(CartContext);
-  const addToCartHandler = (amount) => {
 
-  };
+  const addToCartHandler = (amount) => {};
   ...
 };
 ```
 
-- 먼저 `MealItem` 컴포넌트에서 CartContext를 받아오고 `amount`를 인자로 받아오는 `addToCartHandler` 함수를 추가해보자.
+- 먼저 `MealItem` 컴포넌트에서 `useContext`와 `CartContext`를 받아오고 `amount`를 인자로 받아오는 `addToCartHandler` 함수를 추가해보자.
 
 ```js
 <MealItemForm onAddToCart={addToCartHandler} />
@@ -1374,7 +1382,7 @@ const addToCartHandler = (amount) => {
 };
 ```
 
-- `cartCtx`를 호출하고, `addItem` 라는 메소드 함수 안에 전달할 객체 값(item 데이터)들을 모두 넣어준다. `amount`는 `MealItemForm` 컴포넌트에서 인자로 받아오기 때문에 props 가 아닌, 인자 `amount`를 값으로 넣어준다. `MealItemForm` 컴포넌트에서 제출한 form 의 데이터 `amount`는 `MealItem` 컴포넌트의 `addToCartHandler` 함수의 인자로 들어온다. 그리고 그 값은 Context의 `addItem` 함수에 전달될 것이다.
+- `CartContext`를 호출한 `cartCtx`에 `addItem` 라는 메소드 함수 안에 전달할 새로운 객체 안에 item 데이터를 모두 넣어준다. `amount`는 `MealItemForm` 컴포넌트에서 유일하게 '인자'로 받아오는 값이기 때문에 props 가 아닌, 인자 `amount`를 값으로 넣어준다. `MealItemForm` 컴포넌트에서 제출한 form 의 데이터 `amount`는 `MealItem` 컴포넌트의 `addToCartHandler` 함수의 인자로 들어올 것이다. 그리고 그 값은 `addToCartHandler` 함수의 실행으로 Context의 `addItem` 함수에 전달된다.
 
 ```js
 const addToCartHandler = (amount) => {
@@ -1406,7 +1414,7 @@ const AvailableMeals = () => {
 };
 ```
 
-- 실행 결과를 확인해보면 Add 버튼을 누를 때마다 Cart 에 담긴 item 갯수(`amount`)가 증가하는 것을 확인할 수 있다.
+- form이 제출되면, CartContext method(`addItem`)가 촉발되며 item이 Cart에 추가된다. 실행 결과를 확인해보면 Add 버튼을 누를 때마다 Cart 에 담긴 item 갯수(`amount`)가 증가하는 것을 확인할 수 있다.
 
 ![ezgif com-gif-maker (41)](https://user-images.githubusercontent.com/53133662/163715814-e60cc329-3f32-4b19-9826-732976610615.gif)
 
@@ -1414,12 +1422,206 @@ const AvailableMeals = () => {
 
 ## 장바구니 항목 출력하기
 
-</br>
+- Cart Item을 출력하려면 `Cart` 컴포넌트에 `useContext`를 사용해서 Cart의 `items`를 가져와야 한다.
 
-## 더 복잡한 리듀서 로직 작업하기
+#### Cart.js
 
-</br>
+```js
+import React, { useContext } from "react";
+import CartContext from "../../store/cart-context";
+```
 
-## 동적인 아이템들로 만들기
+```js
+const cartCtx = useContext(CartContext);
+```
 
-</br>
+- 이제 `cartCtx`에서 가져온 `items`를 사용할 것이기 때문에, 기존의 더미 배열은 삭제해준다.
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {/* {[{ id: "c1", name: "Sushi", amount: 2, price: 12.99 }].map((item) => (
+        <li key={item.id}>{item.name}</li>
+      ))} */}
+  </ul>
+);
+```
+
+- 대신 `cartCtx.items`를 불러와서 매핑 해준다.
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <li key={item.id}>{item.name}</li>
+    ))}
+  </ul>
+);
+```
+
+#### 총 가격 출력하기
+
+```js
+const totalAmount = `$ ${cartCtx.totalAmount.toFixed(2)}`;
+```
+
+- `cartCtx`의 `totalAmount` 값을 가져오고, 소수점 2개까지 포함해주기 위해 `toFixed(2)` 메소드를 사용해서 출력할 수 있도록 작업해준다.
+
+- 최종 도출되는 Cart 아이템의 총 가격은 고정된 값이 아니라, `totalAmount`가 될 것이므로 하드코딩으로 작성해주었던 가격 부분도 수정해준다.
+
+```js
+<span>Total Amout</span>;
+<span>{totalAmount}</span>;
+```
+
+- 그리고 Cart에 item이 한개 이상이라도 담겨있을 때만 Oder 버튼이 화면에 뜨도록 작업해주려면, `cartCtx`에 담긴 `items`의 길이를 확인해야 한다.
+
+```js
+const hasItems = cartCtx.items.length > 0;
+```
+
+- `cartCtx.items`의 길이가 0 보다 클 때(아이템이 하나라도 담겨있을 때)만 `hasItems`에 해당하도록 작성하고, 이 값(true, false)을 이용해서 Order 버튼을 조건식에 의해 출력될 수 있도록 수정해준다.
+
+```js
+{
+  hasItems && <button className={classes.button}>Order</button>;
+}
+```
+
+- 이제 Cart에 아이템이 담겨있을 때(`hasItems`가 true일 때)만 Order 버튼이 출력될 것이다.
+
+![ezgif com-gif-maker (42)](https://user-images.githubusercontent.com/53133662/164676688-ef80176a-57bb-4bc4-8bbf-6afe32f93a16.gif)
+
+- Cart에 아이템이 없을 때는 총 가격도 0이며, Order 버튼도 나타나지 않는다. 하지만 Cart에 아이템이 하나라도 추가가 되면, 총 가격도 아이템의 가격에 따라 추가가 되며 Order 버튼도 나타난다.
+
+#### CartItem 컴포넌트 추가하기
+
+```js
+const CartItem = (props) => {
+  const price = `$${props.price}`;
+
+  return (
+    <li className={classes["cart-item"]}>
+      <div>
+        <h2>{props.name}</h2>
+        <div className={classes.summary}>
+          <span className={classes.price}>{price}</span>
+          <span className={classes.amount}>x {props.amount}</span>
+        </div>
+      </div>
+      <div className={classes.actions}>
+        <button onClick={props.onRemove}>−</button>
+        <button onClick={props.onAdd}>+</button>
+      </div>
+    </li>
+  );
+};
+```
+
+- `CartItem.js` 를 추가하고 `Cart` 컴포넌트에서 해당 컴포넌트를 사용할 수 있도록 import 해준다.
+
+#### Cart.js
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <li key={item.id}>{item.name}</li>
+    ))}
+  </ul>
+);
+```
+
+- `<li>` 대신 import 해온 `CartItem` 컴포넌트를 추가한다. `CartItem` 역시 list 이기 때문에, key 값을 추가해야한다.
+
+```js
+import CartItem from "./CartItem";
+
+const Cart = (props) => {
+  ...
+  const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <CartItem
+        key={item.id}
+      />
+    ))}
+  </ul>
+  );
+  ...
+}
+```
+
+- `CartItem` 컴포넌트에서 사용할 `cartCtx.items`의 데이터들을 모두 prop 으로 전달해준다.
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <CartItem
+        key={item.id}
+        name={item.name}
+        amount={item.amount}
+        price={item.price}
+      />
+    ))}
+  </ul>
+);
+```
+
+#### Cart의 Item을 추가하거나 삭제하는 함수 추가하기
+
+```js
+const cartItemAdd = (item) => {};
+const cartItemRemove = (id) => {};
+```
+
+- `cartItemRemove`은 `id`를 받아서 Cart의 Item을 삭제해줄 것이기 때문에 인자로 `id`를 받고, `cartItemAdd`는 `item`을 받아서 Cart의 Item을 추가해줄 것이기 때문에 인자로 `item`을 받도록 작성을 해주었다.
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <CartItem
+        key={item.id}
+        name={item.name}
+        amount={item.amount}
+        price={item.price}
+        onRemove={cartItemRemove}
+        onAdd={cartItemAdd}
+      />
+    ))}
+  </ul>
+);
+```
+
+- `CartItem` 컴포넌트에서 해당 트리거 함수들을 사용할 것이기 때문에 prop으로 두개의 함수를 포인터하여 전달한다.
+
+```js
+const cartItems = (
+  <ul className={classes["cart-items"]}>
+    {cartCtx.items.map((item) => (
+      <CartItem
+        key={item.id}
+        name={item.name}
+        amount={item.amount}
+        price={item.price}
+        onRemove={cartItemRemove.bind(null, item.id)}
+        onAdd={cartItemAdd.bind(null, item)}
+      />
+    ))}
+  </ul>
+);
+```
+
+- 두 개의 함수에서는 `.bind(null, item.id)`를 사용해야 한다. 추가하거나 삭제한 item을 각각의 트리거 함수에 보내는 코드이다. `bind()`는 추후 실행을 대비하는 함수로 함수가 실행됐을 때 받을 인자를 미리 설정하게 만들어준다. 그래서 두 함수가 `id`나 `item`을 개별적으로 받을 수 있게 하는 것이다.
+  ✓ `Function.prototype.bind()` : `bind()` 메소드가 호출되면 새로운 함수를 생성합니다. 받게되는 첫 인자의 value로는 this 키워드를 설정하고, 이어지는 인자들은 바인드된 함수의 인수에 제공됩니다.
+  > [MDN 문서 참조 : Function.prototype.bind()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+
+```js
+const CartItem = (props) => {
+  const price = `$${props.price.toFixed(2)}`;
+};
+```
+
+- `CartItem` 컴포넌트 내부에서 아이템 가격의 소숫점이 제대로 출력되고 있지 않았기 때문에 `toFixed(2)` 메소드를 사용해서 수정해주도록 한다.
