@@ -18,6 +18,7 @@
 - [Practice | Outputting Cart Items](#장바구니-항목-출력하기)
 - [Practice | Working on a More Complex Reducer Logic](#더-복잡한-리듀서-로직-작업하기)
 - [Practice | Making Items Removable](#동적인-아이템들로-만들기)
+- [Practice | Using the useEffect Hook](#useEffect-훅-사용하기)
 
 ## 헤더 컴포넌트 추가하기
 
@@ -2056,3 +2057,189 @@ const cartItemRemove = (id) => {
 - 이제 Cart 안에 담긴 item의 - 버튼을 누르면, 해당 item의 갯수는 감소하고 갯수가 1보다 작을 경우 Cart 내에서 해당 item이 완전히 사라지는 것을 알 수 있다.
 
  </br>
+
+## useEffect 훅 사용하기
+
+- Cart에 item이 추가될 때마다 움직이는 애니메이션을 구현할 것이다.
+
+#### HeaderCartButton.js
+
+```js
+const btnClasses;
+```
+
+- 먼저, `HeaderCartButton` 컴포넌트 내부에 `btnClasses`라는 변수를 설정한다. 이 변수는 style을 적용하기 위한 것이다.
+
+```js
+const btnClasses = `${}`;
+```
+
+- template literal을 이용해서 `classes`를 작성할 것이다. 먼저 백틱 안에 `${}`을 추가하고, 우리가 설정하고자 하는 className을 넣어준다.
+
+```js
+const btnClasses = `${classes.button} ${classes.bump}`;
+```
+
+- `btnClasses`은 `button`와 `bump`라는 이름의 className을 가졌다.
+
+```js
+ <button className={btnClasses} onClick={props.onClick}>
+```
+
+- `<button>` 태그에 className으로 `btnClasses` 변수를 포인터해준다. 이제 이 `<button>` 태그는 `button`와 `bump`라는 이름의 className을 가진 것이다.
+
+![ezgif com-gif-maker (45)](https://user-images.githubusercontent.com/53133662/164719366-74a702a5-1433-4c89-a349-3a35c94a477c.gif)
+
+- 리로드를 할 때마다 Cart를 표시하는 `HeaderCartButton`이 움직인다. 이제 Cart에 변화가 생길 때만 애니메이션이 작동될 수 있도록 로직을 추가해보자.
+
+#### useEffect 사용하기
+
+```js
+useEffect(() => {}, []);
+```
+
+- `HeaderCartButton` 컴포넌트 내부에 `useEffect`를 import 하고 작성한다. 의존성 배열은 일단 비워놓는다.
+
+```js
+const [] = useState();
+```
+
+- 애니메이션 class가 추가되었을 때 `HeaderCartButton` 컴포넌트를 재평가하기 위해서는 `useState`의 도움도 필요하다.
+
+```js
+const [btnIsHighlighted, setBtnIsHighlighted] = useState(false);
+```
+
+- true/false 로 상태(state)를 관리해줄 수 있도록 상태(state) 값을 설정한다. 기본 값은 false 로 해놓자.
+
+```js
+useEffect(() => {
+  setBtnIsHighlighted(true);
+}, []);
+```
+
+- 그리고 `useEffect` 가 발생할 때마다 `btnIsHighlighted`가 true가 될 수 있도록 업데이트해준다.
+- `btnClasses`에는 애니메이션을 작동시키는 className인 `bump`를 항상 발생시키고 싶지 않기 때문에, `btnIsHighlighted` 상태(state)에 따른 조건식을 통해서 `bump` className을 가질 수 있도록 작성해볼 것이다.
+
+```js
+const btnClasses = `${classes.button} ${btnIsHighlighted ? classes.bump : ""}`;
+```
+
+- `btnIsHighlighted`가 true 일 때만 `btnClasses` 안에 `bump` 라는 className이 담기고 false 라면 빈 문자열이 들어가도록 설정했다.
+
+- 상태(state)가 업데이트되면 당연히 컴포넌트는 다시 렌더링 될 것이다. Cart 내부에 들어있는 item의 상태(state)가 바뀔 때나, Cart의 길이가 0보다 클 때(Cart에 item이 담길 때)만 해당 애니메이션을 발동시키고 싶다. 어떻게 해야할까?
+
+```js
+useEffect(() => {
+  if (ctx.items.length === 0) {
+    return;
+  }
+
+  setBtnIsHighlighted(true);
+}, []);
+```
+
+- 먼저, Cart에 담긴 items 가 1개 이하라면 작동되지 않아야 한다. 이 조건문을 충족하면 바로 return을 해줘서 남은 `effect`가 불필요하게 실행되지 않도록 걸러주는 작업이다.
+
+```js
+const { items } = ctx;
+useEffect(() => {
+  if (items.length === 0) {
+    return;
+  }
+
+  setBtnIsHighlighted(true);
+}, [items]);
+```
+
+- 비워져있던 의존성 배열도 수정해주자. 그 전에 객체구조분해할당 기법을 이용해서 `ctx` 안에 들어있는 `items`를 꺼내온다. 그리고 `ctx.items`로 넣어주었던 식들을 전부 `items`로 수정해주면 된다. `ctx` 안에 있는 `items`를 그대로 가져온 것이다. 이제 `useEffect`는 `items`가 업데이트될 때마다 실행될 것이다.
+
+![ezgif com-gif-maker (46)](https://user-images.githubusercontent.com/53133662/164722751-f5d5477b-003d-494e-a9dd-b8a3f4acc177.gif)
+
+- 저장하고 다시 로드해보면, 아이템 리스트의 Add 버튼을 누를 때 처음 한 번만 애니메이션이 작동되는 것을 알 수 있다.
+- 사실 우리가 원하는 것은 아이템이 추가가 될 때마다, 그래서 Cart의 items 가 업데이트될 때마다 애니메이션이 작동되는 것이다. 하지만 `useEffect`로 인해 className(`bump`)가 추가가 되며 최초 1회는 애니메이션이 작동되고 있지만 그 이후 부터는 작동되지 않는다. `btnIsHighlighted` 상태(state)가 처음 변화된 그 상태 그대로 있고, 제거되지 않는 바람에 업데이트가 되지 않는 것이다.
+
+```js
+useEffect(() => {
+  if (items.length === 0) {
+    return;
+  }
+  setBtnIsHighlighted(true);
+
+  setTimeout(() => {}, 300);
+}, [items]);
+```
+
+- 애니메이션이 끝난 뒤에 해당 className(`bump`)이 제거가 되도록 로직을 추가한다. 이때 타이머를 이용하는데, `setTimeout`을 사용해서 300 으로 설정한다.
+
+```css
+.bump {
+  animation: bump 300ms ease-out;
+}
+```
+
+- `bump`의 애니메이션 스타일을 보면 300ms로 애니메이션이 작동되도록 작성되었기 때문이다. 아무튼, `setTimeout`에서 설정한 300ms 의 시간이 지나면 `setTimeout`의 첫번째 인자로 설정한 내부 함수가 실행된다.
+
+```js
+useEffect(() => {
+  if (items.length === 0) {
+    return;
+  }
+  setBtnIsHighlighted(true);
+
+  setTimeout(() => {
+    setBtnIsHighlighted(false);
+  }, 300);
+}, [items]);
+```
+
+- 먼저, 300ms 가 지나면 애니메이션이 제거될 수 있도록 `btnIsHighlighted` 상태(state)의 값을 false로 업데이트해준다. `btnIsHighlighted`가 false 이면,
+
+```js
+const btnClasses = `${classes.button} ${btnIsHighlighted ? classes.bump : ""}`;
+```
+
+- `bump`는 빈 문자열로 들어가기 때문이다. `btnIsHighlighted`가 false 라면 `className`으로 빈 문자열로 들어가고, CSS className이 `DOM`에 업데이트 되지 않는다.
+
+```js
+useEffect(() => {
+  if (items.length === 0) {
+    return;
+  }
+  setBtnIsHighlighted(true);
+
+  const timer = setTimeout(() => {
+    setBtnIsHighlighted(false);
+  }, 300);
+
+  return () => {};
+}, [items]);
+```
+
+- 이제 `setTimeout`로 실행한 함수를 깨끗하게 지우기 위해 `cleanup` 함수를 추가해야 한다. `cleanup` 함수는 컴포넌트가 지워져야 할 때 타이머도 함께 지우는 함수이다. 먼저 reutrn 값에 빈 익명 함수를 추가하고,
+  > section-10의 "useEffect에서 Cleanup 함수 사용하기" 참고
+
+```js
+useEffect(() => {
+  if (items.length === 0) {
+    return;
+  }
+  setBtnIsHighlighted(true);
+
+  const timer = setTimeout(() => {
+    setBtnIsHighlighted(false);
+  }, 300);
+
+  return () => {
+    clearTimeout(timer);
+  };
+}, [items]);
+```
+
+- `clearTimeout`으로 `timer`를 설정해준다. 버튼이 고정돼서 어플리케이션에는 오류가 일어나지 않을 테지만, 우리가 `setTimeout`으로 설저한 `timer`나 혹시나 일어날 수 있는 오류는 미리 `cleanup` 함수를 사용해서 방지하는 것이 좋다. 왜냐하면 우린 현재 `useEffect`를 사용하기 때문이다.
+- `useEffect`에서 `cleanup` 함수를 return 하면 리액트가 자동으로 `cleanup` 함수를 호출한다. 이제 `effect`가 재실행될 때 `timer`는 제거될 것이다. 만약, item을 빠르게 Add 해서 추가할 때 이전에 실행된 타이머는 멈추고 새로운 타이머를 설정한 뒤 이전의 타이머는 지워져야 한다. 이렇듯 `timer`가 만료되기 전에 또 설정될 수 있으니, `cleanup` 함수는 꼭 작성해주는 게 좋다.
+
+![ezgif com-gif-maker (47)](https://user-images.githubusercontent.com/53133662/164727257-6fee942a-1b12-40f6-b389-14b219371905.gif)
+
+- 저장하고 로드하면, item을 추가할 때마다 버튼의 애니메이션이 작동된다. 
+  </br>
