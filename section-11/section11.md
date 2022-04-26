@@ -1657,8 +1657,7 @@ const existingCartItemIndex = state.items.findIndex((item) =>);
 ```
 
 - 이미 들어있는 cart의 item(`state.items`)을 불러오고, `findIndex` 메소드를 사용하여 우리가 원하는 item의 index를 찾을 수 있도록 추가해주는 `existingCartItemIndex` 정수를 하나 만든다. `findIndex` 메소드는 true인 것만 return 하는 함수를 받는데, 만약 우리가 찾는 인자(item)이 아니면 false를 반환한다.
-  ✓ findIndex() 메서드 : 주어진 판별 함수를 만족하는 배열의 첫 번째 요소에 대한 인덱스를 반환합니다. 만족하는 요소가 없으면 -1을 반환합니다.
-
+  - ✓ findIndex() 메서드 : 주어진 판별 함수를 만족하는 배열의 첫 번째 요소에 대한 인덱스를 반환합니다. 만족하는 요소가 없으면 -1을 반환합니다.
   > [MDN 문서 참조 : Array.prototype.findIndex()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
 
 ```js
@@ -1851,7 +1850,10 @@ const cartItems = (
 
 ```js
 const cartItemAdd = (item) => {
-  cartCtx.addItem({});
+  cartCtx.addItem({
+      ...item, // 그대로 item 을 받아서 컨텍스트에 전달하면 => 리듀서 함수에서 action 을 받아 중복 유효성을 처리해줄 것이기에 item 그대로 복사해서 전달
+      amount: 1, // 수량만 추가함
+    });
 };
 ```
 
@@ -2104,7 +2106,7 @@ useEffect(() => {}, []);
 const [] = useState();
 ```
 
-- 애니메이션 class가 추가되었을 때 `HeaderCartButton` 컴포넌트를 재평가하기 위해서는 `useState`의 도움도 필요하다.
+- 애니메이션 class가 추가되었을 때 `HeaderCartButton` 컴포넌트를 리로드하기 위해서는 `useState`의 도움도 필요하다.
 
 ```js
 const [btnIsHighlighted, setBtnIsHighlighted] = useState(false);
@@ -2216,7 +2218,7 @@ useEffect(() => {
 }, [items]);
 ```
 
-- 이제 `setTimeout`로 실행한 함수를 깨끗하게 지우기 위해 `cleanup` 함수를 추가해야 한다. `cleanup` 함수는 컴포넌트가 지워져야 할 때 타이머도 함께 지우는 함수이다. 먼저 reutrn 값에 빈 익명 함수를 추가하고,
+- 이제 `setTimeout`로 실행한 함수를 깨끗하게 지우기 위해 `cleanup` 함수를 추가해야 한다. `cleanup` 함수는 컴포넌트가 지워져야 할 때 타이머도 함께 지우는 함수이다. 먼저 return 값에 빈 익명 함수를 추가하고,
   > section-10의 "useEffect에서 Cleanup 함수 사용하기" 참고
 
 ```js
