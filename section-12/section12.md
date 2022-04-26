@@ -3,6 +3,7 @@
 ## 목차
 
 - [How React Really Works](#리액트가-실제로-작동하는-방식)
+- [Component Updates In Action](#컴포넌트-업데이트-실행-과정)
 
 ## 리액트가 실제로 작동하는 방식
 
@@ -53,11 +54,132 @@
 </div>
 ```
 
-- 첫 번째 코드와 비교해보면, `<h1>` 태그 밑에 새로운 `<p>` 태그가 추가된 것을 알 수 있다. 리액트는 이 두개의 스냅샷(최종 스냅샷, 현재 스냅샷) 간의 차이점이 이 `<p>This is New!</p>` 임을 확인한다. 그리고 이러한 변경 사실을 ReactDOM 에 전달하면 ReactDOM 은 실제 DOM을 업데이트하고 이 `<p>This is New!</p>`을 집어넣는다. ReactDOM 은 전체 DOM을 재렌더링 하지 않는다. 이전에 DOM 트리에 업데이트 되었던 최종 스냅샷 내부의 코드 `<h1>`과 `<div>`는 건드리지 않고, 다만 현재의 스냅샷과 최종 스냅샷과의 차이점인 `<p>This is New!</p>` 만을 추가해서 실제 DOM 트리에 업데이트하는 것이다. 이것이 바로 백그라운드에서  리액트가 작동하는 방식이다.
-
+- 첫 번째 코드와 비교해보면, `<h1>` 태그 밑에 새로운 `<p>` 태그가 추가된 것을 알 수 있다. 리액트는 이 두개의 스냅샷(최종 스냅샷, 현재 스냅샷) 간의 차이점이 이 `<p>This is New!</p>` 임을 확인한다. 그리고 이러한 변경 사실을 ReactDOM 에 전달하면 ReactDOM 은 실제 DOM을 업데이트하고 이 `<p>This is New!</p>`을 집어넣는다. ReactDOM 은 전체 DOM을 재렌더링 하지 않는다. 이전에 DOM 트리에 업데이트 되었던 최종 스냅샷 내부의 코드 `<h1>`과 `<div>`는 건드리지 않고, 다만 현재의 스냅샷과 최종 스냅샷과의 차이점인 `<p>This is New!</p>` 만을 추가해서 실제 DOM 트리에 업데이트하는 것이다. 이것이 바로 백그라운드에서 리액트가 작동하는 방식이다.
 
 #### ✓ 리액트의 가상 돔(버츄얼 돔) 정리
 
 - 리액트의 가상돔은 상태(state)가 변경될 때마다 렌더링이 일어나고 업데이트가 되는 비효율적인 방식을 방지하기 위해 등장한 개념입니다. 리액트의 컴포넌트는 가상의 돔 트리로 리액트의 메모리에 저장되어 있으며 바로 돔 트리에 업데이트 되지 않습니다. 컴포넌트에 변동 사항이 생겨 render 함수가 호출되면 리액트는 이전의 돔 트리와 비교해서 **실질적으로 어떤 부분이 업데이트 되어야 하는지 파악**하고, 필요한 부분만 돔 트리에 업데이트를 합니다. render 함수가 여러번 업데이트-호출이 되어도 **실질적으로 보여지는 데이터가 변동**되지 않으면, 이 돔 Tree에는 전혀 영향을 주지 않습니다. 그렇기에 render 함수가 여러번 호출이 되어도 React의 성능에 큰 영향을 끼치지 않습니다.
 
 </br>
+
+## 컴포넌트 업데이트 실행 과정
+
+- 실제 어플리케이션을 보면서 컴포넌트 업데이트 실행 과정과 함수 업데이트 이후 실제 DOM에 어떻게 적용되는지 확인해볼 것이다.
+
+```js
+<div className="app">
+  <h1>Hi there!</h1>
+</div>
+```
+
+- 현재 `App.js` 에는 간단한 `<div>` 와 `<h1>` 태그가 들어있다.
+
+```js
+<div className="app">
+  <h1>Hi there!</h1>
+  <p>This is New!</p>
+</div>
+```
+
+- 그리고, `<p>This is New!</p>` 가 추가되어야 한다고 생각해보자. 어떻게 하면, 처음에는 문장을 표시(추가)하지 않은 상태에서 어떤 시점을 기점으로 문장을 표시(추가)할 수 있을까? 이때 우리가 늘 사용하는 상태(state)를 이용한 방법이 떠올렸다면 정답이다. 상태(state)와 상태(state) 업데이트 함수를 이용해서, 처음에는 `<p>` 태그의 문장이 표시되지 않다가 해당 상태(state)의 업데이트를 트리거하는 기능(버튼을 클릭하거나, 타이머를 작동시킨다거나)에 따라서 `<p>` 태그의 문장이 표시되도록 할 수 있기 때문이다.
+
+```js
+const [showParagraph, setShowParagraph] = useState(false);
+```
+
+- 먼저, 기본 값을 false 로 갖는 `useState` 상태(state)를 설정한다. 앞서 누누히 말했듯이 리액트는 상태(state)나 props, 컨텍스트(context) 변경 시에만 컴포넌트 함수를 재실행하고 재 렌더링 한다. 현재 우리가 작성하고 있는 컴포넌트는 root 컴포넌트로 props나 컨텍스트(context)로는 거의 바뀌지 않을 가능성이 높다. 따라서 우리는 지금 상태(state) 변화를 이용해서 앞서 설명한 이론적 이야기들을 추상적인 이해가 아닌 실질적인 이해로 확인할 수 있을 것이다.
+
+```js
+<div className="app">
+  <h1>Hi there!</h1>
+  {showParagraph && <p>This is New!</p>}
+</div>
+```
+
+- `showParagraph` 상태(state)와 `setShowParagraph` 상태(state) 업데이트 함수를 이용해서, 즉 이전에 배운 조건부 식을 이용해서 `showParagraph`가 true 일 때만 `<p>` 태그의 문장이 표시되도록 수정해주었다. `showParagraph` 상태(state)의 초기 값이 false 이므로, 처음 페이지를 렌더링하면, `<p>` 태그의 문장은 보이지 않을 것이다. 이제 `<p>` 태그의 문장을 보일 수 있게끔 `showParagraph` 상태(state) 값을 변경해보자.
+
+#### Button.js
+
+```js
+const Button = (props) => {
+  return (
+    <button
+      type={props.type || "button"}
+      className={`${classes.button} ${props.className}`}
+      onClick={props.onClick}
+      disabled={props.disabled}
+    >
+      {props.children}
+    </button>
+  );
+};
+```
+
+#### App.js
+
+```js
+import Button from "./components/UI/Button/Button";
+
+...
+<div className="app">
+  <h1>Hi there!</h1>
+  {showParagraph && <p>This is New!</p>}
+  <Button onClick={}>Toggle Paragraph!</Button>
+</div>
+```
+
+- 기존에 있던 `Button` 컴포넌트를 import 하고 onClick 이라는 prop으로 (상태를 변화시키는)트리거 함수를 실행할 수 있도록 바인드 한다.
+
+```js
+const toggleParagraphHandler = () => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+};
+...
+  <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+```
+
+- `showParagraph` 상태(state)의 업데이트 함수인 `setShowParagraph()`를 불러오고, 해당 트리거 함수가 `Button` 컴포넌트의 onClick 이벤트로 트리거 될 때마다 기존의 상태(`prevParagraph`)의 반댓값(`!prevParagraph`)으로 업데이트하도록 작성한다.
+
+```css
+.app {
+  ...
+  text-align: center;
+}
+```
+
+- 조금 더 예쁘게 보이도록 CSS 도 추가해준다.
+- 이제 Toggle Paragraph! 버튼을 누르면 This is New! 라는 문장이 나타나고, 다시 이 버튼을 누르면, This is New! 문장은 사라진다.
+
+![ezgif com-gif-maker (49)](https://user-images.githubusercontent.com/53133662/165295981-5bf1bd4e-f4a9-47eb-9065-d11b34ebd290.gif)
+
+### 작동 방식 분석하기
+
+- 함수가 업데이트되는 작동 방식을 분석하기 위해서 `App` 컴포넌트에 간단한 로그를 작성해보자.
+
+```js
+console.log("APP RUNNING");
+
+const toggleParagraphHandler = () => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+};
+```
+
+- `console.log("APP RUNNING");`를 추가해서 버튼을 누를 때마다 "APP RUNNING" 문구를 콘솔로그에 출력하도록 했다.
+
+![스크린샷 2022-04-26 오후 10 07 58](https://user-images.githubusercontent.com/53133662/165306840-4ec90b05-baed-4d3b-bc73-873c86376774.png)
+
+- 저장 후 콘솔 화면을 보면 실행 문구("APP RUNNING")가 뜨는 걸 확인할 수 있다. 리액트가 `App` 컴포넌트를 화면에 최초로 렌더링했기 때문이다. 그리고 첫 렌더링을 하면서 리액트는 `<div>`와 `<h1>` 요소 그리고 `<Button>`이 필요하다는 것을 알게 되었다. 우리가 조건부 식으로 작성했던 `<p>`의 문장들은 표시되지 않는다. `<p>`의 문장이 true 일 때만 표시하도록 컨트롤하는 상태(state) 값의 초기 값은 false 이기 때문이다. 리액트가 `App` 컴포넌트를 처음으로 렌더링한 이후 출력할 것은 없다. 즉 이전 스냅샷은 존재하지 않는다. 따라서 차이점을 비교하는 과정에서 `<div>`와 `<h1>` 요소 그리고 `<Button>`가 다시 렌더링하게 된다. 그리고 이 정보가 ReactDOM 패키지로 전달되며 화면에 렌더링 결과가 표시된다.
+
+![ezgif com-gif-maker (50)](https://user-images.githubusercontent.com/53133662/165301945-41c61cb8-6e4d-47e7-a82b-0d5636cd1b30.gif)
+
+- 버튼을 누르면 또 다시 "APP RUNNING" 가 출력된다. 이렇게 매 번 상태(state) 변경이 일어날 때마다 `App` 컴포넌트는 재실행되며 다시 렌더링 된다. 그렇다면, 실제 DOM 에는 어떤 영향을 끼칠까? 라이브 서버를 열고, 개발자 도구의 Elements 탭을 확인해보자.
+
+![ezgif com-gif-maker (51)](https://user-images.githubusercontent.com/53133662/165307352-5c2476ae-7cd3-4481-ab95-94204d1d4b6c.gif)
+
+- 페이지를 로드하면 개발 창에 `<div>`와 `<h1>` 요소 그리고 `<Button>` 요소가 존재하고 있음을 확인할 수 있다.
+
+  > 개발 툴의 Elements 탭은 DOM 에서 발생한 변경 요소들을 강조해서 표시해준다. 이를 통해 실제 DOM이 새로 렌더링 되거나 갱신된 요소들을 볼 수 있는 것이다.
+
+- `<Button>`을 클릭하면, `<p>` 부분이 강조되어 표시되는 걸 알 수 있다. 반면 기존의 `<div>`와 `<h1>`, `<Button>` 요소들은 이전과 그대로이다. 다시 `<Button>`을 클릭하면 `<div>` 요소가 강조 표시 된다. 이 안에 있는 `<p>` 요소가 사라졌기 때문이다. 이처럼 실제 DOM을 통한 업데이트는 리액트의 가상 DOM 과 최종 스냅샷을 저장하고 있는 실제 DOM 과의 차이점만 반영되는 것이다.
+
+  </br>
