@@ -4,6 +4,7 @@
 
 - [How React Really Works](#리액트가-실제로-작동하는-방식)
 - [Component Updates In Action](#컴포넌트-업데이트-실행-과정)
+- [A Closer Look At Child Component Re-Evaluation](#자식-컴포넌트-재평가-자세히-살펴보기)
 
 ## 리액트가 실제로 작동하는 방식
 
@@ -183,3 +184,50 @@ const toggleParagraphHandler = () => {
 - `<Button>`을 클릭하면, `<p>` 부분이 강조되어 표시되는 걸 알 수 있다. 반면 기존의 `<div>`와 `<h1>`, `<Button>` 요소들은 이전과 그대로이다. 다시 `<Button>`을 클릭하면 `<div>` 요소가 강조 표시 된다. 이 안에 있는 `<p>` 요소가 사라졌기 때문이다. 이처럼 실제 DOM을 통한 업데이트는 리액트의 가상 DOM 과 최종 스냅샷을 저장하고 있는 실제 DOM 과의 차이점만 반영되는 것이다.
 
   </br>
+
+## 자식 컴포넌트 재평가 자세히 살펴보기
+
+- 먼저 components 폴더에 하위 폴더 `Demo`를 만들고, 여기에 새로운 파일 `DemoOutput.js` 컴포넌트를 생성한다.
+
+#### DemoOutput.js
+
+```js
+const DemoOutput = (props) => {
+  return;
+};
+```
+
+- 그리고 `App` 컴포넌트의 조건식 `<p>` 문장을 제거하고, `DemoOutput` 컴포넌트에 넣어준다.
+
+```js
+const DemoOutput = (props) => {
+  return <p>This is New!</p>;
+};
+```
+
+- props 로 전달받은 `show` 상태(state)를 기반으로 조건식 `<p>` 태그 속 문장을 렌더링한다.
+
+```js
+const DemoOutput = (props) => {
+  return <p>{props.show ? "This is New!" : ""}</p>;
+};
+```
+
+- 다시 `App` 컴포넌트로 돌아와서, `DemoOutput` 컴포넌트를 import 하고, 직전에 지워준 코드 위치에 위치시킨 뒤, show 라는 필드의 props로 `showParagraph` 상태(state) 값을 넘겨준다.
+
+```js
+<div className="app">
+  <h1>Hi there!</h1>
+  <DemoOutput show={showParagraph} />
+  <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+</div>
+```
+
+- `DemoOutput` 컴포넌트에 props 로 넘겨준 show의 상태값에 따라 기본 값은 false가 될 것이고, 버튼을 클릭하면 true로 상태값이 업데이트 되어 `<p>` 태그 내부의 문장이 출력될 것이다. 저장하고 화면으로 돌아가면, 이전과 같은 행동을 하고 큰 차이도 없음을 확인할 수 있다. 하지만 개발자 도구의 Elements 탭에서 이전과는 차이점이 있음을 알 수 있는데, 화면을 렌더링하자마자 DOM 을 확장해서 보면 `<p>` 태그 요소가 항상 표시되어 있다는 것이다. 하지만 버튼을 클릭하면 이번에는 단락이 깜빡이고, 다시 클릭하면 단락 역시 다시 깜빡인다.
+- 단락 구문이 깜빡이는 이유는 텍스트의 추가와 삭제가 `<p>` 태그 요소 안에서만 이루어지기 때문이다. 이것은 전체 요소에 대한 변경으로 간주되며 텍스트가 아닌 단락이 깜빡이는 이유는 이 텍스트가 단락의 props와 동일하기 때문이다. 이를 컨텍스트라고 할 수도 있겠지만 이것은 엄연히 단락이다. 즉, `<h1>` 이나 `<button>` 같은 요소가 아니라는 뜻이다. 커스텀 요소나 커스텀 컴포넌트를 사용한다고 해도 이 사실은 변하지 않는다. 업데이트는 차이점을 비교하여 실행되어야 하기 때문이다. (물론, `App` 컴포넌트의 상태는 계속 바뀌나 실제로 바뀌는 부분은 다른 컴포넌트의 일부분이다.) 즉, 이것은 리액트가 계속 비교 작업을 하고 이를 기반으로 업데이트를 하며 변경점을 찾아낸다는 증거가 된다.
+
+- 개발자 도구로 이동해서 페이지를 새로고침하면, 아까의 `APP RUNNING` 문구가 출력되고 버튼을 클릭할 때마다 문구가 추가로 확인된다. 실제 변경은 `DemoOutput`에서 발생하지만 이에 대한 상태(state)를 관리하고 있는 `App` 컴포넌트 역시 다시 실행된다.
+
+- 상태(state)나 props 또는 컨텍스트를 가지고 있고 이것들을 변경하는 컴포넌트는 재싱행, 리로드 된다. 그리고 이 상태(state) 관리는 현재 `App` 에서 하고 있다. 따라서 이러한 변경이 다른 컴포넌트의 단락에 시각적으로만 영향을 준다고 하여 `App` 컴포넌트가 재평가되지는 않는다. 상태(state) 관리를 하고 있기 때문이다.
+
+</br>
