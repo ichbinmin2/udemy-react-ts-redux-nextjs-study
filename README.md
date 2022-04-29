@@ -20,4 +20,8 @@
 - [Second Practice Project: Building a Food Order App](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-11/section11.md)
 - [A Look Behind The Scenes Of React & Optimization Techniques](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-12/section12.md)
 
+## Next.js
+
+- [A (Pretty Deep Dive) Introduction to Next.js](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-23/section23.md)
+
 </br>
