@@ -185,7 +185,7 @@ const toggleParagraphHandler = () => {
 
   </br>
 
-## 자식 컴포넌트 재평가 자세히 살펴보기
+## 자식 컴포넌트의 리렌더링 자세히 살펴보기
 
 - 먼저 components 폴더에 하위 폴더 `Demo`를 만들고, 여기에 새로운 파일 `DemoOutput.js` 컴포넌트를 생성한다.
 
@@ -223,11 +223,94 @@ const DemoOutput = (props) => {
 </div>
 ```
 
-- `DemoOutput` 컴포넌트에 props 로 넘겨준 show의 상태값에 따라 기본 값은 false가 될 것이고, 버튼을 클릭하면 true로 상태값이 업데이트 되어 `<p>` 태그 내부의 문장이 출력될 것이다. 저장하고 화면으로 돌아가면, 이전과 같은 행동을 하고 큰 차이도 없음을 확인할 수 있다. 하지만 개발자 도구의 Elements 탭에서 이전과는 차이점이 있음을 알 수 있는데, 화면을 렌더링하자마자 DOM 을 확장해서 보면 `<p>` 태그 요소가 항상 표시되어 있다는 것이다. 하지만 버튼을 클릭하면 이번에는 단락이 깜빡이고, 다시 클릭하면 단락 역시 다시 깜빡인다.
-- 단락 구문이 깜빡이는 이유는 텍스트의 추가와 삭제가 `<p>` 태그 요소 안에서만 이루어지기 때문이다. 이것은 전체 요소에 대한 변경으로 간주되며 텍스트가 아닌 단락이 깜빡이는 이유는 이 텍스트가 단락의 props와 동일하기 때문이다. 이를 컨텍스트라고 할 수도 있겠지만 이것은 엄연히 단락이다. 즉, `<h1>` 이나 `<button>` 같은 요소가 아니라는 뜻이다. 커스텀 요소나 커스텀 컴포넌트를 사용한다고 해도 이 사실은 변하지 않는다. 업데이트는 차이점을 비교하여 실행되어야 하기 때문이다. (물론, `App` 컴포넌트의 상태는 계속 바뀌나 실제로 바뀌는 부분은 다른 컴포넌트의 일부분이다.) 즉, 이것은 리액트가 계속 비교 작업을 하고 이를 기반으로 업데이트를 하며 변경점을 찾아낸다는 증거가 된다.
+- 이제 `DemoOutput` 컴포넌트에 props 로 넘겨준 show의 상태값에 따라 기본 값은 false가 될 것이고, 버튼을 클릭하면 true로 상태값이 업데이트 되어 `<p>` 태그 내부의 문장이 출력될 것이다.
+- `DemoOutput` 컴포넌트는 항상 렌더링 되고, `DemoOutput` 컴포넌트 안에서는 `<p>` 태그가 항상 렌더링 되지만, `<p>` 태그 내부의 문자열은 `props.show`에 따라 달라지는 것이다.
 
-- 개발자 도구로 이동해서 페이지를 새로고침하면, 아까의 `APP RUNNING` 문구가 출력되고 버튼을 클릭할 때마다 문구가 추가로 확인된다. 실제 변경은 `DemoOutput`에서 발생하지만 이에 대한 상태(state)를 관리하고 있는 `App` 컴포넌트 역시 다시 실행된다.
+![ezgif com-gif-maker (52)](https://user-images.githubusercontent.com/53133662/167646274-b8ee911a-0931-457f-94d9-702f7618d672.gif)
 
-- 상태(state)나 props 또는 컨텍스트를 가지고 있고 이것들을 변경하는 컴포넌트는 재싱행, 리로드 된다. 그리고 이 상태(state) 관리는 현재 `App` 에서 하고 있다. 따라서 이러한 변경이 다른 컴포넌트의 단락에 시각적으로만 영향을 준다고 하여 `App` 컴포넌트가 재평가되지는 않는다. 상태(state) 관리를 하고 있기 때문이다.
+- 저장하고 화면으로 돌아가면, 이전과 같은 행동을 하고 큰 차이도 없음을 확인할 수 있다. 하지만 개발자 도구의 `Elements` 탭에서 이전과는 차이점이 있음을 알 수 있는데,
+
+![ezgif com-gif-maker (53)](https://user-images.githubusercontent.com/53133662/167647294-56b1c2d9-322d-4d5e-a2ef-b1fcd38246f1.gif)
+
+- 화면을 렌더링하자마자 `DOM`을 확장해서 보면 `<p>` 태그 요소가 항상 표시되어 있다는 것이다. 하지만 버튼을 클릭하면 이번에는 `<p>` 태그가 깜빡이고, 다시 클릭하면 `<p>` 태그 역시 다시 깜빡인다.
+
+- `<p>` 태그가 깜빡이는 이유는 텍스트의 추가와 삭제가 `<p>` 태그 요소 안에서만 이루어지기 때문이다. 이것은 전체 요소에 대한 변경으로 간주되며 텍스트가 아닌 `<p>` 태그가 깜빡이는 이유는 이 텍스트가 `<p>` 태그의 `props`와 동일하기 때문이다. 물론, 이를 컨텍스트라고 할 수도 있겠지만 이것은 엄연히 `<p>` 태그이다.
+
+- 이 말인 즉슨, 이 `<p>` 태그는 현재 `<p>` 태그의 위 아래에 위치한 `<h1>` 이나 `<button>` 같은 일반적인 태그 요소가 아니라는 뜻이다. 왜냐하면, 리액트의 업데이트 매커니즘은 가상의 `DOM` 과 실제 DOM의 실질적인 차이점을 비교하여 실행되어야 하기 때문이다.
+  > 물론, `App` 컴포넌트의 상태는 계속 바뀌나 실제로 바뀌는 부분은 다른 컴포넌트의 일부분이다.
+- 이 사례는 리액트가 가상의 `DOM`을 사용하여 끊임없이 실제의 `DOM`과 계속 비교 작업을 하고 이를 기반으로 실제 `DOM`을 업데이트를 한다는 증거가 된다.
+
+#### App.js
+
+```js
+console.log("APP RUNNING");
+
+const toggleParagraphHandler = () => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+};
+```
+
+![ezgif com-gif-maker (54)](https://user-images.githubusercontent.com/53133662/167649289-e59e9076-360b-4bfe-9561-a1512f7fda05.gif)
+
+- 다시 개발자 도구의 `Console`로 이동해서 페이지를 새로고침하면, 아까의 `APP RUNNING` 문구가 출력되고 버튼을 클릭할 때마다 문구가 추가로 확인된다. 실제 변경은 `DemoOutput`에서 발생하지만 `props.show`에 대한 상태(state)를 관리하고 있는 `App` 컴포넌트 역시 다시 실행되는 것이다.
+
+- 상태(state)나 props 또는 컨텍스트를 관리하는 컴포넌트는 자식 컴포넌트에서 해당 상태(state)를 변화시킨다고 해도, 재실행-리로드 된다. 현재 `show`라는 상태(state)를 관리하고 있는 건 `App`이기 때문에, `App`에서 관리되는 상태(state)에 따른 변경이 다른 컴포넌트에 시각적으로 영향을 줬을 때 당연히 `App` 컴포넌트가 재실행되거나 리로드 되는 것이다. 결과적으로 `App`이 이 모든 변화의 상태(state) 관리를 하고 있기 때문이다.
+
+```js
+const DemoOutput = (props) => {
+  console.log("DemoOutput RUNNUNG");
+  return <p>{props.show ? "This is New!" : ""}</p>;
+};
+```
+
+- `DemoOutput` 컴포넌트에 "DemoOutput RUNNUNG" 을 출력하도록 `console.log`를 추가한다.
+
+![ezgif com-gif-maker (55)](https://user-images.githubusercontent.com/53133662/167651802-c0f1eb0e-32cc-4e06-8edf-0b45edfcbe05.gif)
+
+- 페이지를 재실행하면, "APP RUNNING" 과 "DemoOutput RUNNUNG" 가 로그에 출력되는 걸 확인할 수 있다. `APP`과 `DemoOutput` 컴포넌트가 최초로 브라우저에 렌더링 됐을 때 출력되는 문구들이다. 그리고 매번 버튼을 클릭할 때마다 "DemoOutput RUNNUNG" 이 출력된다. 버튼을 클릭할 때마다 `show`라는 `props`가 변경되기 때문에 `APP`과 `DemoOutput` 컴포넌트 역시 그에 따라서 재실행 된다는 뜻이다.
+
+### props 와 자식 컴포넌트의 리렌더링
+
+#### App.js
+
+```js
+<DemoOutput show={showParagraph} />
+```
+
+- 먼저, `DemoOutput` 컴포넌트에 `show` prop 으로 전달하던 상태(state) 값인 `showParagraph`를 수정해주자.
+
+```js
+<DemoOutput show={false} />
+```
+
+- `DemoOutput` 컴포넌트에 전달하던 `show`의 값을 false로 바꿔준 것이다. `onClick` 이벤트로 `showParagraph` 상태(state) 값을 변경은 해주고 있지만 `showParagraph` 값을 가시화하는 `DemoOutput`에 이 업데이트 된 `showParagraph` 값을 전달해주지 않고 있다. 결과적으로 어떻게 될까? 페이지를 재실행해보자.
+
+![ezgif com-gif-maker (56)](https://user-images.githubusercontent.com/53133662/167655886-e6bc5aeb-f846-4da1-837c-40e555878d25.gif)
+
+- 페이지를 새로고침 한 뒤에 각각의 컴포넌트에서 설정한 콘솔 로그 문구가 출력된다. `App` 과 `DemoOutput` 컴포넌트 모두 렌더링 되고 난 후 버튼을 누르면 다시 동일하게 각각의 컴포넌트에서 설정한 콘솔 로그 문구가 출력된다. 버튼을 누를 때마다 말이다.
+
+#### props 값은 변화되지 않았지만 `DemoOutput` 컴포넌트가 리렌더링 되는 이유
+
+- `App` 컴포넌트에서 `DemoOutput` 컴포넌트에 전달하던 `show`의 값을 props 값을 false로 고정을 해주었음에도 불구하고 `DemoOutput` 컴포너트가 리렌더링 되는 걸 확인할 수 있다. 왜 그럴까? 하나하나 짚어보도록 하자.
+
+- 버튼을 누를 때마다 `App` 컴포넌트는 `showParagraph` 상태(state)가 변경되기 때문에 당연하게도 리렌더링 된다.
+
+```js
+return (
+  <div className="app">
+    <h1>Hi there!</h1>
+    <DemoOutput show={false} />
+    <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+  </div>
+);
+```
+
+- `App` 컴포넌트는 무엇을 반환할까? 당연히 `JSX` 코드를 반환한다. 여기에 있는 모든 JSX 요소들은 결국 컴포넌트 함수에 대한 함수 호출과 동일하다. 이말인 즉슨, `App` 컴포넌트가 반환하는 JSX 요소들 안에 있는 `DemoOutput` 이나, `Button` 컴포넌트 등을 호출하고 있다는 뜻이다. `App` 컴포넌트에서 관리하고 있는 상태(state)가 변화할 때마다 `APP` 컴포넌트가 리렌더링되는 것처럼, `App` 컴포넌트에서 반환하는 다른 컴포넌트(`DemoOutput`, `Button`) 역시 동일하게 리렌더링 된다는 뜻이다.
+
+- 부모 컴포넌트 함수가 리렌더링 되면, 마찬가지로 자식 컴포넌트 함수도 리렌더링 된다. 따라서 props의 값은 이 리렌더링과 관련하여 상관이 없다고 할 수 있을 것이다.
+
+#### props 의 변경
+
+- props 의 변화는 실제 `DOM`의 업데이트로 이어질 수는 있으나, 컴포넌트 함수에서 리렌더링을 할 때는 부모 컴포넌트가 리렌더링 되는 것만으로 충분하다. 그러니 `DemoOutput` 컴포넌트가 리렌더링되는 것이 실제 `DOM`이 업데이트된다는 것과 동일한 뜻은 아닐 것이다.
 
 </br>
