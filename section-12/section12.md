@@ -5,6 +5,7 @@
 - [How React Really Works](#리액트가-실제로-작동하는-방식)
 - [Component Updates In Action](#컴포넌트-업데이트-실행-과정)
 - [A Closer Look At Child Component Re-Evaluation](#자식-컴포넌트의-리렌더링-자세히-살펴보기)
+- [Preventing Unnecessary Re-Evaluations with React.memo()](#React-memo로-불필요한-재평가-방지하기)
 
 ## 리액트가 실제로 작동하는 방식
 
@@ -324,5 +325,127 @@ return (
 - 이렇게 컴포넌트 트리로 뻗어나가는 컴포넌트가 리렌더링 되는 것을 볼 때마다 의문이 생길 수도 있다. `App` 컴포넌트에 연결된 모든 자식 컴포넌트 함수가 동시에 리렌더링 되면, 성능에 영향을 미치지는 않을까 하는 의문 말이다. 하지만 기억하자. 리액트는 가상의 `DOM`과 실제 `DOM`을 비교하여 실질적으로 변한 부분만 업데이트를 한다.
 
 - 방금 전 예시를 봤듯이, `DemoOutput` 컴포넌트는 변경되지 않았으므로 `DemoOutput` 컴포넌트는 재평가 되지 않는다. 만약 `DemoOutput` 컴포넌트에 prop 으로 내려주던 값을 지운다면, `App` 컴포넌트의 상태(state) 변경이 없으므로 출력 결과 역시 바뀌는 것이 없을 것이다. 그럼에도 불구하고, `DemoOutput` 컴포넌트와 같은 자식 컴포넌트를 리렌더링 하는 것은 아마도 불필요한 낭비가 될 수 있다.
+
+</br>
+
+## React memo로 불필요한 재평가 방지하기
+
+- 사실 이런 간단한 앱에서는 몇 개의 자식 컴포넌트를 리렌더링하는 것은 성능 면에서 크게 문제가 되지 않을 수도 있다. 하지만 이보다 큰 어플리케이션이라면 자식 컴포넌트는 더 복잡하고 다양하게 많아질 것이고, 리렌더링으로 인한 성능을 고려하지 않을 수 없다. 좀 더 최적화가 필요하다는 이야기다. 따라서 개발자는 특정한 상황일 경우에만 자식 컴포넌트를 리렌더링 하도록 React 에 지시할 수 있어야 할 것이다.
+
+### React.memo() 사용하기
+
+- 앞서 거론한 특정한 상황이란 무엇일까? 예를 들면, 자식 컴포넌트가 부모 컴포넌트로 부터 받은 props 가 변경되었을 때를 생각해보자.
+
+#### App.js
+
+```js
+<DemoOutput show={false} />
+```
+
+- `App` 컴포넌트에서 `DemoOutput` 컴포넌트로 전달하는 `show` 부분을 다시 불러오면, React는 `show` 상태(state) 값이 바뀔 때에만 `DemoOutput` 컴포넌트를 리렌더링을 할 수 있다면 이것이 특정한 상황이라고 말할 수 있을 것이다. 그렇다면, 우리는 어떻게 React 에 '특정한 상황' 일 때만 자식 컴포넌트를 리렌더링 할 수 있도록 지시할 수 있을까?
+
+- 먼저, props가 바뀌었는지
+
+#### DemoOutput.js
+
+```js
+const DemoOutput = (props) => {
+  console.log("DemoOutput RUNNUNG");
+  return <p>{props.show ? "This is New!" : ""}</p>;
+};
+
+export default DemoOutput;
+```
+
+-
+
+```js
+const DemoOutput = (props) => {
+  console.log("DemoOutput RUNNUNG");
+  return <p>{props.show ? "This is New!" : ""}</p>;
+};
+
+export default React.memo(DemoOutput);
+```
+
+### 왜 모든 컴포넌트에 React.memo()를 사용하지 않을까?
+
+- 최적화에는 비용이 따른다.
+
+```js
+const Button = (props) => {
+  console.log("Button RUNNING");
+  return (
+    <button
+      type={props.type || "button"}
+      className={`${classes.button} ${props.className}`}
+      onClick={props.onClick}
+      disabled={props.disabled}
+    >
+      {props.children}
+    </button>
+  );
+};
+```
+
+- `Button` 컴포넌트를 `React.memo()`로 래핑하는 게 과연 옳을까?
+
+#### Button.js
+
+```js
+const Button = (props) => {
+  console.log("Button RUNNING");
+  return (
+    <button
+      type={props.type || "button"}
+      className={`${classes.button} ${props.className}`}
+      onClick={props.onClick}
+      disabled={props.disabled}
+    >
+      {props.children}
+    </button>
+  );
+};
+
+export default React.memo(Button);
+```
+
+- 리액트에서 발생하는 오류 중에 하나이다.
+
+#### App.js
+
+```js
+function App() {
+  const [showParagraph, setShowParagraph] = useState(false);
+
+  console.log("APP RUNNING");
+
+  const toggleParagraphHandler = () => {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  };
+
+  return (
+    <div className="app">
+      <h1>Hi there!</h1>
+      <DemoOutput show={false} />
+      <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+    </div>
+  );
+}
+```
+
+-
+
+```js
+const toggleParagraphHandler = () => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+};
+```
+
+```js
+<Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+```
+
+- `React.memo()` 가 하는 일은 props 의 값을 확인하고, 이전의 props 와 가장 최근의 props 스냅샷을 비교한다. 그리고 이 비교 작업은 일반적인 비교 연산자를 통해 이뤄진다. 그리고 일반적인 원시 값이라면 이런 일반적인 비교 연산자를 통해서 비교가 가능할 것이다. 하지만 배열이나 객체, 함수를 비교한다면 말이 달라진다. 배열이나 객체, 함수는 참조 값이기 때문에 일반적인 비교 연산자를 통해서 비교할 수 없기 때문이다.
 
 </br>
