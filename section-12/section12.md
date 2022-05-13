@@ -344,29 +344,40 @@ return (
 
 - `App` 컴포넌트에서 `DemoOutput` 컴포넌트로 전달하는 `show` 부분을 다시 불러오면, React는 `show` 상태(state) 값이 바뀔 때에만 `DemoOutput` 컴포넌트를 리렌더링을 할 수 있다면 이것이 특정한 상황이라고 말할 수 있을 것이다. 그렇다면, 우리는 어떻게 React 에 '특정한 상황' 일 때만 자식 컴포넌트를 리렌더링 할 수 있도록 지시할 수 있을까?
 
-- 먼저, props가 바뀌었는지
+- 먼저, props가 바뀌었는지 확인할 컴포넌트를 지정한 뒤
 
 #### DemoOutput.js
 
 ```js
 const DemoOutput = (props) => {
   console.log("DemoOutput RUNNUNG");
-  return <p>{props.show ? "This is New!" : ""}</p>;
+  return <MyParagraph>{props.show ? "This is New!" : ""}</MyParagraph>;
 };
 
 export default DemoOutput;
 ```
 
--
+- 이것을 통째로 warp 해주면 된다.
 
 ```js
 const DemoOutput = (props) => {
   console.log("DemoOutput RUNNUNG");
-  return <p>{props.show ? "This is New!" : ""}</p>;
+  return <MyParagraph>{props.show ? "This is New!" : ""}</MyParagraph>;
 };
 
 export default React.memo(DemoOutput);
 ```
+
+- 이렇게 `React.memo()` 로 warp을 해주는 것은 함수형 컴포넌트에서만 가능하다. 클래스 기반의 컴포넌트의 경우 작동하지 않는다.
+
+- `React.memo()`는 함수형 컴포넌트를 최적화한다. 이 `memo()`는 어떤 역할을 할까? `React.memo()`는 인자로 들어간 컴포넌트에 어떤 props가 입력되는지를 확인하고, 입력되는 모든 props의 새로운 값을 확인한 뒤 이를 기존의 props 값과 비교하도록 React에 전달하는 역할을 한다. 그리고 props의 값이 바꾸니 경우에만 컴포넌트를 재실행 및 재평가 한다.
+
+- 즉, 부모 컴포넌트가 변경되었지만 `React.memo()`로 감싼 컴포넌트의 props가 변하지 않았다면 이 컴포넌트의 재실행은 건너뛰게 되는 것이다.
+
+![ezgif com-gif-maker (60)](https://user-images.githubusercontent.com/53133662/168254207-65545604-8021-4a06-85c7-2160428106ba.gif)
+
+- 저장하고 콘솔을 확인해보자. 최초에 어플리케이션이 렌더링되면, `DemoOutput` 컴포넌트에서 출력하는 텍스트인 "DemoOutput RUNNUNG" 도 함께 출력된다. 하지만 콘솔을 초기화한 뒤 버튼을 누르면 "APP RUNNING" 와 "Button RUNNING" 는 출력되지만 "DemoOutput RUNNUNG"는 출력되지 않는 것을 볼 수 있다. `MyParagraph` 컴포넌트는 `React.memo()`로 감싼 `DemoOutput` 컴포넌트의 자식 컴포넌트이므로 이 또한 출력되지 않는다.
+
 
 ### 왜 모든 컴포넌트에 React.memo()를 사용하지 않을까?
 
