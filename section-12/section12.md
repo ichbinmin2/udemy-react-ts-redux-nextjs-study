@@ -6,6 +6,7 @@
 - [Component Updates In Action](#컴포넌트-업데이트-실행-과정)
 - [A Closer Look At Child Component Re-Evaluation](#자식-컴포넌트의-리렌더링-자세히-살펴보기)
 - [Preventing Unnecessary Re-Evaluations with React.memo()](#React-memo로-불필요한-재평가-방지하기)
+- [Preventing Function Re-Creation with useCallback()](#useCallback으로-함수-재생성-방지하기)
 
 ## 리액트가 실제로 작동하는 방식
 
@@ -557,5 +558,97 @@ false === false;
 
 - `React.memo()` 가 하는 일은 props 의 값을 확인하고, 이전의 props 와 가장 최근의 props 스냅샷을 비교한다. 그리고 이 비교 작업은 일반적인 비교 연산자를 통해 이뤄진다. 일반적인 원시 값이라면 이런 일반적인 비교 연산자를 통해서 비교가 가능할 것이다. 하지만 배열이나 객체, 함수를 비교한다면 말이 달라진다. 배열이나 객체, 함수는 참조 값이기 때문에 일반적인 비교 연산자를 통해서는 동일한 값으로 취급하지 않기 때문이다.
 - 이것은 React 에서의 일반적인 이슈 중 하나로, 이 때문에 많은 개발자들이 어려움을 겪고 있다. 그렇기에 `React.memo()`의 작동방식 즉, 자바스크립트 내에서 비교연산자를 통해 이루어지는 작동방식을 이해하고 사용하는 것은 무척 중요한 일이다. 그렇다면, `React.memo()`는 props를 통한 객체나 배열 또는 함수를 가져오는 컴포넌트에는 사용할 수 없는 걸까? 다행히도 해결 방법은 존재한다.
+
+</br>
+
+## useCallback으로 함수 재생성 방지하기
+
+- `React.memo()`로 props로 전달하는 객체나 배열 혹은 함수에도 작동하게끔 만들 수 있다. 객체를 생성하고 저장하는 방식을 조금 변경해준다면 말이다. 그리고 이 작업은 React 에서 제공하는 hook 을 통해서 가능하다. 바로 `useCallback()` 이라는 hook 이다.
+
+### `useCallback` 사용하기
+
+> [React 공식 문서 참조 : useCallback()](https://ko.reactjs.org/docs/hooks-reference.html#usecallback)
+
+- `useCallback` 은 기본적으로 컴포넌트 실행 전반에 걸쳐 함수를 저장할 수 있도록 하는 hook 으로써 `useCallback`를 통해서 감싼 함수를 저장하여 이 함수가 어플리케이션이 매번 실행될 때마다 재생성할 필요가 없다는 것을 React에 알리는 역할을 한다.
+
+- 이렇게 `useCallback`을 사용하여 특정 함수를 감싼다면, 이 함수 객체가 메모리의 동일한 위치에 저장되므로 이를 통해 비교 작업을 할 수 있게 된다. 구체적으로 예를 들어보자.
+
+```js
+let obj1 = {};
+let obj2 = {};
+```
+
+- 여기 두개의 객체가 있다. 이 둘은 비슷해보일지 모르겠지만, 적어도 자바스크립트에서는 분명 이 두개의 객체는 동일한 취급을 받을 수 없을 것이다.
+
+```js
+let obj1 = {};
+let obj2 = {};
+
+obj1 === obj2;
+// false
+```
+
+- 하지만 `obj1`과 `obj2`가 같은 메모리 안의 같은 위치를 가리키고 있다면 어떨까?
+
+```js
+let obj1 = {};
+let obj2 = {};
+
+obj1 = obj2;
+```
+
+- 동일한 메모리 안의 같은 위치를 가리키도록 `obj1`에 `obj2`를 할당해보자.
+
+```js
+let obj1 = {};
+let obj2 = {};
+obj1 = obj2;
+
+obj1 === obj2;
+// true
+```
+
+- 자바스크립트는 이 `obj1`에 `obj2`를 같은 객체로 간주하게 된다. 이는 `useCallback`이 하는 일과 정확하게 동일한 역할을 한다.
+
+```js
+const toggleParagraphHandler = () => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+};
+```
+
+- 우리가 선택한 함수를 React 의 내부 메모리에 저장해서 해당 함수 객체가 재실행 될 때마다 이를 재사용할 수 있도록 하는 것이다. `useCallback`의 사용법도 매우 간단하다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+});
+```
+
+- `useCallback`으로 저장하려는 함수를 래핑하기만 하면 된다. `useCallback`을 통해서 어떤 함수를 첫 번째 인자로 전달하면, `useCallback`는 이 저장된 함수를 반환한다. 이런 작동 과저을 통해서 `App` 컴포넌트 함수가 재실행될 때마다 `useCallback` 이 React 의 내부 메모리에 저장된 함수를 찾아서 재사용하는 것이다. 따라서, 어떤 함수가 절대 변경되어서는 안된다면, 이 `useCallback` hook 을 사용해서 그 함수를 React 내부의 메모리에 저장하면 된다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+}, []);
+```
+
+- `useCallback` 은 두개의 인자가 필요한데 첫 번째 인자는 앞서 거론한 함수이고, 두 번째 인자는 의존성 배열이다. 의존성 배열은 `useEffect` hook 에서 말하는 의존성 배열과 같은 의미로 쓰인다.
+- `useCallback` 호출에 대한 의존성 배열은 첫 번째 인자인 함수를 감싼 컴포넌트로부터 전달받는 모든 것을 사용할 수 있다. (`useEffect` 처럼) 즉, 상태(state)나 props, 컨텍스트 같은 것 말이다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+}, []);
+```
+
+- 이 `toggleParagraphHandler` 함수에서는 업데이트 함수 `setShowParagraph` 를 명시하면 된다. 물론 `setShowParagraph`을 의존성 배열 안에 추가할 수도 있지만 React가 `useCallback`을 통해 해당 함수는 절대 변하지 않으며, 이전과 동일한 함수 객체임을 보장하고 있기 때문에 굳이 추가할 필요가 없어서 생략하였다. 다만 이런 코드는 `setShowParagraph` 에 전달된 함수라는 걸 기억만 하면 될 것이다. 기억한다는 것은 즉, 이 모두가 콜백 함수에 포함되어 있다는 뜻이다.
+
+### 정리
+
+- 현재 `toggleParagraphHandler` 함수를 감싼 `useCallback`의 의존성 배열은 React에 `toggleParagraphHandler` 함수를 저장하려고 하는 이 콜백 함수는 절대 변경되지 않을 것이라고 React에 알려주는 역할을 한다. 따라서 `App` 컴포넌트가 다시 리렌더링 되어도 항상 같은 함수 객체가 사용되게끔 하는 것이다.
+
+![ezgif com-gif-maker (62)](https://user-images.githubusercontent.com/53133662/168430276-57314193-aa0a-4563-bb62-01bb0ad194d7.gif)
+
+- 저장하고 새로고침 해보면, 버튼을 여러 번 클릭해봐도 더이상 "Button RUNNING" 문구가 출력되지 않는 것을 알 수 있다. 우리가 전달한 모든 props 값이 원시 값 뿐만 아니라 함수 또한 `useCallback`을 통해 일반 비교 연산자를 통해 비교가 가능하도록 전달했기 때문에 `React.memo()`이 역할을 제대로 수행할 수 있도록 했기 때문이다. 즉, `useCallback` 덕분에 `toggleParagraphHandler` 객체가 React의 메모리 안에서 항상 같은 객체임을 보장하고 있는 것이다.
 
 </br>
