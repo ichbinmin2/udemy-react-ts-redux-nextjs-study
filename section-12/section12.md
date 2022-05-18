@@ -7,6 +7,7 @@
 - [A Closer Look At Child Component Re-Evaluation](#자식-컴포넌트의-리렌더링-자세히-살펴보기)
 - [Preventing Unnecessary Re-Evaluations with React.memo()](#React-memo로-불필요한-재평가-방지하기)
 - [Preventing Function Re-Creation with useCallback()](#useCallback으로-함수-재생성-방지하기)
+- [useCallback() and its Dependencies](#useCallback-및-종속성에-대하여)
 
 ## 리액트가 실제로 작동하는 방식
 
@@ -476,7 +477,7 @@ const Button = (props) => {
 export default React.memo(Button);
 ```
 
-- `Button` 컴포넌트를 확인해보면 안에는 `onClick` 이라는 props와 `children` 이라는 props 를 가지고 있다. 하지만 이 둘 모두 값은 불변이이다. `children`으로 받는 텍스트도 동일하고, `onClick` 이라는 함수도 동일하다. 그리고 이것은 React에서 흔하게 발생하는 오류 중 하나이다.
+- `Button` 컴포넌트를 확인해보면 안에는 `onClick` 이라는 props와 `children` 이라는 props 를 가지고 있다. 하지만 이 둘 모두 값은 불변 값이다. `children`으로 받는 텍스트도 동일하고, `onClick` 이라는 함수도 동일하다. 그리고 이것은 React에서 흔하게 발생하는 오류 중 하나이다.
 
 #### App.js
 
@@ -512,7 +513,7 @@ const toggleParagraphHandler = () => {
 
 ### `App` 컴포넌트에서 실행되는 함수는 리렌더링 될 때마다 모두 새로 만들어진다
 
-- `App` 컴포넌트가 리렌더링 될 대마다 `App` 컴포넌트 내부에 있는 모든 코드 역시 다시 실행되므로 당연하게도 새로운 함수와 상수들이 만들어진다. `toggleParagraphHandler` 함수 역시 이전에 렌더링 되었던 `toggleParagraphHandler` 함수가 아니며, 그저 같은 기능을 하는 새로운 `toggleParagraphHandler` 함수일 뿐이다. 이처럼, `App` 컴포넌트 함수가 실행될 때마다 만들어지는 상수와 함수는 모두 새로운 상수와 함수이다.
+- `App` 컴포넌트가 리렌더링 될 때마다 `App` 컴포넌트 내부에 있는 모든 코드 역시 다시 실행되므로 당연하게도 새로운 함수와 상수들이 만들어진다. `toggleParagraphHandler` 함수 역시 이전에 렌더링 되었던 `toggleParagraphHandler` 함수가 아니며, 그저 같은 기능을 하는 새로운 `toggleParagraphHandler` 함수일 뿐이다. 이처럼, `App` 컴포넌트 함수가 실행될 때마다 만들어지는 상수와 함수는 모두 새로운 상수와 함수이다.
 
 ```js
 <DemoOutput show={false} />
@@ -569,9 +570,7 @@ false === false;
 
 > [React 공식 문서 참조 : useCallback()](https://ko.reactjs.org/docs/hooks-reference.html#usecallback)
 
-- `useCallback` 은 기본적으로 컴포넌트 실행 전반에 걸쳐 함수를 저장할 수 있도록 하는 hook 으로써 `useCallback`를 통해서 감싼 함수를 저장하여 이 함수가 어플리케이션이 매번 실행될 때마다 재생성할 필요가 없다는 것을 React에 알리는 역할을 한다.
-
-- 이렇게 `useCallback`을 사용하여 특정 함수를 감싼다면, 이 함수 객체가 메모리의 동일한 위치에 저장되므로 이를 통해 비교 작업을 할 수 있게 된다. 구체적으로 예를 들어보자.
+- `useCallback` 은 기본적으로 컴포넌트 실행 전반에 걸쳐 함수를 저장할 수 있도록 하는 hook 으로써 `useCallback`를 통해서 감싼 함수를 저장하여 이 함수가 어플리케이션이 매번 실행될 때마다 재생성할 필요가 없다는 것을 React에 알리는 역할을 한다. `useCallback`을 사용하여 특정 함수를 감싼다면, 이 함수 객체가 메모리의 동일한 위치에 저장되므로 이를 통해 비교 작업을 할 수 있게 된다. 구체적으로 예를 들어보자.
 
 ```js
 let obj1 = {};
@@ -624,7 +623,7 @@ const toggleParagraphHandler = useCallback(() => {
 });
 ```
 
-- `useCallback`으로 저장하려는 함수를 래핑하기만 하면 된다. `useCallback`을 통해서 어떤 함수를 첫 번째 인자로 전달하면, `useCallback`는 이 저장된 함수를 반환한다. 이런 작동 과저을 통해서 `App` 컴포넌트 함수가 재실행될 때마다 `useCallback` 이 React 의 내부 메모리에 저장된 함수를 찾아서 재사용하는 것이다. 따라서, 어떤 함수가 절대 변경되어서는 안된다면, 이 `useCallback` hook 을 사용해서 그 함수를 React 내부의 메모리에 저장하면 된다.
+- `useCallback`으로 저장하려는 함수를 래핑하기만 하면 된다. `useCallback`을 통해서 어떤 함수를 첫 번째 인자로 전달하면, `useCallback`는 이 저장된 함수를 반환한다. 이런 작동 과정을 통해서 `App` 컴포넌트 함수가 재실행될 때마다 `useCallback` 이 React 의 내부 메모리에 저장된 함수를 찾아서 재사용하는 것이다. 따라서, 어떤 함수가 절대 변경되어서는 안된다면, 이 `useCallback` hook 을 사용해서 그 함수를 React 내부의 메모리에 저장하면 된다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
@@ -650,5 +649,91 @@ const toggleParagraphHandler = useCallback(() => {
 ![ezgif com-gif-maker (62)](https://user-images.githubusercontent.com/53133662/168430276-57314193-aa0a-4563-bb62-01bb0ad194d7.gif)
 
 - 저장하고 새로고침 해보면, 버튼을 여러 번 클릭해봐도 더이상 "Button RUNNING" 문구가 출력되지 않는 것을 알 수 있다. 우리가 전달한 모든 props 값이 원시 값 뿐만 아니라 함수 또한 `useCallback`을 통해 일반 비교 연산자를 통해 비교가 가능하도록 전달했기 때문에 `React.memo()`이 역할을 제대로 수행할 수 있도록 했기 때문이다. 즉, `useCallback` 덕분에 `toggleParagraphHandler` 객체가 React의 메모리 안에서 항상 같은 객체임을 보장하고 있는 것이다.
+
+</br>
+
+## useCallback 및 종속성에 대하여
+
+- `useCallback` 을 이용하면 함수를 저장하고 이를 재사용할 수 있게 된다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  setShowParagraph((prevParagraph) => !prevParagraph);
+}, []);
+```
+
+- 이제 `useCallback` 으로 저장한 함수의 의존성 배열을 지정해야 하는데, 이 의존성 배열이 왜 필요한지에 대해서 의아할 수가 있다. 지금의 어플리케이션 내의 함수는 모든 재렌더링 주기마다 항상 똑같은 로직을 쓰는데, 이 의존성 배열은 왜 필요한 것일까?
+
+### 자바스크립트에서의 함수는 클로저이다.
+
+- 자바스크립트에서의 함수는 클로저이다. 즉, 이 환경에서 사용할 수 있는 값에 클로저를 만들게 된다. 구체적인 예시를 하나 보자.
+
+```js
+  <Button>Allow Toggling</Button>
+  <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+```
+
+- Allow Toggling 이라는 텍스트를 넣은 버튼을 하나 더 추가한다. 이 버튼은 Toggle 기능을 활성화해서 아래의 버튼이 작동하게끔 하는 버튼이 될 것이다.
+
+```js
+const [allowToggle, setAllowToggle] = useState(false);
+```
+
+- Toggle 의 활성화/비활성화 기능을 사용하기 위해서는 이 버튼의 상태(state)가 필요할 것이다. `allowToggle` 상태(state)를 추가해주자. 초기값은 false 이다.
+
+```js
+const allowToggleHandler = () => {
+  setAllowToggle(true);
+};
+
+...
+<Button onClick={allowToggleHandler}>Allow Toggling</Button>;
+```
+
+- Toggle 의 상태(state)를 핸들링하는 트리거 함수 `allowToggleHandler`도 작성한다. 해당 함수가 트리거 될 때마다 `setAllowToggle` 상태 업데이트 함수로 true 값으로 업데이트할 것이다. (즉, 트리거 함수가 발동될 때마다 `allowToggle` 상태(state)는 true 로 고정된다는 뜻이다.) 그리고 해당 Toggle 기능을 적용할 버튼에 `onClick` 이벤트로 해당 트리거 함수를 할당한다.
+
+```js
+<DemoOutput show={showParagraph} />
+```
+
+- 그리고 이전에 false 값으로 지정해주었던 `show` props 를 다시 `showParagraph` 상태(state) 값으로 수정해준다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  if (allowToggle) {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  }
+}, []);
+```
+
+- `allowToggle` 상태(state) 스냅샷에 따라 아래의 버튼의 상태(state)가 업데이트 될지 되지 않을지를 결정할 것이기 때문에, if 문을 사용해서 만약 `allowToggle`이 true 라면 `setShowParagraph` 상태(state) 업데이트 함수가 실행될 수 있도록 작성해준다. 이렇게 되면, `showParagraph` 상태(state)는 Toggle 이 true 일 때만 업데이트하게 된다.
+
+![ezgif com-gif-maker (63)](https://user-images.githubusercontent.com/53133662/169037252-555ca0d3-7e20-4e06-b0a7-2d57461b8592.gif)
+
+- 저장하고 콘솔창을 확인해보자. Toggle Paragraph! 버튼을 누르게 되면 아무 일도 일어나지 않으며, Allow Toggling 버튼을 누르고 다시 Toggle Paragraph! 버튼을 눌러도 작동되지 않는 걸 알 수 있다.
+
+![image](https://user-images.githubusercontent.com/53133662/169037672-b19f7fa7-3be0-40ba-aa5b-dca4915e238f.png)
+
+- 이는 자바스크립트에서 함수는 클로저이고, `useCallback`을 제대로 사용하지 않았기 때문이다. 위의 이미지를 보면 의존성 배열 `[]` 부분에 문제가 있음을 알 수 있다.
+- 자바스크립트의 함수는 클로저이다. 이 말인 즉슨, 함수가 정의되면(`App` 컴포넌트 함수 내부에 있는 모든 코드들) 이 함수가 정의될 때 자바스크립트는 이 안에서 사용되는 모든 변수를 잠그게 된다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  if (allowToggle) {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  }
+}, []);
+```
+
+- 여기에서는 `allowToggle` 이 이에 해당하는데 이것은 `App` 컴포넌트 함수 외부에 있는 변수나 상수이고, 이를 함수 안에서 사용하고 있다. 따라서 자바스크립트는 이 상수에 클로저를 만들고, 함수를 정의할 때 사용하기 위해 상수를 저장한다. 그리고 이렇게 되면, 다음에 `toggleParagraphHandler` 함수가 실행되면 이 저장된 변수(`allowToggle`)를 그대로 사용하게 된다. 따라서 이 변수의 값은 변수가 저장된 시점의 값을 사용하게 되고, 함수 밖의 변수를 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있게 된다.
+- 문제는 우리는 `useCallback`을 사용하여 리액트에게 해당 함수를 저장하라고 지정할 수 있다. 이러면 함수는 메모리 어딘가에 저장된다. `App` 함수가 토글 상태가 변경되어 재평가, 재실행되면 리액트는 이 함수를 재생성 하지 않는다. 왜냐하면 우리가 `useCallback`을 통해 리액트에게 어떤 환경에서든 함수 재생성을 하지 않도록 막았기 때문이다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  if (allowToggle) {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  }
+}, [allowToggle]);
+```
 
 </br>
