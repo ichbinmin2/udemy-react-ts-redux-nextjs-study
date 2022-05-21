@@ -666,20 +666,21 @@ const toggleParagraphHandler = useCallback(() => {
 
 ### 자바스크립트에서의 함수는 클로저이다.
 
-- 자바스크립트에서의 함수는 클로저이다. 즉, 이 환경에서 사용할 수 있는 값에 클로저를 만들게 된다. 구체적인 예시를 하나 보자.
+- 자바스크립트에서의 함수는 클로저이다. 즉, 이 환경에서 사용할 수 있는 값에 클로저를 만들게 된다. 구체적인 예시를 통해 이해해보자.
 
 ```js
+  <DemoOutput show={showParagraph} />
   <Button>Allow Toggling</Button>
   <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
 ```
 
-- Allow Toggling 이라는 텍스트를 넣은 버튼을 하나 더 추가한다. 이 버튼은 Toggle 기능을 활성화해서 아래의 버튼이 작동하게끔 하는 버튼이 될 것이다.
+- `App` 컴포넌트가 렌더하는 `Button` 컴포넌트 위에 "Allow Toggling" 이라는 텍스트를 넣은 `Button` 컴포넌트 하나를 더 추가한다. 이 버튼은 Toggle 기능을 활성화해서 아래의 버튼이 작동하게끔 하는 버튼으로 만들 것이다.
 
 ```js
 const [allowToggle, setAllowToggle] = useState(false);
 ```
 
-- Toggle 의 활성화/비활성화 기능을 사용하기 위해서는 이 버튼의 상태(state)가 필요할 것이다. `allowToggle` 상태(state)를 추가해주자. 초기값은 false 이다.
+- Toggle 의 활성화/비활성화 기능을 사용하기 위해서는 이 버튼의 상태(state)가 필요할 것이다. `allowToggle` 상태(state)를 추가해주자. 초기값은 false 로 설정해준다. 그리고 해당 Toggle 기능을 적용할 버튼에 `onClick` 이벤트로 해당 트리거 함수를 할당한다.
 
 ```js
 const allowToggleHandler = () => {
@@ -690,13 +691,8 @@ const allowToggleHandler = () => {
 <Button onClick={allowToggleHandler}>Allow Toggling</Button>;
 ```
 
-- Toggle 의 상태(state)를 핸들링하는 트리거 함수 `allowToggleHandler`도 작성한다. 해당 함수가 트리거 될 때마다 `setAllowToggle` 상태 업데이트 함수로 true 값으로 업데이트할 것이다. (즉, 트리거 함수가 발동될 때마다 `allowToggle` 상태(state)는 true 로 고정된다는 뜻이다.) 그리고 해당 Toggle 기능을 적용할 버튼에 `onClick` 이벤트로 해당 트리거 함수를 할당한다.
-
-```js
-<DemoOutput show={showParagraph} />
-```
-
-- 그리고 이전에 false 값으로 지정해주었던 `show` props 를 다시 `showParagraph` 상태(state) 값으로 수정해준다.
+- Toggle 을 할 것인지 말 것인지를 결정하는 상태(state)를 핸들링하는 트리거 함수 `allowToggleHandler`도 작성한다. 해당 함수가 트리거 될 때마다 `setAllowToggle` 상태 업데이트 함수로 true 값으로 업데이트할 것이다. (이 함수는 Toggle 자체의 상태(state)가 아니라 Toggle을 움직이는 버튼 자체에 대한 Toggle을 활성화할 뿐이다.)
+- 여기에서 문제가 발생할 수도 있는데, 새로운 버튼에 `allowToggleHandler`를 바인딩하는 것 외에도 여기의 다른 함수(`toggleParagraphHandler`)에서 `allowToggle` 상태(state) 스냅샷을 이용해서 `setShowParagraph`를 사용할 수 있는지 확인할 것이기 때문이다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
@@ -706,16 +702,16 @@ const toggleParagraphHandler = useCallback(() => {
 }, []);
 ```
 
-- `allowToggle` 상태(state) 스냅샷에 따라 아래의 버튼의 상태(state)가 업데이트 될지 되지 않을지를 결정할 것이기 때문에, if 문을 사용해서 만약 `allowToggle`이 true 라면 `setShowParagraph` 상태(state) 업데이트 함수가 실행될 수 있도록 작성해준다. 이렇게 되면, `showParagraph` 상태(state)는 Toggle 이 true 일 때만 업데이트하게 된다.
+- 텍스트를 Toggle 해주었던 트리거 함수인 `toggleParagraphHandler` 로 돌아가 `allowToggle` 상태(state) 스냅샷에 따라 아래의 버튼의 상태(state)가 업데이트 되도록 작성해준다. if 문을 사용해서 만약 `allowToggle`(Toggle 버튼을 실행할 수 있는지를 체크하는 상태 값)이 true 일 때만 `setShowParagraph` 상태(state) 업데이트 함수가 실행될 수 있도록 작성해준다. 이렇게 되면, `showParagraph` 상태(state)는 Toggle 이 허용되는 경우(`allowToggle`가 true 일 때)만 업데이트하게 된다.
 
 ![ezgif com-gif-maker (63)](https://user-images.githubusercontent.com/53133662/169037252-555ca0d3-7e20-4e06-b0a7-2d57461b8592.gif)
 
-- 저장하고 콘솔창을 확인해보자. Toggle Paragraph! 버튼을 누르게 되면 아무 일도 일어나지 않으며, Allow Toggling 버튼을 누르고 다시 Toggle Paragraph! 버튼을 눌러도 작동되지 않는 걸 알 수 있다.
+- 저장하고 콘솔창을 확인해보자. 바로 Toggle Paragraph! 버튼을 누르게 되면 텍스트가 보여지거나 하는 등의 액션이 일어나지 않는다. 그리고 Allow Toggling 버튼을 누르고 다시 Toggle Paragraph! 버튼을 눌러보자. 콘솔에는 분명 'App RUNNING' 이 출력되고 있지만, 버튼의 기능은 작동되지 않는다. 우리가 의도한 대로 작동되지 않고 있는 것이다. 왜 그럴까?
 
 ![image](https://user-images.githubusercontent.com/53133662/169037672-b19f7fa7-3be0-40ba-aa5b-dca4915e238f.png)
 
-- 이는 자바스크립트에서 함수는 클로저이고, `useCallback`을 제대로 사용하지 않았기 때문이다. 위의 이미지를 보면 의존성 배열 `[]` 부분에 문제가 있음을 알 수 있다.
-- 자바스크립트의 함수는 클로저이다. 이 말인 즉슨, 함수가 정의되면(`App` 컴포넌트 함수 내부에 있는 모든 코드들) 이 함수가 정의될 때 자바스크립트는 이 안에서 사용되는 모든 변수를 잠그게 된다.
+- 왜냐하면 자바스크립트에서 함수는 클로저이며 우리가 `useCallback`을 제대로 사용하지 않았기 때문이다. 위의 이미지를 보면 의존성 배열 `[]` 부분에 편집기에서 코드 작성에 문제가 있음을 표시해주고 있다.
+- 자바스크립트의 함수는 클로저이다. 이 말인 즉슨, `useCallback` 에서 반환하는 함수가 정의되면(`App` 컴포넌트 함수 내부에 있는 모든 코드들) 이 함수(`useCallback` 에서 반환하는 함수)가 정의될 때 자바스크립트는 이 함수 안에서 사용되는 모든 변수를 잠그게 되기 때문이다. 함수 외부에서 사용하는 모든 변수라고 해야 조금 더 정확할 것이다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
@@ -725,8 +721,19 @@ const toggleParagraphHandler = useCallback(() => {
 }, []);
 ```
 
-- 여기에서는 `allowToggle` 이 이에 해당하는데 이것은 `App` 컴포넌트 함수 외부에 있는 변수나 상수이고, 이를 함수 안에서 사용하고 있다. 따라서 자바스크립트는 이 상수에 클로저를 만들고, 함수를 정의할 때 사용하기 위해 상수를 저장한다. 그리고 이렇게 되면, 다음에 `toggleParagraphHandler` 함수가 실행되면 이 저장된 변수(`allowToggle`)를 그대로 사용하게 된다. 따라서 이 변수의 값은 변수가 저장된 시점의 값을 사용하게 되고, 함수 밖의 변수를 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있게 된다.
-- 문제는 우리는 `useCallback`을 사용하여 리액트에게 해당 함수를 저장하라고 지정할 수 있다. 이러면 함수는 메모리 어딘가에 저장된다. `App` 함수가 토글 상태가 변경되어 재평가, 재실행되면 리액트는 이 함수를 재생성 하지 않는다. 왜냐하면 우리가 `useCallback`을 통해 리액트에게 어떤 환경에서든 함수 재생성을 하지 않도록 막았기 때문이다.
+- 여기에서는 `allowToggle`이 앞서 설명한 경우에 해당하는데 `allowToggle`는 `App` 컴포넌트 함수 외부에 있는 변수나 상수이고, 이를 `useCallback` 에서 반환하는 함수 안에서 사용하고 있다. 따라서 자바스크립트는 이 `allowToggle`에 클로저를 만들고, 해당 함수를 정의할 때 사용하기 위해 변수(`allowToggle`)를 저장한다.
+
+- 그리고 이렇게 되면, 다음에 `toggleParagraphHandler` 함수가 실행되면 이 저장된 변수(`allowToggle`)를 그대로 사용하게 된다. 따라서 이 변수의 값은 변수가 저장된 시점(`allowToggle`의 클로저를 만들 때)의 값을 사용하게 되고, 함수 밖의 변수를 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있게 된다. 이는 언뜻 보기에 완벽한 기능처럼 보인다. 이런 기능을 사용하면 `useCallback` 에서 반환하는 함수 밖의 변수를 해당 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있기 때문이다.
+
+```js
+const toggleParagraphHandler = useCallback(() => {
+  if (allowToggle) {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  }
+}, []);
+```
+
+- 그러나, 여기서 문제가 발생한다. 우리는 `useCallback`을 사용하여 리액트에게 해당 함수를 저장하라고 지정할 수 있다. 이러면 함수는 메모리 어딘가에 저장된다. `App` 함수가 토글 상태가 변경되어 재평가, 재실행되면 리액트는 이 함수를 재생성 하지 않는다. 왜냐하면 우리가 `useCallback`을 통해 리액트에게 어떤 환경에서든 함수 재생성을 하지 않도록 막았기 때문이다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
