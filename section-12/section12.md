@@ -711,7 +711,10 @@ const toggleParagraphHandler = useCallback(() => {
 ![image](https://user-images.githubusercontent.com/53133662/169037672-b19f7fa7-3be0-40ba-aa5b-dca4915e238f.png)
 
 - 왜냐하면 자바스크립트에서 함수는 클로저이며 우리가 `useCallback`을 제대로 사용하지 않았기 때문이다. 위의 이미지를 보면 의존성 배열 `[]` 부분에 편집기에서 코드 작성에 문제가 있음을 표시해주고 있다.
-- 자바스크립트의 함수는 클로저이다. 이 말인 즉슨, `useCallback` 에서 반환하는 함수가 정의되면(`App` 컴포넌트 함수 내부에 있는 모든 코드들) 이 함수(`useCallback` 에서 반환하는 함수)가 정의될 때 자바스크립트는 이 함수 안에서 사용되는 모든 변수를 잠그게 되기 때문이다. 함수 외부에서 사용하는 모든 변수라고 해야 조금 더 정확할 것이다.
+
+### 버튼을 눌러도 반응하지 않는 이유
+
+- 자바스크립트의 함수는 클로저이다. 이 말인 즉슨, `useCallback` 에서 반환하는 함수가 정의되면(`App` 컴포넌트 함수 내부에 있는 모든 코드들) 이 함수(`useCallback` 에서 반환하는 함수)가 정의될 때 자바스크립트는 이 함수 안에서 사용되는 모든 변수를 잠그게 된다. 물론 함수 외부에서 사용하는 모든 변수라고 해야 조금 더 정확한 설명일 것이다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
@@ -721,9 +724,49 @@ const toggleParagraphHandler = useCallback(() => {
 }, []);
 ```
 
-- 여기에서는 `allowToggle`이 앞서 설명한 경우에 해당하는데 `allowToggle`는 `App` 컴포넌트 함수 외부에 있는 변수나 상수이고, 이를 `useCallback` 에서 반환하는 함수 안에서 사용하고 있다. 따라서 자바스크립트는 이 `allowToggle`에 클로저를 만들고, 해당 함수를 정의할 때 사용하기 위해 변수(`allowToggle`)를 저장한다.
+- 여기에서는 `allowToggle`이 앞서 설명한 경우에 해당하는데 `allowToggle`는 `App` 컴포넌트 함수 외부에 있는 변수나 상수이고,
 
-- 그리고 이렇게 되면, 다음에 `toggleParagraphHandler` 함수가 실행되면 이 저장된 변수(`allowToggle`)를 그대로 사용하게 된다. 따라서 이 변수의 값은 변수가 저장된 시점(`allowToggle`의 클로저를 만들 때)의 값을 사용하게 되고, 함수 밖의 변수를 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있게 된다. 이는 언뜻 보기에 완벽한 기능처럼 보인다. 이런 기능을 사용하면 `useCallback` 에서 반환하는 함수 밖의 변수를 해당 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있기 때문이다.
+```js
+const [allowToggle, setAllowToggle] = useState(false);
+```
+
+- 이를 `useCallback` 에서 반환하는 함수 안에서 사용하고 있다.
+
+```js
+useCallback(() => {
+  if (allowToggle) {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  }
+}, [allowToggle]);
+```
+
+- 따라서 자바스크립트는 이 `allowToggle`에 클로저를 만들고, 해당 함수를 정의할 때 사용하기 위해 변수(`allowToggle`)를 저장한다.
+
+- 그리고 이렇게 되면, 다음에 `toggleParagraphHandler` 함수가 실행되면 이 저장된 변수(`allowToggle`)를 그대로 사용하게 된다. 따라서 이 변수의 값은 변수가 저장된 시점(`allowToggle`의 클로저를 만들 때)의 값을 사용하게 되고, 함수 밖의 변수를 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있게 된다.
+
+### 변수의 값은 변수가 저장된 시점의 값을 사용한다.
+
+- `allowToggle` 의 값은 `allowToggle` 가 저장된 시점의 값을 사용한다. 이는 언뜻 보기에 완벽한 기능처럼 보인다. 이런 기능을 사용하면 `useCallback` 에서 반환하는 함수 밖의 변수를 해당 함수 안에서 사용할 수 있으며 우리가 원하는 시점에 함수를 호출할 수 있기 때문이다.
+
+```js
+<Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+```
+
+- 버튼에 바인딩한 `toggleParagraphHandler` 함수처럼 말이다.
+
+### useCallback은 함수를 재생성하지 못하도록 한다.
+
+- 그러나, 여기서 문제가 발생한다. 우리는 `useCallback`을 사용하여 리액트에게 해당 함수를 저장하라고 지시할 수 있다. 이러면 이 함수는 메모리 어딘가에 저장된다. `App` 함수가 토글 상태가 변경되어 재평가, 재실행되면 리액트는 이 함수를 재생성 하지 않을 것이다. 왜 그럴까? 왜냐하면 우리가 `useCallback`을 통해 리액트에게 어떤 환경에서든 함수 재생성을 하지 않도록 의도적으로 막았기 때문이다.
+
+```js
+useCallback(() => {
+  if (allowToggle) {
+    setShowParagraph((prevParagraph) => !prevParagraph);
+  }
+}, []);
+```
+
+- 따라서 리액트가 이 함수에 사용하기 위해 저장한 `allowToggle`의 값은 최신 스냅샷의 값이 아니라, `App` 컴포넌트가 처음 실행된 시점의 값을 저장하고 있을 뿐이다. 이전에 거론했듯이 자바스크립트는 함수 생성 시점의 `allowToggle` 상수의 값을 저장하고 있기 때문이다. 그리고 당연히 이런 점 때문에 오류는 발생한다. 우리가 의도적으로 `useCallback`을 사용해서 리액트에 함수를 저장하라고 지시하고, `App` 컴포넌트가 변경되어 재평가, 재실행되도 더이상 해당 함수가 재생성하지 않도록 했기 때문이다. 하지만 때때로 우리는 해당 함수의 재생성이 필요로 할지도 모른다. 그러니까 해당 함수에서 사용하는 즉 함수 외부에서 오는 값(`allowToggle`)이 업데이트 될지도 모르는 가능성이 있다는 이야기다. 지금의 사례처럼 말이다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
@@ -733,7 +776,9 @@ const toggleParagraphHandler = useCallback(() => {
 }, []);
 ```
 
-- 그러나, 여기서 문제가 발생한다. 우리는 `useCallback`을 사용하여 리액트에게 해당 함수를 저장하라고 지정할 수 있다. 이러면 함수는 메모리 어딘가에 저장된다. `App` 함수가 토글 상태가 변경되어 재평가, 재실행되면 리액트는 이 함수를 재생성 하지 않는다. 왜냐하면 우리가 `useCallback`을 통해 리액트에게 어떤 환경에서든 함수 재생성을 하지 않도록 막았기 때문이다.
+### allowToggle 을 종속 형태로 추가하기
+
+- 우리는 `allowToggle`을 `useCallback`에 종속성에 추가하려고 한다. 이렇게 되면, `useCallback`을 통해 리액트에 함수를 저장하라고 지시했어도, 종속 형태로 추가된 `allowToggle`의 값이 업데이트 되거나 새로운 값이 들어왔을 때 해당 함수를 재생성 하고, 이 재생성된 함수로 저장할 수 있게 된다.
 
 ```js
 const toggleParagraphHandler = useCallback(() => {
@@ -742,5 +787,15 @@ const toggleParagraphHandler = useCallback(() => {
   }
 }, [allowToggle]);
 ```
+
+- 이렇게 되면, `allowToggle`의 최신 값만을 사용할 수 있다. 또한 `allowToggle`이 변경되지만 않는다면 함수를 재생성하지 않게 되었다. 즉, `useCallback`을 통한 불필요한 재생성을 방지하는 장점과, 해당 함수에서 사용하는 변수의 값을 최신 값으로 사용할 수 있는 장점을 모두 챙길 수 있게 되었다.
+
+![ezgif com-gif-maker (64)](https://user-images.githubusercontent.com/53133662/170860183-58bdf6e6-9c03-4887-a1c0-d30c9a6af7ce.gif)
+
+- 저장하고 화면으로 돌아가서 다시 "Toggle Paragraph!" 버튼을 눌러보자. 당연히 처음에는 아무 반응이 없다. 다시 "Allow Toggling" 버튼을 누르고, "Toggle Paragraph!" 을 누르면 드디어 우리가 원했던 모든 출력들이 표시된다. "Toggle Paragraph!" 버튼을 눌렀을 때 "Button RUNNING" 이 한 번만 출력되는 것도 눈여겨봐야 할 부분이다. 당연히 `React.memo`가 두 번째 버튼에서는 작동하지 않는다. 왜냐하면 "Allow Toggling" 버튼에 연결된 함수인 `allowToggleHandler`는 `useCallback`을 사용하지 않았기 때문이다. "Toggle Paragraph!" 버튼이 다시 렌더링 된다면 두 번 표시되겠지만, `useCallback`이 해당 함수가 매 번 다시 빌드되는 것을 의도적으로 막았기 때문에 다만 의존성으로 주입된 `allowToggle` 상태가 변경될 때만 해당 문구를 볼 수 있다.
+
+### 정리
+
+- 지금까지의 개념들은 리액트 보다는 자바스크립트에 가까운 것들이다. 다만, 클로저가 어떻게 작동하는지를 이해하고 원시값과 참조값에 대한 이해가 뒷받침 된다면 리액트의 작동 원리를 보다 완벽하게 이해할 수 있을 것이다.
 
 </br>
