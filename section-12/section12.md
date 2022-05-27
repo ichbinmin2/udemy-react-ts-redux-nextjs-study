@@ -8,6 +8,7 @@
 - [Preventing Unnecessary Re-Evaluations with React.memo()](#React-memo로-불필요한-재평가-방지하기)
 - [Preventing Function Re-Creation with useCallback()](#useCallback으로-함수-재생성-방지하기)
 - [useCallback() and its Dependencies](#useCallback-및-종속성에-대하여)
+- [A First Summary](#첫-번째-요약)
 
 ## 리액트가 실제로 작동하는 방식
 
@@ -797,5 +798,83 @@ const toggleParagraphHandler = useCallback(() => {
 ### 정리
 
 - 지금까지의 개념들은 리액트 보다는 자바스크립트에 가까운 것들이다. 다만, 클로저가 어떻게 작동하는지를 이해하고 원시값과 참조값에 대한 이해가 뒷받침 된다면 리액트의 작동 원리를 보다 완벽하게 이해할 수 있을 것이다.
+
+</br>
+
+## 첫 번째 요약
+
+- 리액트 앱에서는 컴포넌트를 통해 작업을 수행한다. 그리고 최신 리액트에서는 주로 함수 컴포넌트를 사용할 것이다. 이런 컴포넌트(ex. `App`)는 결국 하나의 작업을 수행할 것이며, JSX 코드를 반환한다.
+
+```js
+return (
+  <div className="app">
+    <h1>Hi there!</h1>
+    <DemoOutput show={showParagraph} />
+    <Button onClick={allowToggleHandler}>Allow Toggling</Button>
+    <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+  </div>
+);
+```
+
+- 이것은 리액트에게 컴포넌트의 출력이 무엇인지를 알려준다. 이런 리액트 컴포넌트에서는 상태(state)와 props, 컨텍스트를 이용해서 작업할 수 있다. 그리고 props와 컨텍스트는 결국 상태(state)의 변경으로 이어지기 때문에 컴포넌트의 변경과 혹은 컴포넌트에 영향을 주거나 어플리케이션 일부에 영향을 미치는 데이터를 변경하게 된다.
+
+### 컴포넌트에서 상태(state)를 변경할 때마다 컴포넌트는 재평가 된다
+
+- 컴포넌트에서는 상태(state)를 변경할 때마다 이 변경된 상태(state)를 가지고 있는 컴포넌트는 재평가 될 것이다. 즉, 이 말은 컴포넌트 함수가 상태(state)가 변경될 때마다 재실행 된다는 의미이다. 따라서 컴포넌트가 재실행 될 때마다 컴포넌트 내부의 모든 코드 역시 재실행되고, 새로운 출력 값을 얻게 된다. 물론 출력 값은 이전과 동일할 수 있지만 실제로는 다른 의미를 가진다. 예를 들어, 단락 전체가 렌더링 되거나 안될 수도 있다는 의미이다.
+
+```js
+<DemoOutput show={showParagraph} />
+```
+
+- `DemoOutput` 와 같은 컴포넌트를 예를 들어보자.
+
+```js
+const DemoOutput = (props) => {
+  console.log("DemoOutput RUNNUNG");
+  return <MyParagraph>{props.show ? "This is New!" : ""}</MyParagraph>;
+};
+```
+
+- 여기 `DemoOutput` 컴포넌트 내부의 텍스트("This is New!")는 렌더링되지 않을 수도 있다. 리액트는 단순히 최신 평가의 결과를 가져와서 직전 평가의 결과와 비교해서 리액트의 `DOM`에 전달한다. 그리고 이는 모든 컴포넌트에 해당 된다.
+
+### 리액트 DOM의 변경 사항은 브라우저의 실제 DOM 에 적용 된다
+
+- 리액트는 최신 평가 결과와 직전 평가 결과와 비교해서 실질적으로 업데이트 되는 부분을 체크한 뒤 리액트 `DOM`에 전달한다. 그리고 이 리액트 `DOM`을 통해 `index.js` 파일을 렌더링하고 리액트 `DOM`은 이 변경 사항을 브라우저의 실제 `DOM`에 적용하며, 변경되지 않은 것들은 그대로 둔다.
+
+```js
+return (
+  <div className="app">
+    <h1>Hi there!</h1>
+    <DemoOutput show={showParagraph} />
+    <Button onClick={allowToggleHandler}>Allow Toggling</Button>
+    <Button onClick={toggleParagraphHandler}>Toggle Paragraph!</Button>
+  </div>
+);
+```
+
+- 이제 리액트가 컴포넌트를 재평가 할 때 단순히 컴포넌트 재평가에서 그치지 않고 전체 함수를 재실행하고 이를 통해 코드 전부를 리빌드한다. 이 JSX 코드가 최신 스냅샷의 출력 결과를 리빌드 하는 것이다. 그리고 이 JSX 코드에 있는 모든 컴포넌트를 재실행한다. 위의 코드에서는 `DemoOutput` 컴포넌트와 아래의 `Button` 컴포넌트 두개를 재실행 할 것이다.
+
+```js
+const DemoOutput = (props) => {
+  console.log("DemoOutput RUNNUNG");
+  return <MyParagraph>{props.show ? "This is New!" : ""}</MyParagraph>;
+};
+
+export default React.memo(DemoOutput);
+```
+
+- 하지만 이제 `DemoOutput`는 `React.memo`를 통해 하위 컴포넌트의 불필요한 재실행을 막았고, 리액트에게 props가 실제로 변경되었을 때만 컴포넌트 함수를 재실행하고 새로운 값이 없을 땐 함수를 재실행하지 않도록 할 수 있게 되었다.
+
+### 컴포넌트의 재평가는 컴포넌트 함수 전체의 재실행을 의미한다
+
+- 컴포넌트의 재평가는 컴포넌트 함수 전체의 재실행을 의미한다. `App` 컴포넌트 안에 있는 모든 것들이 다시 실행된다는 사실을 알지 못한다면 우리는 이상한 결과를 초래할 수 있을지도 모른다. 예를 들어보자. 함수 안에 함수를 만들고 해당 함수를 props를 통해 컴포넌트에 전달하면 새로운 함수 객체를 얻을 수 있다. 이렇게 되면 `React.memo`를 통한 불필요한 재실행을 막을 수 없을 것이다. 앞서서 설명했듯이 객체(배열, 함수)는 참조 값이며, `React.memo`가 내부적으로 실행하는 일반적인 비교 연산자를 통한 비교는 이 참조 값에 대해서는 통용되지 않기 때문이다.
+
+> "`React.memo()` 가 하는 일은 props 의 값을 확인하고, 이전의 props 와 가장 최근의 props 스냅샷을 비교한다. 그리고 이 비교 작업은 일반적인 비교 연산자를 통해 이뤄진다. 일반적인 원시 값이라면 이런 일반적인 비교 연산자를 통해서 비교가 가능할 것이다. 하지만 배열이나 객체, 함수를 비교한다면 말이 달라진다. 배열이나 객체, 함수는 참조 값이기 때문에 일반적인 비교 연산자를 통해서는 동일한 값으로 취급하지 않기 때문이다."
+
+- 그래서 우리는 `useCallback`를 사용했다. 바로 이 `useCallback`을 통해 참조 값도 비교하여 불필요한 재실행을 막을 수 있도록 한 것이다.
+
+> "`useCallback` 은 기본적으로 컴포넌트 실행 전반에 걸쳐 함수를 저장할 수 있도록 하는 hook 으로써 `useCallback`를 통해서 감싼 함수를 저장하여 이 함수가 어플리케이션이 매번 실행될 때마다 재생성할 필요가 없다는 것을 React에 알리는 역할을 한다. `useCallback`을 사용하여 특정 함수를 감싼다면, 이 함수 객체가 메모리의 동일한 위치에 저장되므로 이를 통해 비교 작업을 할 수 있게 된다. "
+
+- `useCallback`을 통해 리액트에게 `useCallback`으로 특정 함수를 감싸서 함수를 저장하도록 하고, 해당 함수가 재실행되어도 특정 의존성이 변경되는 것이 아니라면 함수 재생성을 막을 수 있다.
 
 </br>
