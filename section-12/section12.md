@@ -11,6 +11,7 @@
 - [A First Summary](#첫-번째-요약)
 - [A Closer Look At State & Components](#State-및-컴포넌트-자세히-살펴보기)
 - [Understanding State Scheduling & Batching](#State-스케줄링-및-일괄-처리-이해하기)
+- [Optimizing with useMemo()](#useMemo로-최적화하기)
 
 </br>
 
@@ -1044,3 +1045,200 @@ setSecondState(something2);
 - 하나의 함수 안에서 아예 다른 것으로 업데이트를 한다면 두 개의 상태(state)를 변경하는 하나의 상태(state) 변경 작업 스케줄이 존재하게 된다. 이는 단 하나의 프로세스만을 가지며, 컴포넌트의 재실행-재평가로 인한 두 번의 변경 작업이 아니라 함수 내의 모든 상태(state) 변경을 하나의 작업으로 결합해 놓은 스케줄이란 뜻이다. 따라서 상태(state) 배치 작업은 리액트를 통한 작업에서 반드시 알아야 하는 또 다른 개념이다.
 
 </br>
+
+## useMemo로 최적화하기
+
+- `useCallback`처럼 또 다른 최적화 방법으로 사용할 수 있는 `useMemo` 훅에 대해서 알아볼 것이다. 그 전에 먼저 예제의 코드에서 우리가 이전에 최적화했던 방법인 `useCallback`이 어떻게 사용되고 있는지를 하나씩 확인해볼 것이다.
+
+#### App.js
+
+```js
+function App() {
+  const [listTitle, setListTitle] = useState("My List");
+
+  const changeTitleHandler = useCallback(() => {
+    setListTitle("New Title");
+  }, []);
+
+  return (
+    <div className="app">
+      <DemoList title={listTitle} items={[5, 3, 1, 10, 9]} />
+      <Button onClick={changeTitleHandler}>Change List Title</Button>
+    </div>
+  );
+}
+```
+
+- 예제의 `App` 컴포넌트를 천천히 살펴보자. `changeTitleHandler` 함수에서 사용하고 있는 `useCallback`은 기본적으로 함수를 저장하며, 저장된 함수를 다시 재실행하거나 재평가하는 일은 의존성 배열에 의한 변경을 제외하고는 없도록 만들어준다.
+
+```js
+<Button onClick={changeTitleHandler}>Change List Title</Button>
+```
+
+- 그리고 `Button` 컴포넌트에서 onClick props를 통해 해당 함수를 전달하고 있다.
+
+```js
+export default React.memo(Button);
+```
+
+- `Button` 컴포넌트는 내부적으로 `React.memo`를 사용하며 `useCallback`을 통해 함수를 저장했기 때문에 버튼의 props 는 변경되지 않으므로 이 `Button` 컴포넌트는 다시 렌더링 되지 않을 것이다.
+
+![스크린샷 2022-05-29 오후 9 28 29](https://user-images.githubusercontent.com/53133662/170868315-15cc404d-304c-404b-bedf-23c245b9e3ff.png)
+
+- 저장하고 화면을 확인해보면, 리스트가 렌더링 되있는 걸 알 수 있다. 오름차순으로 정렬이 된 채로 말이다. 분명 우리가 작성한 코드에 입력한 데이터는 정렬되지 않은 상태였다. 이 말인 즉슨, 리스트에서 어떤 종류의 정렬을 실행하고 있다는 뜻이다.
+
+#### DemoList.js
+
+```js
+const DemoList = (props) => {
+  const sortedList = props.items.sort((a, b) => a - b);
+
+  return (
+    <div className={classes.list}>
+      <h2>{props.title}</h2>
+      <ul>
+        {sortedList.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+```
+
+- `DemoList` 컴포넌트를 확인해보면, 간단한 내장 정렬 메소드(`sort()`)로 리스트를 정리한 것을 알 수 있다. 하지만 컴포넌트 내부에 이런 로직이 있다는 뜻은 성능 면에서 민감할 수 있다는 뜻이기도 하다. 물론 예시 코드처럼 리스트가 짧다면 정렬 속도 역시 빠르겠지만 만약 리스트가 길다면 혹은 다른 작업을 수행하는 중이라면 분명 긴 시간을 소요하는 로직이 될 수도 있을 것이다. 전체 컴포넌트가 재평가될 때마다 이런 긴 시간을 소요하는 로직을 실행하고 싶지 않다면 어떻게 해야 할까? 이전의 학습에서 불필요한 재평가 과정을 피하는 여러 방법들을 알아봤다. `React.memo`가 바로 그 예시 중에 하나일 것이다.
+
+```js
+const DemoList = (props) => {
+  const sortedList = props.items.sort((a, b) => a - b);
+
+  return (
+    <div className={classes.list}>
+      <h2>{props.title}</h2>
+      <ul>
+        {sortedList.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default React.memo(DemoList);
+```
+
+- 먼저, 불필요한 재렌더링을 피하기 위해 `DemoList` 컴포넌트를 `React.memo`로 감싸주었다. 이렇게 하면 불필요한 동작을 막을 수 있을 것이다. `DemoList` 컴포넌트 내부에 콘솔 로그로 "DemoList RUNNING"를 출력하는 코드를 추가하고 개발자도구에서 한 번 확인해보자.
+
+![ezgif com-gif-maker (65)](https://user-images.githubusercontent.com/53133662/170868719-6fc5daef-aae1-4ba7-a570-3431cc283332.gif)
+
+- 당연히, 초기 화면에서는 이 "DemoList RUNNING"를 확인할 수 있다. 즉 리스트가 정렬되었다는 의미이기도 하다. 하지만 그 뒤에는 실행되지 말아야 한다. 버튼을 누르고 페이지의 제목이 바뀐다. 그리고 이 제목은 리스트의 일부분이다. 따라서 버튼을 클릭하면 `DemoList` 컴포넌트가 재실행되는 것이다. props 의 일부가 바뀌었기 때문에 제목이 변경된 것이니 당연히 재실행 되어야 마땅하다. 제목은 실제 값의 변경이 일어났으므로 `React.memo`는 정상 작동하고 있는 것이다. 앞서 props의 일부가 바뀌고 실제 값의 변경이 일어났기 때문에 `React.memo`로 감싸도 당연히 재실행을 수행한다.
+
+- 물론, 현재는 부모 컴포넌트(`App`)가 재렌더링 되었으니 언제나 다시 실행이 되는 것이다.
+
+```js
+<DemoList title={listTitle} items={[5, 3, 1, 10, 9]} />
+```
+
+- `App` 컴포넌트 내부의 코드에서 `DemoList`에 전달하는 `items` props의 배열이 부모 컴포넌트(`App`) 컴포넌트가 실행될 때마다 지속적으로 재생성되기 때문이다. 따라서 제목이 바뀌지 않더라도 상위 구성 컴포넌트가 여타 이유로 재실행되면 새로운 배열(`[5, 3, 1, 10, 9]`)을 생성하기 때문에 `DemoList` 컴포넌트는 당연히 다시 실행된다. 함수와 마찬가지로, 배열 역시 객체이고 이 객체는 참조 값이기 때문이다.
+
+- 따라서 제목이 바뀐다는 것은 `DemoList`를 리빌드 해야 하는 타당한 이유가 될 것이다. 하지만 과거에 했던 모든 작업들을 반복하고 싶지 않을 때도 있는 법이다. 특히 다시 해야 할 작업이 성능에 민감한 작업이라면 말이다. 또한, 정렬은 컴포넌트에서 수행 가능한 대표적인 성능 집약적 작업 중에 하나이다.
+
+### 정렬 작업에서 성능 최적화 하기
+
+- 이에 대한 해결책이 있을까? 이전처럼 `useCallback`을 사용하여 함수 객체를 저장하고 입력 값이 변경될 경우에만 리빌드할 수도 있다. 다른 종류의 데이터에도 비슷한 역할을 하는 훅이 있다. 바로 `useMemo` 이다.
+
+### useMemo 로 성능 최적화 하기
+
+- `useMemo`는 기본적으로 저장을 할 수 있는데, `useCallback`이 함수에 대한 것을 저장하듯이 모든 종류의 데이터를 저장하는 기능을 가지고 있다.
+
+```js
+const sortedList = props.items.sort((a, b) => a - b);
+```
+
+- 우리가 데이터를 정렬했던 로직이다. 이 정렬하는 로직을 `useMemo`를 사용하여 저장하고, 최적화를 할 것이다.
+
+```js
+const sortedList = useMemo(() => {
+  return props.items.sort((a, b) => a - b);
+});
+```
+
+- 먼저 `useMemo`를 호출하여 해당 정렬의 결과를 기억하게 할 수 있다. 그리고 `useMemo`의 첫 번째 인자에는 함수가 들어가야 한다. 이 말인 즉슨, `useMemo`가 함수를 기억하도록 하는 것은 아니며, 단지 함수가 저장하고 싶은 것을 반환하고 이 반환된 결과 값을 저장하도록 할 뿐이다. 이 경우에는 정렬된 배열을 반환할 것이다.
+
+```js
+const sortedList = useMemo(() => {
+  return props.items.sort((a, b) => a - b);
+}, []);
+```
+
+- `useCallback` 과 마찬가지로 `useMemo`는 두 번째 인자가 필요한데, 이는 역시 의존성 배열이다. 이 의존성 배열을 통해 저장된 값에 변경 사항이 생길 때마다 `useMemo`에 저장된 값을 업데이트할 것이다. 여기서는 값이 변경되고 새로운 값이 추가될 때마다 업데이트 되도록 할 것이다.
+
+```js
+const sortedList = useMemo(() => {
+  return props.items.sort((a, b) => a - b);
+}, [props]);
+```
+
+- 해당 의존성 배열에 `props`를 추가할 수도 있지만(`props`의 `items` 이기 때문이다.) 이는 전체 `props` 객체가 여기에서의 의존성 객체가 되며, 이는 항상 재계산 되기 때문에 다른 방법을 고려하는 것이 좋을 것이다.
+
+```js
+const { items } = props;
+
+const sortedList = useMemo(() => {
+  return items.sort((a, b) => a - b);
+}, [items]);
+```
+
+- 이전보다 좀 더 우아하게 의존성 배열을 사용하기 위해서는 앞서 배웠던 객체 구조 분해 할당을 사용할 수 있을 것이다. `props`에서 객체 구조 분해 할당을 이용해서 `items`를 꺼내오고, 이것을 `useMemo`의 의존성 배열에 추가한다. `props` 로 `items`를 직접 꺼내와서 정렬해주었던 로직도 그냥 `items`로 수정해준다. 이제 `useMemo`의 로직은 의존성 배열인 `items`에 변경 사항이 발생할 때만 리빌드를 진행할 것이다.
+
+```js
+const sortedList = useMemo(() => {
+  console.log("Items sorted");
+  return items.sort((a, b) => a - b);
+}, [items]);
+```
+
+- `useMemo`가 반환하는 함수 내부에 "Items sorted"를 출력하는 콘솔 로그를 추가하고 저장한 뒤 개발자 도구 콘솔을 확인해보자.
+
+![ezgif com-gif-maker (66)](https://user-images.githubusercontent.com/53133662/170870504-de0859a1-5043-4b42-92f0-9a366a5178fe.gif)
+
+- 새로 고침을 하면 최초 실행이 되면서 "Items sorted"를 출력하는데, 제목을 변경해도 여전히 "Items sorted"를 출력하는 것을 알 수 있다. 생각대로 구동되지 않고 있는 것이다. 왜 그럴까?
+
+- 이전에도 말했듯이, `useMemo`의 의존성 배열인 `items`가 바뀌었기 때문이다.
+
+```js
+<DemoList title={listTitle} items={[5, 3, 1, 10, 9]} />
+```
+
+- 여기서 props 로 전달하는 `items`는 `App` 컴포넌트가 재실행될 때마다 새로운 배열을 생성하기 때문에 이 배열 역시 재생성 된다. 그러니까 기술적으로는 같은 값을 가지고 같은 순서로 된 비슷한 배열이지만, 메모리상에서는 새로운 배열이기 때문에 내포한 값이 같더라도 기존 배열과 다른 새로운 배열로 취급한다. 이 배열이 앞서 여러 번 언급했던 참조 값이라는 사실을 잊지 말아야 한다. 따라서 이제 불필요하게 새로운 배열을 전달하는 것을 막기 위해서 이 배열에 `useMemo`를 사용할 것이다.
+
+### useMemo 로 새로운 배열의 생성을 막기
+
+```js
+<DemoList title={listTitle} items={useMemo(() => [5, 3, 1, 10, 9], [])} />
+```
+
+- 해당 배열이 있는 위치에 `useMemo` 함수로 배열을 래핑한다. 그리고 빈 의존성 배열을 추가한다. 이 빈 의존성 배열은 값에 변함이 없다. 외부 의존성이 없고 하드 코딩되어 있다. 따라서 `useMemo`를 사용할 수 있는 것이다.
+
+```js
+const listItems = useMemo(() => [5, 3, 1, 10, 9], []);
+```
+
+- `useMemo` 함수로 래핑한 배열 값을 변수 `listItems`에 저장하고,
+
+```js
+<DemoList title={listTitle} items={listItems} />
+```
+
+- 아까 배열이 있던 위치에 그 변수를 포인터 시킨다. 이렇게 함으로써 불필요한 재정렬을 막을 수 있을 것이다.
+
+![ezgif com-gif-maker (67)](https://user-images.githubusercontent.com/53133662/170870978-aec54a83-51a6-4e8b-8c69-59f876cf5236.gif)
+
+- 저장하고 확인해보자. 최초 실행에는 출력되던 "Items sorted"이 버튼을 누르면 더이상 출력되지 않는 걸 확인할 수 있다. `useMemo` 덕분에 전달된 배열이 재정렬 되지 않기 때문이다.
+
+### 정리
+
+- `useMemo`는 `useCallback`에 비해 사용빈도가 낮을 것이다. 데이터를 기억하는 것보다 함수를 기억하는 것이 훨씬 더 도움이 되며, 빈도수도 높기 때문이다. 물론 데이터 재계산과 같은 성능 집약적 작업 때문에 데이터를 저장해야 할 필요도 있으나, 이런 경우가 아니라면 사용할 일은 없을 것이다.
+- 잊지 말아야 할 사실은, `useMemo`를 사용하여 데이터를 저장한다는 것은 메모리를 사용한다는 것이며 이런 `useMemo`를 통한 함수 저장 역시 일정 성능을 사용한다는 뜻이기도 하다는 것이다. 따라서 `useMemo`는 여러 성능 면에서 고려하여 사용해야 하는 것이다. 다만 지금과 같이 뭔가를 정렬하는 경우라면 이후의 컴포넌트 업데이트에서 불필요한 정렬을 막을 수 있으므로 `useMemo`를 고려해보는 것도 괜찮을 것이다.
+
+  </br>
