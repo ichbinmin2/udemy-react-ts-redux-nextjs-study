@@ -5,6 +5,7 @@
 - [How To (Not) Connect To A Database](#데이터베이스에-연결하지-않는-방법)
 - [Our Starting App & Backend](#시작-앱-및-백엔드)
 - [Sending a GET Request](#GET-요청-보내기)
+- [Using async / await](#async-와-await-사용하기)
 
   </br>
 
@@ -353,3 +354,56 @@ function fetchMoviesHandler() {
 - 화면의 결과는 우리가 외부 API에서 fetch 해온 즉, 백엔드 어플리케이션에서 데이터 베이스와 소통한 결과물인 셈이다. 지금까지 리액트 앱을 이용해 데이터베이스와 연결을 한 것으로 보이지만 이것은 이론적으로 정확한 표현이 아니며, 다만 리액트 앱에서 백엔드로 HTTP 요청을 전송을 했을 뿐이라는 사실을 우리는 잊지 말아야 할 것이다.
 
 </br>
+
+## async 와 await 사용하기
+
+### 프로미스는 자바스크립트 언어의 기능 중에 하나이다
+
+- fetch 는 프로미스 객체를 반환하므로 우리는 `then()` 체인 즉, `then()` 호출 뒤에 또 다시 `then()`을 재차 호출할 수 있었다. 하지만 이런 `then()` 체인 대신 간단하게 `async`와 `await`을 이용하여 비동기 작업을 수행할 수도 있다.
+
+### async/await 를 통한 코드 간결화
+
+#### before
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
+      setMovies(transformedMovies);
+    });
+}
+```
+
+#### after
+
+```js
+async function fetchMoviesHandler() {
+  const response = await fetch("https://swapi.dev/api/films");
+  const data = await response.json();
+
+  const transformedMovies = data.results.map((movieData) => {
+    return {
+      id: movieData.episode_id,
+      title: movieData.title,
+      openingText: movieData.opening_crawl,
+      releaseDate: movieData.release_date,
+    };
+  });
+  setMovies(transformedMovies);
+}
+```
+
+- befor와 after 코드를 보면 기존의 `then()` 체이닝을 통해 작성한 비동기 코드보다 `async/await`를 사용해서 작성한 코드가 훨씬 가독성이 높은 걸 확인할 수 있다. 이는 단순한 코드 변환에 가까우며, 백그라운드에서는 `then()` 체이닝을 사용한 것과 동일한 역할을 할 뿐이지만, 코드를 단순화 시키고 직관적으로 작성할 수 있게 되며 가독성 역시 높아진다는 장점이 있다. 겉으로 보기엔 단계적으로 실행되는 즉, 동기적 작업처럼 보이지만 백그라운드에서는 `then()` 체이닝과 같은 비동기적 작업으로 진행되고 있는 것이다.
+
+  </br>
