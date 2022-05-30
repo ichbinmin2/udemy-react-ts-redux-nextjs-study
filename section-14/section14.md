@@ -4,6 +4,7 @@
 
 - [How To (Not) Connect To A Database](#데이터베이스에-연결하지-않는-방법)
 - [Our Starting App & Backend](#시작-앱-및-백엔드)
+- [Sending a GET Request](#GET-요청-보내기)
 
   </br>
 
@@ -38,5 +39,317 @@
 ![스크린샷 2022-05-29 오후 11 13 59](https://user-images.githubusercontent.com/53133662/170873648-4ade7694-8d98-455f-bb62-1771d1b0d4e9.png)
 
 - swapi 사이트에서 제공하는 것은 "REST API"이며 우리가 요청을 전송하게 되면 특정한 형식에 맞춰서 데이터를 전달해준다. 서로 다른 URL에 각기 다른 요청을 보내게 되면 그에 맞는 서로 다른 데이터들을 제공한다. 그리고 바로 이것이 API 이다. 접근 위치가 다르면 결과도 다르다. 이제 우리의 리액트 어플리케이션에서 사용하던 더미 데이터 대신, 이 API로 요청을 보내서 실제 데이터를 표시하고자 한다.
+
+</br>
+
+## GET 요청 보내기
+
+- 리액트 앱에서 요청을 전송하려고 할 때 우리가 잊어서는 안되는 사실이 있다. 우리가 작성하는 것은 정규 자바스크립트 코드 라는 사실이다. 리액트 어플리케이션은 결국 자바스크립트 어플리케이션이라는 뜻이다. 그렇기 때문에 우리는 자바스크립트 솔루션을 통해서 리액트 어플리케이션 내에서 어떤 HTTP 요청이든 전달할 수 있는 것이다.
+
+### fetch API
+
+- 최근에는 자바스크립트 내에서 HTTP 요청을 전송하는 내장 메커니즘이 존재하는데 그것은 fetch API 라고 불린다.
+
+  > [ MDN 공식문서 참고 : fetch API ](https://developer.mozilla.org/ko/docs/Web/API/Fetch_API)
+
+- fetch API 는 브라우저 내장형이며, 데이터를 불러오거나 데이터를 전송하는 것도 가능하다. 이 API를 통해서 HTTP 요청을 전송하고 응답을 처리할 수 있다.
+
+### fetch API 사용해서 영화 정보 데이터 불러오기
+
+- 먼저 해야할 것은 버튼이 클릭될 때마다 영화 정보를 가져오고 이에 대한 결과를 화면에 표시하는 것이다. 우리가 이전에 작성해두었던 더미 데이터 대신에 fetch API를 통해서 데이터를 받아와 화면에 표시하도록 할 것이다.
+
+#### 기존의 더미 데이터
+
+```js
+const dummyMovies = [
+  {
+    id: 1,
+    title: "Some Dummy Movie",
+    openingText: "This is the opening text of the movie",
+    releaseDate: "2021-05-18",
+  },
+  {
+    id: 2,
+    title: "Some Dummy Movie 2",
+    openingText: "This is the second opening text of the movie",
+    releaseDate: "2021-05-19",
+  },
+];
+```
+
+- 먼저 버튼을 클릭하면 실행될 수 있는 트리거 함수를 작성한다. 이 트리거 함수에서 fetch API를 사용할 것이다.
+
+```js
+function fetchMoviesHandler() {
+  fetch();
+}
+```
+
+- fetch API 에 대한 가장 단순한 형태는 우리가 요청을 전송하려는 URL을 '문자열'로 전달하는 것이다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films");
+}
+```
+
+- fetch API에는 두 번째 인자를 전달할 수 있는데, 이 두 번째 인자를 통해서 다양한 호출 선택 사항을 지정할 수 있는 자바스크립트 객체를 전달할 수 있게 된다. 예를 들어 헤더나 바디 또는 HTTP 요청 메소드(POST, PUT, PATCH, DELETE)를 변경하거나 할 때 사용된다. fetch API 는 기본적으로 "GET"으로 설정되어 있기 때문에 현재 데이터를 불러오기만 하는 상황에서는 수정할 필요가 없기에 두 번째 인자를 생략했다. 이제 이 함수가 호출될 때마다 매 번 HTTP 요청이 전송될 것이다.
+
+### fetch API 호출에 대한 응답 처리하기 - then()
+
+- HTTP 요청이 전송되는 것 뿐만 아니라 이 호출에 대한 응답 역시 처리해야만 한다. 이 `fetch()` 함수는 프로미스라는 객체를 반환하는데 이 객체는 우리가 잠재적으로 발생할 수 있는 오류나 호출에 대한 응답에 반응할 수 있도록 만들어준다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films");
+}
+```
+
+- `fetch()` 함수를 통해서 프로미스 객체가 반환되었다는 것은 즉각적인 행동 대신 어떤 데이터를 전달하는 객체라는 의미이다. 왜냐하면 HTTP 요청 전송은 '비동기 작업' 이기 때문이다. 즉각적으로 끝내는 것이 아니라, 몇 초-몇 분이 걸리기도 하며 심지어 실패할 가능성도 있다. 따라서 `fetch()` 로 프로미스 객체를 반환한 뒤에 코드의 결과를 바로 확인할 수 없도록 한 것이고, 다만 이 응답을 처리하기 위해 우리는 `then()`을 사용할 수 있게 된다.
+
+  > [ MDN 공식문서 참고 : Promise.prototype.then() ](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films").then();
+}
+```
+
+- 바로 `then()`을 통해서 응답을 처리하는 것이다. (그리고 `catch` 문을 추가해서 잠재적 오류나 에러등을 핸들링 할 수도 있지만 지금은 일단 무시하도록 하자.)
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films").then((res) => {});
+}
+```
+
+- `then()`의 인자로 `res`(response) 를 받고, 화살표 함수를 사용해서 반환해보자. 인자로 들어온 `res`는 객체이며 요청의 응답에 대한 많은 데이터를 가지고 있을 것이다. 예를 들어, 응답의 헤더를 읽거나 상태 코드를 얻을 수도 있다. 하지만 우리가 지금 확인해야 할 것은 `res`의 본문이다. API는 데이터를 JSON 형식으로 전송한다.
+
+### API의 데이터는 JSON 형식이다
+
+- JSON은 데이터 교환에 사용하는 간단하지만 유용한 형식이다. 우리가 받아올 API 응답 데이터 파일을 보면, 마치 자바스크립트 객체 같지만 키 값은 큰 따옴표로 묶여있는 걸 볼 수 있다.
+
+![스크린샷 2022-05-30 오후 3 18 40](https://user-images.githubusercontent.com/53133662/170929169-b7230b6b-97db-47e8-9e76-35e2cf904ef9.png)
+
+- 이 외에도 JSON은 염두해둬야 하는 규칙들이 있다. 메소드가 없고 모두 데이터이기도 하다. 그리고 JSON 데이터의 또 다른 이점은 자바스크립트에서 변환 작업이 반드시 필요하지만 글머에도 불구하고 JSON 형식에서 자바스크립트 객체로의 변환이 매우 쉽다는 것에 있다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films").then((res) => {
+    return res;
+  });
+}
+```
+
+- 그리고 다행히 이 `response` 의 객체에는 내장 메소드가 있어서 JSON response의 본문을 코드에서 사용할 수 있는 자바스크립트 객체로 자동 변환해 줄 수 있다.
+
+### JSON Response 를 자바스크립트 객체로 변환하기 - json()
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films").then((res) => {
+    return res.json();
+  });
+}
+```
+
+- reponse 객체에 있는 내장 메소드인 `json()`를 사용해서 자동으로 변환해줄 수 있도록 한다. 그리고 이 `json()` 메소드 역시, 프로미스 객체를 반환하므로 추가적인 `then()` 구역을 생성해야할 필요성이 있다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then();
+}
+```
+
+- 이렇게 하면, 이 데이터 변환 작업이 끝나고 난 직후에 바로 추가한 `then()`이 작동하게 된다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      return data;
+    });
+}
+```
+
+- 그리고 `then()`을 통해서 변환 된 데이터를 가져온다.
+
+![스크린샷 2022-05-30 오후 3 18 40](https://user-images.githubusercontent.com/53133662/170929169-b7230b6b-97db-47e8-9e76-35e2cf904ef9.png)
+
+- 데이터 파일을 보면, 우리가 가져오길 원하는 영역은 'results'의 배열이기 때문에 `data.result`로 접근해서 이 결과를 반환하면 된다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      return data.results;
+    });
+}
+```
+
+- 당연히 이 데이터를 사용하기 위해서는 우리가 `data.result`로 접근해서 반환 된 배열 데이터를 넣어둘 상태(state)도 필요할 것이다.
+
+### 상태(state)에 데이터 저장하기
+
+```js
+const [movies, setMovies] = useState([]);
+```
+
+- 이 상태(state)에 데이터를 저장하면, `data.results` 에서 갱신되고 이를 화면에 실시간으로 보여줄 수 있을 것이다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      setMovies(data.results);
+    });
+}
+```
+
+- 이제 JSON의 배열이 `movies` 라는 새로운 상태(state)가 되었다. 이제 여기에 있는 `movies`의 상태(state)를 props에 대한 값으로 전달한다.
+
+```js
+<section>
+  <MoviesList movies={movies} />
+</section>
+```
+
+- `MoviesList` 컴포넌트에서 `Movie` 컴포넌트로 전달하는 값을 보면,
+
+```js
+<ul className={classes["movies-list"]}>
+  {props.movies.map((movie) => (
+    <Movie
+      key={movie.id}
+      title={movie.title}
+      releaseDate={movie.release}
+      openingText={movie.openingText}
+    />
+  ))}
+</ul>
+```
+
+- id 와 title, release, openingText 가 props로 전달되고 있음을 확인할 수 있다. 여기서 주의할 점은 이 어플리케이션에서 props 로 넘겨주는 이름과 받아오는 데이터의 key 값들이 다르다는 것이다. 그럼 props로 전달을 하더라도 이름이 다르기 때문에 해당 데이터를 받아오지 못하게 된다. 어떻게 해야 할까?
+
+### 데이터 형식의 이름 변환하기
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      setMovies(data.results);
+    });
+}
+```
+
+- 먼저 HTTP 요청을 생성하는 `App` 컴포넌트 안에서 `data.results`를 새로운 상태로 만들기 전에 변환 과정이 필요하다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      const transformedMovies = data.results.map();
+      setMovies(data.results);
+    });
+}
+```
+
+- `data.results`를 매핑하는 `transformedMovies`라는 새로운 상수를 만들고 넘겨받은 데이터 배열의 모든 객체를 새로운 객체로 반환할 수 있도록 한다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      const transformedMovies = data.results.map((movieData) => {
+        return {};
+      });
+      setMovies(data.results);
+    });
+}
+```
+
+- 반환되는 새로운 객체는 변환된 새로운 객체로 채워진 배열이 될 것이다. `map()`에서 `movieData`라는 인자의 데이터를 가져오는데, 이 데이터의 형식은 API로 받아오는 객체의 형식과 동일하다.
+
+![스크린샷 2022-05-30 오후 3 18 40](https://user-images.githubusercontent.com/53133662/170933374-a7b90f24-eb52-47ad-b81d-690651dcdcaa.png)
+
+- 이중 우리는 episode_id, title, opening_crawl, release_date 만 가져올 예정이니, 새로운 객체 안에서 우리가 props로 넘겨줄 이름으로 변환하여 return 하면 될 것이다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
+      setMovies(data.results);
+    });
+}
+```
+
+- 이제 텍스트가 변환 되었으니, 이 변환된 `transformedMovies` 를 `setMovies`에 저장한다.
+
+```js
+function fetchMoviesHandler() {
+  fetch("https://swapi.dev/api/films")
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
+      setMovies(transformedMovies);
+    });
+}
+```
+
+- 마지막으로 모든 데이터가 출력되고 있는지 확인하기 위해서 `fetchMoviesHandler` 함수를 버튼에 `onClick`을 추가하고 포인터해준다.
+
+```js
+<button onClick={fetchMoviesHandler}>Fetch Movies</button>
+```
+
+![ezgif com-gif-maker (68)](https://user-images.githubusercontent.com/53133662/170934128-8c345bf4-1695-4298-b475-49ef7ff256b8.gif)
+
+- 저장하고, "Fetch Movies" 버튼을 누르면 버튼 클릭 후 영화에 대한 데이터가 표시된다.
+
+### 정리
+
+- 화면의 결과는 우리가 외부 API에서 fetch 해온 즉, 백엔드 어플리케이션에서 데이터 베이스와 소통한 결과물인 셈이다. 지금까지 리액트 앱을 이용해 데이터베이스와 연결을 한 것으로 보이지만 이것은 이론적으로 정확한 표현이 아니며, 다만 리액트 앱에서 백엔드로 HTTP 요청을 전송을 했을 뿐이라는 사실을 우리는 잊지 말아야 할 것이다.
 
 </br>
