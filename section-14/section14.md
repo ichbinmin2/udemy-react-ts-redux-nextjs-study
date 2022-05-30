@@ -6,6 +6,7 @@
 - [Our Starting App & Backend](#시작-앱-및-백엔드)
 - [Sending a GET Request](#GET-요청-보내기)
 - [Using async / await](#async-와-await-사용하기)
+- [Handling Loading & Data States](#로딩-및-데이터-State-처리하기)
 
   </br>
 
@@ -405,5 +406,96 @@ async function fetchMoviesHandler() {
 ```
 
 - befor와 after 코드를 보면 기존의 `then()` 체이닝을 통해 작성한 비동기 코드보다 `async/await`를 사용해서 작성한 코드가 훨씬 가독성이 높은 걸 확인할 수 있다. 이는 단순한 코드 변환에 가까우며, 백그라운드에서는 `then()` 체이닝을 사용한 것과 동일한 역할을 할 뿐이지만, 코드를 단순화 시키고 직관적으로 작성할 수 있게 되며 가독성 역시 높아진다는 장점이 있다. 겉으로 보기엔 단계적으로 실행되는 즉, 동기적 작업처럼 보이지만 백그라운드에서는 `then()` 체이닝과 같은 비동기적 작업으로 진행되고 있는 것이다.
+
+  </br>
+
+## 로딩 및 데이터 State 처리하기
+
+![ezgif com-gif-maker (68)](https://user-images.githubusercontent.com/53133662/170934128-8c345bf4-1695-4298-b475-49ef7ff256b8.gif)
+
+- 상용되는 서비스에서는 어떤 로딩 과정 중에 로딩 아이콘이나 로딩 텍스트를 통해서 사용자에게 현재 데이터를 불러오고 있다는 신호를 보내기도 한다. 현재 우리는 버튼을 통해서 API 데이터를 fetch 하여 영화 데이터를 화면에 표시하는 것까지 완료했지만 실제로 영화 데이터가 표시되기 까지 약간의 지연 시간이 있다는 걸 알 수 있다. 앞서 거론한 서비스들 처럼 이런 지연 시간을 사용자에게 알릴 수 있는 방법이 있을까? 어떻게 처리해야 할까?
+
+### 상태 관리를 통한 데이터 로딩 처리
+
+- 영화의 상태(state)를 가져오면 영화가 실제로 존재하는지를 알 수 있다. 하지만 사용자에게 영화의 데이터를 받아오기까지 기다리는 중인지를 알리기 위해서는 또 다른 상태(state)가 필요할 것이다.
+
+```js
+const [isLoding, setIsLoding] = useState(false);
+```
+
+- `isLoding` 이라는 boolean 의 false 초기값을 가지는 상태(state)를 만들었다. 초기 값을 false 로 설정한 이유는 컴포넌트를 로드할 때나 컴포넌트가 화면에 렌더링될 때 영화 데이터가 바로 로드되는 건 아니기 때문이다.
+
+```js
+async function fetchMoviesHandler() {
+  setIsLoding(true);
+  const response = await fetch("https://swapi.dev/api/films");
+  const data = await response.json();
+
+  const transformedMovies = data.results.map((movieData) => {
+    return {
+      id: movieData.episode_id,
+      title: movieData.title,
+      openingText: movieData.opening_crawl,
+      releaseDate: movieData.release_date,
+    };
+  });
+  setMovies(transformedMovies);
+  setIsLoding(false);
+}
+```
+
+- 하지만 사용자가 버튼을 눌러 `fetchMoviesHandler` 함수를 호출했을 때 영화 데이터가 로드되기 때문에 여기에 `setIsLoding` 을 호출하고, true 값으로 업데이트해준다. 이렇게 하면 영화 데이터 로딩을 시작할 때 해당 `isLoding` 상태(state) 변화가 발생하게 되기 때문이다. 또한 데이터를 호출한 뒤에는 `isLoding`의 상태는 false 여야 하기 때문에 `setMovies()`로 데이터를 넘겨준 뒤에는 다시 `isLoding`의 상태를 false로 업데이트 해준다.
+
+```js
+<section>
+  <MoviesList movies={movies} />
+</section>
+```
+
+- 그리고 여기에서 `isLoding`의 상태를 이용해서 로딩 아이콘이나 로딩 텍스트를 렌더링 할 수 있게 된다. 가령 로딩 중이 아닐 때에만 `MoviesList` 컴포넌트를 렌더링할 수 있을 것이다.
+
+```js
+<section>{!isLoding && <MoviesList movies={movies} />}</section>
+```
+
+- 반대로, 로딩 중일 때에는 로딩 중임을 알리는 텍스트를 표시하도록 한다.
+
+```js
+<section>
+  {!isLoding && <MoviesList movies={movies} />}
+  {isLoding && <p>Loding...</p>}
+</section>
+```
+
+![ezgif com-gif-maker (69)](https://user-images.githubusercontent.com/53133662/170946197-a3334022-dbb0-43b4-aceb-2eaf897e1af5.gif)
+
+- 저장하고 다시 버튼을 누르면, 아주 잠깐이지만 영화 데이터가 표시되기 전까지 우리가 지정한 문구 'Loding...'이 표시 된다. 하지만 우리가 사용할 수 있는 상태(state)가 `isLoding` 이거나 `!isLoding` 만 있는 것은 아니다. 로딩이 완료되었으나, 영화의 데이터가 없는 경우도 분명 예외적으로 존재할 가능성이 있다. 우리가 fetch 로 받아오는 영화 데이터가 없을 때에 혹은 fetch 가 실패해서 `movies`가 빈 배열일 때를 가정해서 이를 사용자에게 알릴 수 있어야 한다.
+
+```js
+<section>
+  {!isLoding && movies.length > 0 && <MoviesList movies={movies} />}
+  {isLoding && <p>Loding...</p>}
+</section>
+```
+
+- 로딩이 되지 않고 `movies.length` 를 이용한 값이 0 이상일 때(즉, 데이터가 1개 이상으로 담겼을 때)를 `&&` 연산자로 추가하여 `MoviesList` 컴포넌트를 렌더링할 수 있도록 해주고,
+
+```js
+<section>
+  {!isLoding && movies.length > 0 && <MoviesList movies={movies} />}
+  {!isLoding && movies.length === 0 && <p>Found no movies.</p>}
+  {isLoding && <p>Loding...</p>}
+</section>
+```
+
+- 로딩이 되지 않고, `movies.length` 를 이용한 값이 0일 때(`movies`가 빈 배열일 때)를 `&&` 연산자로 추가하여 "Found no movies." 텍스트를 화면에 표시할 수 있도록 해주었다.
+
+![ezgif com-gif-maker (70)](https://user-images.githubusercontent.com/53133662/170947678-68b6eb2e-d44d-4084-ac04-bc1fdd8cbd62.gif)
+
+- 저장하고 어플리케이션을 다시 불러오면 초기에는 로딩이 되지 않았고(`!isLoding`), 영화도 불러오지 않았으니 "Found no movies." 가 표시되고, 버튼을 눌러서 영화 데이터를 가져오는 지연 시간에는 로딩이 되었기에(`isLoding`), "Loding..." 화면에 표시되었으며, 로딩이 끝나고(`!isLoding`) 영화 데이터가 담겼으므로(`movies.length > 0`) 영화 데이터의 목록이 화면에 출력(`MoviesList` 컴포넌트 렌더링)되고 있음을 확인할 수 있다.
+
+### 정리
+
+- 이런 로딩 처리는 사용자 인터페이스 구축 과정에서 매우 중요한 부분이다. 사용자에게 어플리케이션의 현재 상태를 알려야 하기 때문이다. 영화 데이터를 가져오는 도중에 표시되는 로딩 문자나, 영화 데이터를 가져오지 않았을 때의 상태를 사용자에게 알려주는 것은 이 모든 것들이 없을 때와는 사용자 경혐 면에서 큰 차이가 있을 수 밖에 없을 것이다.
 
   </br>
