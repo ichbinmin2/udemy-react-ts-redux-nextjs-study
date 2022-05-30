@@ -7,6 +7,7 @@
 - [Sending a GET Request](#GET-요청-보내기)
 - [Using async / await](#async-와-await-사용하기)
 - [Handling Loading & Data States](#로딩-및-데이터-State-처리하기)
+- [Handling Http Errors](#HTTP-오류-처리하기)
 
   </br>
 
@@ -155,7 +156,7 @@ function fetchMoviesHandler() {
 }
 ```
 
-- reponse 객체에 있는 내장 메소드인 `json()`를 사용해서 자동으로 변환해줄 수 있도록 한다. 그리고 이 `json()` 메소드 역시, 프로미스 객체를 반환하므로 추가적인 `then()` 구역을 생성해야할 필요성이 있다.
+- response 객체에 있는 내장 메소드인 `json()`를 사용해서 자동으로 변환해줄 수 있도록 한다. 그리고 이 `json()` 메소드 역시, 프로미스 객체를 반환하므로 추가적인 `then()` 구역을 생성해야할 필요성이 있다.
 
 ```js
 function fetchMoviesHandler() {
@@ -497,5 +498,373 @@ async function fetchMoviesHandler() {
 ### 정리
 
 - 이런 로딩 처리는 사용자 인터페이스 구축 과정에서 매우 중요한 부분이다. 사용자에게 어플리케이션의 현재 상태를 알려야 하기 때문이다. 영화 데이터를 가져오는 도중에 표시되는 로딩 문자나, 영화 데이터를 가져오지 않았을 때의 상태를 사용자에게 알려주는 것은 이 모든 것들이 없을 때와는 사용자 경혐 면에서 큰 차이가 있을 수 밖에 없을 것이다.
+
+  </br>
+
+## HTTP 오류 처리하기
+
+> [MDN 공식문서 참고 : HTTP 상태 코드](https://developer.mozilla.org/ko/docs/Web/HTTP/Status)
+
+- HTTP 요청을 전송하는 경우에도 무언가 잘못된 것이 있다면 오류가 발생할 수 있다. 네트워크 연결이 없다던가, 또는 네트워크 연결이 완료되고 요청이 전송되었는데 오류 응답 코드를 넘겨받는 등의 기술적인 오류 등을 생각해보자. HTTP Status 코드를 공부했다면 알 수 있지만 404, 500, 401과 같은 응답 들이 바로 그 오류의 예시일 것이다.
+
+### HTTP 상태 코드
+
+- 만약 200 이나, 201 처럼 2xx 으로 시작하는 코드는 정상적인 응답을 뜻한다. 즉 요청이 정상적으로 전송되었고, 서버가 성공적으로 응답했을 때 받는 코드들이다. 하지만 요청을 보낼 때 400 이나 500 같은 응답 코드를 받을 가능성도 있다. 예를 들어, 접근을 허가받지 못한 자원에 대해 요청을 한다고 생각해보자. 요청이 성공적으로 전송 되었고, 심지어 이 과정에서 아무런 기술적인 문제가 없었음에도 서버에서 401, 403 과 같은 응답을 하게 된다면 서버가 요청을 받았으나 우리가 원하는 응답을 주지 않았음을 의미한다. 기술적으로는 성공적으로 응답 받은 것이나 응답에 오류 상태 코드가 포함되어 있기에 이런 코드를 받는 것이다. 그리고 5xx 대의 응답 코드들은 서버에 오류가 있을 때 발생한다. 이것이 웹의방식이다.
+
+### HTTP 오류를 어떻게 처리할까?
+
+```js
+const response = await fetch("https://swapi.dev/api/films");
+```
+
+- 먼저, 오류에 대한 처리에 대한 예시를 위해서 우리가 정상적으로 받아왔던 URL을 유효하지 않은 주소로 수정해보자.
+
+```js
+const response = await fetch("https://swapi.dev/api/film");
+```
+
+- 이렇게 유효하지 않은 URL 주소로 수정을 한 뒤 저장을 해보면, 데이터는 들어오지 않는다.
+
+![ezgif com-gif-maker (71)](https://user-images.githubusercontent.com/53133662/170956208-69a59c8e-6c61-4cf3-b906-03cfc489cd88.gif)
+
+- 버튼을 눌러도 계속 로딩 상태에 멈춰있는 걸 알 수 있다. 당연하지만 이는 전혀 좋지 않은 사용자 경험을 제공한다. 이 어플리케이션을 사용하는 사용자에게 오류 메세지 같은 것을 표시해서 문제가 발생했음을 알려주는 게 좋을 것이다.
+
+![스크린샷 2022-05-30 오후 5 57 32](https://user-images.githubusercontent.com/53133662/170956472-9a6b19a0-fa2f-4d1e-a70a-da012d0d8d39.png)
+
+- 개발자 도구를 열어보면 해당 응답 오류 코드 404를 확인할 수 있다. 의도했던 대로 기술적으로는 성공적인 응답이다. 그러나 요청이 서버로 가서 응답을 받았지만 404 코드를 받았고 이는 무언가 문제가 있었음을 나타낸다. 그리고 이 경우는 서버가 준비하지 못한 리소스를 요청했다는 의미이다.
+
+### error의 상태(state) 추가하기
+
+- 이런 오류를 처리하기 위해서는 추가적인 세 번째 상태(state)를 도입해야 한다. 초기에는 오류가 없기 때문에 초기 값은 null 로 처리해준다.
+
+```js
+const [error, setError] = useState(null);
+```
+
+- 그리고 `fetchMoviesHandler` 함수가 호출되면, 이 `error`를 `null`로 다시 돌려놔야 한다. 이전에 받았을 수도 있는 오류를 초기화해줘야 하기 때문이다.
+
+```js
+async function fetchMoviesHandler() {
+  setIsLoding(true);
+  setError(null);
+
+  const response = await fetch("https://swapi.dev/api/film");
+  const data = await response.json();
+
+  const transformedMovies = data.results.map((movieData) => {
+    return {
+      id: movieData.episode_id,
+      title: movieData.title,
+      openingText: movieData.opening_crawl,
+      releaseDate: movieData.release_date,
+    };
+  });
+  setMovies(transformedMovies);
+  setIsLoding(false);
+}
+```
+
+- 실제로 오류가 발생헀다면, 이는 `error`의 초기 값 null이 아니기 때문에 null 이외의 값을 사용해야 할 것이다.
+
+### try-catch 사용하기
+
+- `async/await` 를 사용하지 않고 `then()` 체이닝을 통해 작업을 한다면, `catch()`를 이어 추가해서 오류를 확인해야 한다. 하지만 `async/await`을 사용한다면 `try-catch`를 사용해야 한다. 코드의 실행을 시도(`try`)해서 잠재적인 오류를 포착(`catch`) 하기 위해서 말이다.
+
+```js
+async function fetchMoviesHandler() {
+  setIsLoding(true);
+  setError(null);
+
+  try {
+    const response = await fetch("https://swapi.dev/api/film");
+    const data = await response.json();
+
+    const transformedMovies = data.results.map((movieData) => {
+      return {
+        id: movieData.episode_id,
+        title: movieData.title,
+        openingText: movieData.opening_crawl,
+        releaseDate: movieData.release_date,
+      };
+    });
+    setMovies(transformedMovies);
+    setIsLoding(false);
+  } catch (error) {}
+}
+```
+
+- `try` 블록 안에 데이터를 요청해서 반환하는 모든 코드들을 넣어주고, 이 `try` 블록 안에서 발생할 수 있는 잠재적인 오류들을 `catch` 블록 안에서 포착하여 처리할 수 있도록 한다. 따라서 `try` 블록 안에서 어떤 오류가 발생했다면 `catch` 블록에서 이를 확인할 수 있게 되는 것이다.
+
+### fetch API 에서 에러 상태 코드는 에러로 취급되지 않는다
+
+- 여기서 우리가 직면해야 하는 문제 중 하나는 fetch API 에서는 에러 상태 코드를 실제 에러로 취급하지 않는다는 사실이다. 실제로 오류 상태 코드를 받더라도 기술적인 오류로써 처리하지 않는다는 의미이다. 따라서 어떤 문제가 발생해도 이를 실제 오류로 처리하지 않게 된다. 가져오지 못한 데이터로 어떤 작업을 하려고 할 때만 오류가 발생하게 된다. 그리고 이는 우리가 원하는 에러 처리 방식이 아니다.
+
+### 에러 상태 코드를 받았을 때 실제 오류를 발생시키는 방법
+
+- fetch API 에서는 에러 상태 코드를 실제 에러로 취급하지 않기 때문에 우리가 에러를 보다 우아한 방식으로 에러를 처리하기 위해서는 오류 상태 코드를 받았을 때 실제 오류가 발생하도록 할 수도 있을 것이다. 물론 axios 같은 서드 파티 패키지 라이브러리 같은 경우 요청 전송에 성공하면 오류 상태 코드에 맞는 오류를 만들어서 전달해주는 기능을 포함하고 있다. 하지만 우리는 axios를 사용하지 않고 fetch API 를 사용하고 있으니 우리가 직접 오류를 만들어야 된다.
+
+```js
+try {
+  const response = await fetch("https://swapi.dev/api/film");
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error("Something went wrong!");
+  }
+
+  const transformedMovies = data.results.map((movieData) => {
+    return {
+      id: movieData.episode_id,
+      title: movieData.title,
+      openingText: movieData.opening_crawl,
+      releaseDate: movieData.release_date,
+    };
+  });
+  setMovies(transformedMovies);
+  setIsLoding(false);
+} catch (error) {}
+```
+
+- 우리가 전달받게 되는 `response` 객체에는 `ok` 라는 필드가 존재한다. 이는 요청이 성공적인지 그렇지 않은지를 표시하는 영역이다. 그러니까 이 `ok` 필드를 이용해서 응답이 ok 인지 아닌지를 확인하고 이에 대해 자체적인 오류를 만들어서 표시할 수 있다. 그리고 여기에 적당한 오류 메세지를 `new Error()`로 생성해서 표시하면 된다. 물론 서버에서 돌아오는 오류 응답 코드에 따라서 오류 메세지를 개별적으로 읽어들일 수도 있고, 단지 앞서 우리가 했던 것처럼 우리가 만든 메세지를 추가해서 사용할 수도 있다. 아무튼 이 메세지는 응답(`response`)에 문제가 있을 때에만 표시하도록 할 것이다.
+
+### catch() 사용하기
+
+```js
+async function fetchMoviesHandler() {
+  setIsLoding(true);
+  setError(null);
+
+  try {
+    const response = await fetch("https://swapi.dev/api/film");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error("Something went wrong!");
+    }
+    ...
+
+  } catch (error) {
+
+  }
+}
+```
+
+- 여기에서 오류가 발생하면 당연히 그 다음 단계의 코드는 진행이 되지 않을 테니 대신에 `catch()` 블록을 만들어둔 것이다. 그리고 `catch()` 블록 안에서 `setError`를 호출하고 null 값이 아닌 오류 메세지를 넣어둔다.
+
+```js
+catch (error) {
+  setError(error.message);
+}
+```
+
+- 이제 `error` 는 null 이 아닌 문자열(`error.message`)이 되었다. 이제 `error` 상태를 관리할 수 있게 되었으니 화면에 표시되는 것들 역시 정해줘야 한다. 오류의 존재 여부에 따라 표시되는 것들도 변화해야 하기 떄문이다.
+
+### error 가 발생했을 때 화면에 표시되는 것
+
+```js
+{
+  !isLoding && movies.length > 0 && <MoviesList movies={movies} />;
+}
+{
+  !isLoding && movies.length === 0 && <p>Found no movies.</p>;
+}
+{
+  isLoding && <p>Loding...</p>;
+}
+```
+
+- 위의 코드처럼 조건에 따라서 특정 컨텐츠를 렌더링할 것이다. 먼저 로딩 중이 아닌지를 확인해야 한다. 로딩 중이라면 이에 대한 결과를 기다려야 하기 때문이다.
+
+```js
+{
+  !isLoding && error && <p>{error}</p>;
+}
+```
+
+- 하지만 로딩 중이 아니고(`!isLoding`) 오류가 있다면 (`error`가 null이 아니라, 값이 존재한다면) 오류 메시지를 표시할 수 있도록 작성해준다.
+
+```js
+async function fetchMoviesHandler() {
+  setIsLoding(true);
+  setError(null);
+
+  try {
+    const response = await fetch("https://swapi.dev/api/film");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error("Something went wrong!");
+    }
+    ...
+    setMovies(transformedMovies);
+    setIsLoding(false);
+
+  } catch (error) {
+    setError(error.message);
+    setIsLoding(false);
+  }
+}
+```
+
+- 또한, 오류가 발생하게 되면 더이상 로딩이 필요 없다. 이런 경우에는 반드시 로딩을 중단(`setIsLoding(false)`)되게 해야만 한다. 그리고 이 구문(`setIsLoding(false)`)을 `try-catch` 블록 뒤에 설정해서 응답을 성공적으로 받았거나 오류를 받았든 상관없이 `setIsLoding(false)`을 설정하여 로딩이 끝났음을 알리는 것도 괜찮을 것이다.
+
+```js
+async function fetchMoviesHandler() {
+  setIsLoding(true);
+  setError(null);
+
+  try {
+    const response = await fetch("https://swapi.dev/api/film");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error("Something went wrong!");
+    }
+    ...
+    setMovies(transformedMovies);
+
+  } catch (error) {
+    setError(error.message);
+  }
+
+  setIsLoding(false);
+}
+```
+
+- 이렇게 작성을 하고 저장한 뒤 버튼을 누르면, 로딩이 끝나고 "Found no movies." 문구와 함께 우리가 설정한 오류 메세지(`error.message`)가 출력되고 있는 걸 확인할 수 있다.
+
+![ezgif com-gif-maker (72)](https://user-images.githubusercontent.com/53133662/170962868-f92192c0-25f4-459f-b715-526e1ab2a9a5.gif)
+
+- "Unexpected token < in JSON at position 1" 는 우리가 코드 안에서 설정한 것이 아니라, JSON에 대한 응답을 호출했음에도 우리가 설정한 에러 메세지를 받아오는데 실패한 것이다. 유효하지 않은 API 엔드 포인트에 대해 요청을 했고, 따라서 JSON 데이터를 받아오지 못했는데도 말이다. 그러니, `response` 바디 부분을 파싱하기 이전에 `response`의 응답이 ok 인지를 먼저 확인해야 한다.
+
+```js
+const response = await fetch("https://swapi.dev/api/film");
+if (!response.ok) {
+  throw new Error("Something went wrong!");
+}
+
+const data = await response.json();
+```
+
+- 오류 응답을 다루는 좀 더 확실한 방법은 어떤 API와 통신하는지에 달려있다. 몇 몇 API는 요청이 성공적이지 못헀음에도 JSON 데이터를 보낼 때도 있기 때문이다. 하지만 우리가 사용하는 API는 요청이 성공적이지 못하면 JSON 데이터를 보내지 않기 때문에 이에 맞춰서 파싱 전에 처리를 해줘야 한다.
+
+![ezgif com-gif-maker (73)](https://user-images.githubusercontent.com/53133662/170963856-f67da992-fe54-4913-90f4-806da77a6d56.gif)
+
+- 다시 저장하고 이전과 동일한 방법으로 시도하자, 이번엔 우리가 설정한 에러 메시지 "Something went wrong!" 가 출력되고 있음을 알 수 있다.
+
+### 조건에 따른 메세지 문구 출력하기
+
+```js
+{
+  !isLoding && movies.length > 0 && <MoviesList movies={movies} />;
+}
+{
+  !isLoding && movies.length === 0 && <p>Found no movies.</p>;
+}
+{
+  !isLoding && error && <p>{error}</p>;
+}
+{
+  isLoding && <p>Loding...</p>;
+}
+```
+
+- "Something went wrong!" 가 출력되는 것은 우리가 의도한 적이지만, "Found no movies." 메세지 역시 동시에 출력되는 건 의도하지 않았다. 이 부분의 조건 처리를 추가해줘야 할 필요성이 있어보인다.
+
+```js
+{
+  !isLoding && movies.length > 0 && <MoviesList movies={movies} />;
+}
+{
+  !isLoding && movies.length === 0 && !error && <p>Found no movies.</p>;
+}
+{
+  !isLoding && error && <p>{error}</p>;
+}
+{
+  isLoding && <p>Loding...</p>;
+}
+```
+
+- "Found no movies." 를 출력하는 조건식에 에러가 아닐 때(`!error`)를 `&&` 연산자로 추가해준다.
+
+![ezgif com-gif-maker (74)](https://user-images.githubusercontent.com/53133662/170965084-c90ea50d-c897-43a3-881b-5e72035e9e1d.gif)
+
+- 더이상 "Found no movies." 문구는 출력되지 않는 걸 알 수 있다.
+
+- 이것이 HTTP 요청 전송에서 각각의 서로 다른 상태를 처리하는 방법이다. 어떤 백엔드 어플리케이션과 통신하든 간에 서로 다른 상태(state)를 마주할 수 있으므로 경우에 따른 처리 방법을 아는 것은 중요하다. 항상 응답(response)을 기다리게 되다 보면 오류(error)를 받을 수도 빈 데이터를 받을 수도 있기 때문에 이러한 여러 시나리오에 대응하는 방법을 핸들링할 수 있어야 하기 때문이다.
+
+### 조건에 따른 content 출력하기
+
+```js
+{
+  !isLoding && movies.length > 0 && <MoviesList movies={movies} />;
+}
+{
+  !isLoding && movies.length === 0 && !error && <p>Found no movies.</p>;
+}
+{
+  !isLoding && error && <p>{error}</p>;
+}
+{
+  isLoding && <p>Loding...</p>;
+}
+```
+
+- 이처럼 코드 안에서 모든 조건을 확인하는 대신, 다른 방법을 사용할 수도 있다.
+
+```js
+let content = "Found no movies.";
+```
+
+- 먼저 변수 `content`에 기본 값으로 "Found no movies." 문구를 할당해준다. 그리고 이제 우리가 가지고 있는 상태(state)에 따라서 이 상수(`content`)의 값을 다르게 할당해보자.
+
+```js
+let content = "Found no movies.";
+
+if (isLoding) {
+  content = <p>Loding...</p>;
+}
+```
+
+- 예를 들어서, 로딩 중(`isLoding`) 이라면, `content`의 값을 `<p>Loding...</p>`로 할당한다. 해당 if 문 코드는 조건에 해당하는 모든 것들을 덮어쓸 테니 이 조건에 대해서는 마지막에 확인하도록 하고, 다른 조건식들을 추가해보자.
+
+```js
+let content = "Found no movies.";
+
+if (error) {
+  content = <p>{error}</p>;
+}
+
+if (isLoding) {
+  content = <p>Loding...</p>;
+}
+```
+
+- 오류가 있는지(`error`) 확인해서 만약 오류가 있다면(`error`가 null 이 아닐 때) `<p>{error}</p>`를 `content` 의 값으로 할당한다.
+
+```js
+let content = "Found no movies.";
+
+if (movies.length > 0) {
+  content = <MoviesList movies={movies} />;
+}
+
+if (error) {
+  content = <p>{error}</p>;
+}
+
+if (isLoding) {
+  content = <p>Loding...</p>;
+}
+```
+
+- 물론, 요청을 통해 데이터를 받아올 때도 처리해줘야 한다. 이전에 우리가 조건식에 추가해주었던 방식 대로 if 문에 `movies.length > 0` 일 때를 가정(데이터가 들어왔을 때)해서 `MoviesList` 컴포넌트를 렌더링 할 수 있도록 `content` 의 값으로 할당 한다.
+
+```js
+<section>{content}</section>
+```
+
+- 마지막으로 먼저 조건식으로 만들어 두었던 JSX 의 모든 코드들을 제거하고 앞서 설정한 변수 `content`만 렌더링 해준다. 이렇게 하면 `content` 변수에 있는 값은 각각의 상태(state)에 따라서 다르게 할당될 것이다.
 
   </br>
