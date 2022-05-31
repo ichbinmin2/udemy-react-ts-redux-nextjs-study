@@ -9,6 +9,7 @@
 - [Handling Loading & Data States](#로딩-및-데이터-State-처리하기)
 - [Handling Http Errors](#HTTP-오류-처리하기)
 - [Using useEffect() For Requests](#요청에-useEffect-사용하기)
+- [Preparing The Project For The Next Steps](#다음-단계를-위한-프로젝트-준비하기)
 
 </br>
 
@@ -953,6 +954,118 @@ const fetchMoviesHandler = useCallback(async () => {
 
 ![ezgif com-gif-maker (75)](https://user-images.githubusercontent.com/53133662/171169455-b3496e4b-6c4a-4e56-8878-59ac6ee1f47f.gif)
 
-- 이제 저장하고 새로고침을 해보면 무한 루프도 방지하면서 즉각적으로 데이터를 fetch 해옴과 동시에, 버튼을 통해서 수동으로 새로고침을 할 수도 있게 되었다. 
+- 이제 저장하고 새로고침을 해보면 무한 루프도 방지하면서 즉각적으로 데이터를 fetch 해옴과 동시에, 버튼을 통해서 수동으로 새로고침을 할 수도 있게 되었다.
 
 </br>
+
+## 다음 단계를 위한 프로젝트 준비하기
+
+- 지금까지는 설정해둔 URL 에 fetch 요청(default는 'GET')을 보내고, 데이터를 받아왔다. 하지만 실제 환경에서는 많은 어플리케이션에서 데이터 fetch 만으로 끝나지 않으며 서버로 데이터를 보내는 작업도 필요할 때가 많다. 예를 들어, 새로운 사용자를 만들 때라던가 말이다. 따라서 `App` 컴포넌트 내부에서 새로운 컴포넌트 `AddMovie`를 추가했다.
+
+```js
+<AddMovie onAddMovie={addMovieHandler} />
+```
+
+- 이 `AddMovie` 컴포넌트에는 movies를 콘솔 로그에 남기는 `addMovieHandler` 함수도 포인터 했다.
+
+```js
+function addMovieHandler(movie) {
+  console.log(movie);
+}
+```
+
+- `AddMovie` 컴포넌트를 보면, 사용자 입력 양식을 렌더링하고 사용자 입력을 받고 있는 걸 알수 있다.
+
+```js
+function AddMovie(props) {
+  const titleRef = useRef('');
+  const openingTextRef = useRef('');
+  const releaseDateRef = useRef('');
+
+  function submitHandler(event) {
+    event.preventDefault();
+    // could add validation here...
+    const movie = {
+      title: titleRef.current.value,
+      openingText: openingTextRef.current.value,
+      releaseDate: releaseDateRef.current.value,
+    };
+
+    props.onAddMovie(movie);
+  }
+
+  ...
+}
+```
+
+- 우리는 `AddMovie`에서 렌더링하는 폼을 통해서 영화를 직접 추가할 수 있도록 한 것이다.
+
+![ezgif com-gif-maker (76)](https://user-images.githubusercontent.com/53133662/171174805-08cf20cc-ccf6-4eef-83b0-c2f28bf7d22c.gif)
+
+- 우리가 사용 중인 URL("https://swapi.dev/api/films/") 은 영화 정보 데이터 수신('GET')을 위한 더미 API 이다. 외부에서 들어오는 데이터를 받지 못하는 것이다. 그렇기에 지금 우리가 `AddMovie` 컴포넌트 폼을 이용해서 새로운 데이터를 저장하고자 하는 'POST' 요청은 아직 불가능한 상태다. 그렇기에 우리가 'POST' 요청을 통해 데이터를 저장하기 위해서 또 다른 더미 API를 사용해야만 한다. 바로 구글이 제공하는 데이터 저장 서비스인 Firebase 이다.
+
+### Firebase 로 백엔드 데이터베이스 구축하기
+
+- Firebase 는 구글에서 제공하는 서비스로, 코드 작성 없이도 사용 가능한 백엔드 서비스이다. Firebase 자체가 데이터 베이스라고 생각할 수도 있지만 그렇지 않다. 데이터 베이스에 딸린 '백엔드' 인 것이다. 즉, 우리가 요청을 주고 받을 수 있는 완전한 REST API 를 제공하는 '풀 백엔드 어플리케이션' 이라고 볼 수 있다.
+
+![스크린샷 2022-05-31 오후 9 42 42](https://user-images.githubusercontent.com/53133662/171175986-f8841f78-f502-4cce-a6fc-0139e0133221.png)
+
+- Firebase 의 서비스의 좋은 점은 무료로 사용이 가능하다는 것에 있다. 더미 백엔드를 이용해서 서버 기반 코드 없이 무료로 실습이 가능하다는 것이다. 그리고 우리는 이 서비스를 이용해서 데이터를 가져오고 저장할 수 있게 되었다.
+
+### Firebase 사용하기
+
+- 먼저 구글 계정으로 로그인하고, Firebase 콘솔로 이동한다.
+
+![스크린샷 2022-05-31 오후 9 46 20](https://user-images.githubusercontent.com/53133662/171177578-ca9f9576-403e-4876-b237-e3df8b4b3ff3.png)
+
+- 새로운 프로젝트의 이름을 정하고 추가 한 뒤,
+
+![스크린샷 2022-05-31 오후 9 46 38](https://user-images.githubusercontent.com/53133662/171177610-9d13737f-f91b-4a81-a0db-53682206cd10.png)
+
+- 구글 통계는 필요하지 않으므로 비활성화 하고, 프로젝트를 생성한다.
+
+![스크린샷 2022-05-31 오후 9 47 31](https://user-images.githubusercontent.com/53133662/171177620-0f7b52e1-9fdd-4fe2-ba91-86bc7b7a4f44.png)
+
+- 몇 분 후에, Firebase 의 새로운 프로젝트가 만들어진다.
+
+> Firebase 는 구글에서 제공하는 서비스이고, 전체 서비스를 구성하고 있는 제품과 서비스가 매우 다양하다. 하지만 우리는 지금 복잡한 어플리케이션을 만들지 않기 때문에 그 중 일부분만을 사용할 것이다.
+
+![스크린샷 2022-05-31 오후 9 48 23](https://user-images.githubusercontent.com/53133662/171177623-b4b876f9-2022-4432-aa32-3275bad85908.png)
+
+- 프로젝트가 만들어지면, Firebase의 콘솔로 돌아와, Realtime Database(실시간 데이터베이스)탭으로 이동한다. 다시 한번 말하지만, Firebase 는 데이터베이스가 아니며, 제공하는 기능 중 일부가 데이터 베이스일 뿐이다. 그리고 Firebase 가 제공하는 데이터 베이스 서비스는 2개가 있는데, 여기서 Firestore Database(이전엔 Cloude Firestore) 가 기능상 조금 더 강력하지만, 간단한 어플리케이션을 위한 더미 백엔드만 필요하기 때문에 Realtime Database 면 충분하기에 Realtime Database 를 사용해보고자 한다.
+
+![스크린샷 2022-05-31 오후 9 49 08](https://user-images.githubusercontent.com/53133662/171177629-c81ce37b-d43c-4430-b89e-685369365702.png)
+
+- 이제 Realtime Database 탭 페이지로 들어와서 새로운 데이터베이스를 생성하고, 데이터 베이스 설정에서 반드시 '테스트 모드'를 선택한다. 그렇지 않으면 요청 전송이 불가능하기 때문이다.
+
+![스크린샷 2022-05-31 오후 9 49 42](https://user-images.githubusercontent.com/53133662/171177640-732023ab-24f6-40fb-856a-107b99f87f16.png)
+
+- 이제 간단한 데이터베이스가 만들어졌다. 그리고 이 데이터 베이스와 통신할 API URL 역시 제공된다.
+
+### 데이터베이스에서 제공하는 URL은 Firebase REST API에 대한 URL 이다.
+
+- 이 말인 즉슨, 프론트엔드 어플리케이션은 데이터 베이스와 직접 통신이 불가능하고, 또 가능하더라도 그렇게 해서는 안된다. (앞서 여러 번 거론한 문제이다.) 아무튼 이 URL은 Firebase REST API에 대한 URL 이며, 이 API 는 들어오는 요청을 받고 백그라운드의 데이터베이스와 통신 할 뿐이다. 우리가 보기엔 데이터 베이스와 직접 소통하는 것처럼 보이지만 실제로는 그렇지 않다는 뜻이다.
+
+### Firebase API의 URL 로 대체하기
+
+- 이제 우리는 Firebase API가 제공하는 URL을 통해서 Firebase 백엔드, 즉 우리의 데이터 베이스로 데이터를 보낼 수 있게 되었다.
+
+```js
+const response = await fetch("https://react-http2-xxxxxxx.firebaseio.com/");
+```
+
+- 기존의 영화 데이터를 받아오던 URL을 삭제하고, 우리가 제공받은 URL 주소를 가져온다.
+
+```js
+const response = await fetch(
+  "https://react-http2-xxxxxxx.firebaseio.com/movies.json"
+);
+```
+
+- 그리고 해당 주소 뒤에 `movies.json` 이라는 세그먼트를 추가한다. 이 `movies` 라는 이름은 우리가 임의로 정할 수 있다. 그리고 이렇게 하면 데이터베이스에 우리가 지정한 이름 `movies`로 노드가 새롭게 만들어지게 된다. 이것은 동적 REST API 로 서로 다른 세그먼트를 사용하여 데이터 베이스의 서로 다른 노드들에 데이터를 저장할 수 있게 설정해주는 것이다. 그러니 이름은 우리가 데이터를 무엇으로 관리할 것인지에 따라 이름을 직관적으로 정해서 설정해준다.
+
+### .json 확장자를 추가해야 하는 이유 
+
+- `movies`에 확장자 `.json`을 추가하는 이유가 궁금할 것이다. 이는 Firebase의 요구 사항으로, 요청을 전달하려는 URL 끝에 `.json`을 반드시 추가해야 한다. 만약 이 확장자를 추가하지 않는다면, 요청은 실패하게 되기 때문이다.
+
+  </br>
