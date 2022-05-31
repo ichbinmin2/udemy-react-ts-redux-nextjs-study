@@ -8,8 +8,9 @@
 - [Using async / await](#async-와-await-사용하기)
 - [Handling Loading & Data States](#로딩-및-데이터-State-처리하기)
 - [Handling Http Errors](#HTTP-오류-처리하기)
+- [Using useEffect() For Requests](#요청에-useEffect-사용하기)
 
-  </br>
+</br>
 
 ## 데이터베이스에 연결하지 않는 방법
 
@@ -868,3 +869,90 @@ if (isLoding) {
 - 마지막으로 먼저 조건식으로 만들어 두었던 JSX 의 모든 코드들을 제거하고 앞서 설정한 변수 `content`만 렌더링 해준다. 이렇게 하면 `content` 변수에 있는 값은 각각의 상태(state)에 따라서 다르게 할당될 것이다.
 
   </br>
+
+## 요청에 useEffect 사용하기
+
+- 대부분의 어플리케이션에서는 특정 컴포넌트가 로딩되자마자 데이터를 가져온다. 가령 사용자가 페이지를 방문하자마자 데이터를 가져오는 것처럼 말이다. 하지만 우리는 현재 버튼을 누르고 데이터를 fetch 해서 가져오고 있기 있기 때문에 데이터를 즉시 fetch 하기 위해서는 추가적인 작업이 필요하다.
+
+### useEffect 으로 즉시 데이터를 fetch 하는 것이 가능한 이유
+
+- `useEffect` 훅으로 데이터를 즉시 가져오는 게 가능한 이유는 HTTP 요청 전송은 일종의 사이드 이펙트로 컴포넌트의 상태(state)를 바꿔버릴 수 있기 떄문이다. 그리고 이전에 우리가 배웠던 것처럼 이런 사이드 이펙트는 `useEffect`을 사용한다. 함수로 집어넣는 것 역시 상관 없다. 함수 일부분으로 호출하지만 않는다면 말이다. 만약 그렇게 한다면, 함수 호출이 되는 순간 상태(state)의 갱신이 발생하고, 컴포넌트 함수가 재렌더링-재평가 되면서 무한으로 호출되는 무한루프가 발생되기 때문이다. 그리고 이를 피하기 위해서 우리는 `useEffect`를 사용할 수 있다.
+
+- `useEffect`는 컴포넌트가 렌더링되는 주기 안에서 사용되어야 하는 코드가 있을 때 유용하다. 컴포넌트가 재렌더링될 경우는 조금 다르지만 말이다. 따라서 여기에 `useEffect`를 추가하고 화살표 함수를 사용하거나 function 예약어를 이용한 정규 함수를 통해 `effect` 함수를 정의한다.
+
+```js
+useEffect(() => {
+  fetchMoviesHandler();
+});
+```
+
+- 이 `useEffect` 함수 안에서 우리가 그동안 데이터를 fetch 해오는 데 사용했던 `fetchMoviesHandler` 트리거 함수를 호출한다.
+
+### 의존성 배열로 무한 루프를 방지하기
+
+- 이제 `fetchMoviesHandler` 함수는 버튼을 클릭하면 호출되지만 동시에 컴포넌트 재평가가 발생할 때에도 호출하게 된다. 이 때문에 우리가 앞서 거론했던 무한 루프 이슈가 발생할 수 있으므로 컴포넌트 재평가가 발생할 때마다 호출하지 않도록 추가해줘야 할 것이 있다.
+
+```js
+useEffect(() => {
+  fetchMoviesHandler();
+}, []);
+```
+
+- `useEffect` 의 의존성 배열을 추가한다는 것은 언제 `effect` 함수가 다시 실행되는 지를 정의한다는 뜻이다. 즉, 우리가 추가한 의존성 배열의 목록이 갱신 되거나 변할 때마다 `effect` 함수가 재실행되도록 정의하는 것이다. 현재는, 의존성 배열에 아무 것도 들어있지 않다. 이 상태로 저장한다면 컴포넌트가 최초로 로딩될 때를 제외하고는 절대 재실행되지 않을 것이다. 따라서, 어플리케이션을 새로고침하면 데이터를 즉시 fetch 해오는 것을 확인할 수 있다.
+
+### `effect` 함수에서 사용하는 모든 의존성은 의존성 배열에 추가해야 한다
+
+- 사실 이런 식의 실행은 썩 깔끔한 방식은 아니다. 다만 우리가 여기서 배울 수 있는 건 `effect` 함수 내에서 사용하는 모든 의존성을 이 의존성 배열에 표시해두는 게 가장 좋다는 것이다. 그리고 여기에서는 `fetchMoviesHandler`가 바로 그 대상이다. 이것은 `effect`에 대한 의존성이기 때문이다.
+
+```js
+useEffect(() => {
+  fetchMoviesHandler();
+}, [fetchMoviesHandler]);
+```
+
+- `useEffect` 의 두 번째 인자인 의존성 배열에 `fetchMoviesHandler`를 포인터하자. 이 `fetchMoviesHandler` 함수가 변경되면 `effect`는 재실행 될 것이고, 만약 외부 상태(state)를 이용한다면 이 `fetchMoviesHandler` 함수도 바뀔 수 있으니 말이다.
+
+### 함수를 의존성 배열에 추가헀을 때 무한 루프가 발생한다
+
+- `fetchMoviesHandler`는 함수이고, 객체이기 때문에 컴포너트가 재렌더링 될 때마다 이 `fetchMoviesHandler` 함수 역시 바뀌게 된다. 그렇다면 의존성 배열에 이 `fetchMoviesHandler` 함수를 추가하게 되면 무한 루프가 발생될 것이다. 무한 루프를 방지하기 위해서 의존성 배열에 이 `fetchMoviesHandler` 함수를 추가했는데, 또 다시 무한 루프가 발생하다니 매우 의아할 것이다. 하지만 여기서 우리는 새로운 해결책을 통해 무한 루프를 방지할 수 있게 된다.
+
+### `useCallback`을 통한 무한 루프 방지하기
+
+```js
+async function fetchMoviesHandler() {
+  ...
+
+}
+```
+
+- 무한 루프에 대한 해결책 중 하나는 함수를 의존성 배열에서 제거하는 것이다. 사실 의존성 배열에서 제거되어도, 원하는 결과는 나오기 때문이다. 하지만 함수가 외부 상태를 사용하거나 한다면, 의도치 않은 버그가 발생할 가능성이 높다. 때문에 이에 대한 가장 좋은 해결책은 `useCallback` 훅을 사용해서 우리의 함수 `fetchMoviesHandler`를 감싸는 것이다.
+
+```js
+const fetchMoviesHandler = useCallback(() => {
+  ...
+});
+```
+
+- 이를 위해서 `fetchMoviesHandler` 함수는 `useCallback`의 결과를 저장하는 상수가 되어야 하기 때문에 상수 형태로 변경하고, 화살표 함수를 통해 이를 감싸준다. 그리고 `useCallback`의 두 번째 인자인 의존성 배열도 추가해준다.
+
+```js
+const fetchMoviesHandler = useCallback(() => {
+  ...
+}, []);
+```
+
+- 해당 함수에서 사용하는 모든 의존성을 의존성 배열의 목록 안에 포인터 해줘야하지만 `fetchMoviesHandler` 함수는 외부 의존성이 없기 때문에 빈 상태로 표기한다. `fetchMoviesHandler` 함수 내부에서 사용하는 fetch API 는 글로벌 브라우저 API 이고 이는 의존성이 아니며, 또한 `setMovies`, `setError`, `setIsLoding` 같은 상태(state) 업데이트 함수는 리액트에서 절대 변경이 일어나지 않을 것이라 보장하고 있기 때문에 의존성으로 추가할 필요가 없기 때문이다.
+
+```js
+const fetchMoviesHandler = useCallback(async () => {
+  ...
+}, []);
+```
+
+- 이외에 이전에 `async/await`를 사용해서 비동기적으로 작업해왔던 것을 그대로 해주기 위해 `async` 예약어를 익명 함수 앞에 추가해준다.
+
+![ezgif com-gif-maker (75)](https://user-images.githubusercontent.com/53133662/171169455-b3496e4b-6c4a-4e56-8878-59ac6ee1f47f.gif)
+
+- 이제 저장하고 새로고침을 해보면 무한 루프도 방지하면서 즉각적으로 데이터를 fetch 해옴과 동시에, 버튼을 통해서 수동으로 새로고침을 할 수도 있게 되었다. 
+
+</br>
