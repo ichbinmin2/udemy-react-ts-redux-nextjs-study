@@ -1237,6 +1237,131 @@ async function addMovieHandler(movie) {
 
 - 새로 고침 후 영화 제목과 텍스트, 날짜를 적당히 적어서 "Add Movie" 버튼을 눌러보자. 우리가 콘솔에서 `data`를 출력했던 것이 그대로 추가된 것을 확인할 수 있다. 그리고 Firebase 백엔드로 돌아와 실시간 데이터 베이스 항목을 확인해보면 `movies` 라는 새로운 노드가 추가된 것을 알 수 있다. 우리가 이전에 URL 뒤에 `movies.json`을 적어서 전송 했기 때문이다. 그리고 이 `moives` 라는 노드 안에는 방금 Firebase가 자동 생성한 암호화 된 ID가 있고, 이 안을 보면 우리가 폼에 입력한 데이터가 저장된 것을 알 수 있다. 그리고 개발자 도구의 콘솔에서는 Firebase 로부터 받은 `response` 객체가 출력되어 있고, name 필드에 Firebase가 자동 생성된 ID 를 적어서 응답했다.
 
+### Firebase의 실시간 데이터에 저장된 데이터 가져오기
 
+- 지금까지 'POST' 요청을 전달하는 방식에 대해서 학습했다. 이제 우리는 "Fetch Movies" 버튼을 누르면 실시간 데이터에 저장해둔 영화 데이터를 다시 가져와야 한다.
+
+![스크린샷 2022-05-31 오후 11 26 57](https://user-images.githubusercontent.com/53133662/171197932-b963e5c5-b38e-4035-aab9-00a9c17c8567.png)
+
+- 영화 목록이 렌더링 되던 위치에서 출력되고 있는 오류 메세지를 보면, 앞서 만들어두었던 로직이 더이상 작동하지 않는 걸 알 수 있다.
+
+> Cannot read properties of undefined (reading 'map')
+
+```js
+const fetchMoviesHandler = useCallback(async () => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(
+      "https://react-http2-xxxxxxx.firebaseio.com/movies.json"
+    );
+    if (!response.ok) {
+      throw new Error("Something went wrong!");
+    }
+
+    const data = await response.json();
+
+    console.log(data);
+
+    const transformedMovies = data.results.map((movieData) => {
+      return {
+        id: movieData.episode_id,
+        title: movieData.title,
+        openingText: movieData.opening_crawl,
+        releaseDate: movieData.release_date,
+      };
+    });
+    setMovies(transformedMovies);
+  } catch (error) {
+    setError(error.message);
+  }
+  setIsLoading(false);
+}, []);
+```
+
+- movies 데이터를 "GET" 해오던 로직 `fetchMoviesHandler` 함수로 돌아가보자. 그 전에 우리가 사용한 실습용 영화 데이터에서는 `results` 필드가 있을 것으로 예상했지만, 지금 우리가 사용하는 데이터에서는 해당 필드가 존재하지 않는다. 이 부분의 수정이 필요할 것 같다.
+
+```js
+const data = await response.json();
+console.log(data);
+```
+
+- `data`를 fetch 해오는 부분에 콘솔 로그를 추가해서 새로고침을 해보면,
+
+![ezgif com-gif-maker (79)](https://user-images.githubusercontent.com/53133662/171200199-462853b8-4413-41d6-bdfe-7488dc4d3566.gif)
+
+- `data` 가 객체로 넘어왔고, 이 객체 안에 암호화된 ID 키가 있으며, 실제로 저장된 영화 데이터는 중첩된 객체로 나타나고 있음을 알 수 있다. 즉, 배열로 가져오지 않고 객체로 받아오고 있는 것이다. (`id`가 key 이며, 실제 데이터는 중첩 객체이다.) 이제 이것 `data` 를 다시 변환한 값을 `setMovies`에 담아서 상태(state)를 갱신해줄 것이다.
+
+### 중첩 객체 데이터를 배열로 변환하기
+
+```js
+const loadedMovies = [];
+```
+
+- 더이상 `map`은 필요하지 않으므로, 빈 배열을 하나 만든 뒤에
+
+```js
+const loadedMovies = [];
+
+for (const key in data) {
+}
+```
+
+- `for` 루프와 `key in`을 이용해서 객체 안의 모든 key를 확인한다.
+
+```js
+const loadedMovies = [];
+
+for (const key in data) {
+  loadedMovies.push({});
+}
+```
+
+- 그리고 `loadedMovies` 배열에 `push()`를 이용해서 객체를 푸쉬하는데,
+
+```js
+const loadedMovies = [];
+
+for (const key in data) {
+  loadedMovies.push({
+    id: key,
+  });
+}
+```
+
+- `id`는 기본의 `key` 값으로 설정하고
+
+![스크린샷 2022-05-31 오후 11 45 33](https://user-images.githubusercontent.com/53133662/171202069-126ebf1c-57f0-483a-b0d6-f694d76067b9.png)
+
+- 우리가 전달받은 객체의 key 값들을 모두 확인해서
+
+```js
+const loadedMovies = [];
+
+for (const key in data) {
+  loadedMovies.push({
+    id: key,
+    title: data[key].title,
+    openingText: data[key].openingText,
+    releaseDate: data[key].releaseDate,
+  });
+}
+```
+
+- `title`과 `openingText`, `releaseDate`의 값으로 넣어준다. 이렇게하면 `response` 로 받은 중첩 객체를 타고 들어가게 된다. 이것이 자바스크립트의 속성에 대한 '동적 접근 방법' 이다. 이제 `loadedMovies`는 내부에 객체가 있는 배열이 되며, 각 객체는 우리가 원하는 구조를 그대로 가지고 있다. 따라서 기존의 `map`으로 데이터를 넣어두었던 `transformedMovies`를 삭제하고,
+
+```js
+setMovies(loadedMovies);
+```
+
+- `setMovies`의 상태 업데이트 값으로 `loadedMovies` 를 포인터 해준다.
+
+![스크린샷 2022-05-31 오후 11 59 57](https://user-images.githubusercontent.com/53133662/171205667-d7421811-9342-4bc9-bdbd-ea39254c4364.png)
+
+- 저장 후 새로고침을 하면, 우리가 저장한 데이터가 `MoviesList`에 정상적으로 로드 된 것을 확인할 수 있다. 두 번째 영화를 또 다른 텍스트를 통해 추가해보고, 다시 "Fetch Movies" 버튼을 누르면
+
+![ezgif com-gif-maker (80)](https://user-images.githubusercontent.com/53133662/171206530-8de0e49c-23ee-4457-8fbe-1d0a4132b0bf.gif)
+
+- 두 번째로 추가한 영화 역시 정상적으로 로드 되는 걸 알 수 있다.
 
 </br>
