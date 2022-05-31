@@ -10,6 +10,7 @@
 - [Handling Http Errors](#HTTP-오류-처리하기)
 - [Using useEffect() For Requests](#요청에-useEffect-사용하기)
 - [Preparing The Project For The Next Steps](#다음-단계를-위한-프로젝트-준비하기)
+- [Sending a POST Request](#POST-요청-보내기)
 
 </br>
 
@@ -1064,8 +1065,178 @@ const response = await fetch(
 
 - 그리고 해당 주소 뒤에 `movies.json` 이라는 세그먼트를 추가한다. 이 `movies` 라는 이름은 우리가 임의로 정할 수 있다. 그리고 이렇게 하면 데이터베이스에 우리가 지정한 이름 `movies`로 노드가 새롭게 만들어지게 된다. 이것은 동적 REST API 로 서로 다른 세그먼트를 사용하여 데이터 베이스의 서로 다른 노드들에 데이터를 저장할 수 있게 설정해주는 것이다. 그러니 이름은 우리가 데이터를 무엇으로 관리할 것인지에 따라 이름을 직관적으로 정해서 설정해준다.
 
-### .json 확장자를 추가해야 하는 이유 
+### .json 확장자를 추가해야 하는 이유
 
 - `movies`에 확장자 `.json`을 추가하는 이유가 궁금할 것이다. 이는 Firebase의 요구 사항으로, 요청을 전달하려는 URL 끝에 `.json`을 반드시 추가해야 한다. 만약 이 확장자를 추가하지 않는다면, 요청은 실패하게 되기 때문이다.
 
-  </br>
+</br>
+
+## POST 요청 보내기
+
+- 이제 남은 건 POST 요청을 전송하고 내가 폼에 입력한 데이터를 Firebase 에 저장하는 것이다.
+
+```js
+function addMovieHandler(movie) {
+  console.log(movie);
+}
+```
+
+- 우리가 이전에 설정해두었던 `addMovieHandler` 함수를 보자. 버튼을 클릭하면 `addMovieHandler`가 movie 라는 매개변수를 받아 콘솔에 출력하는 로직이다.
+
+```js
+function submitHandler(event) {
+  event.preventDefault();
+
+  // could add validation here...
+
+  const movie = {
+    title: titleRef.current.value,
+    openingText: openingTextRef.current.value,
+    releaseDate: releaseDateRef.current.value,
+  };
+
+  props.onAddMovie(movie);
+}
+```
+
+- `AddMovie` 컴포넌트에서 props 로 전달받은 `onAddMovie`(addMovieHandler)에 매개변수로 넘겨주는 moive 의 형태는 어떤가? 위의 코드에서 알 수 있듯이 `moive` 라는 이름의 객체 안에는 `title`과 `openingText` 그리고 `releaseDate`를 담겨있다. (`id`는 firebase에서 자동적으로 추가된다.) 그러니, 이 `addMovieHandler` 에서는 ferch API를 이용해서 또 다른 HTTP 요청을 전송해야 한다. 이전에도 거론한 이야기지만 fetch 라고 해도 사실상 데이터를 가져오는 역할만 하는 것이 아니다. 데이터를 전송하는 데에도 fetch 를 사용할 수 있기 때문이다.
+
+```js
+function addMovieHandler(movie) {
+  console.log(movie);
+}
+```
+
+- 다시, `addMovieHandler`로 돌아와서, 데이터를 firebase에 요청해서 전송하는 로직을 추가하도록 하자. 우리의 목적은 요청 전송이다. 데이터를 가져오는 URL 에 반대로 요청을 보내는 것이다. 그렇지 않으면 저장 된 데이터를 가져올 수 없을 것이다.
+
+### fetch 로 POST 요청 보내기
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json");
+
+  console.log(movie);
+}
+```
+
+- 먼저 `fetch()` 를 불러와서 firebase 로부터 제공받은 기존의 URL을 추가한다. 하지만 fetch API 는 기본적으로 'GET' 이 default 이기 떄문에 'POST' 메소드를 사용하기 위해서는 fetch API 의 두 번째 인자를 추가해야 한다.
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json", {});
+
+  console.log(movie);
+}
+```
+
+### fetch API 의 두 번째 인자 - method
+
+- fetch API 두 번째 인자를 지용해서 외부로 전송하는 요청을 지정할 수 있게 되는데, 보통은 method 키 같은 것을 지정한다. fetch API의 기본 값은 'GET' 이지만 우리가 원하는 것은 'POST' 이므로, 여기에 'POST'를 추가한다.
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json", {
+    method: "POST",
+  });
+
+  console.log(movie);
+}
+```
+
+- 이렇게, Firebase 서비스에 'POST' 요청을 보내면 Firebase는 데이터 베이스에 리소스를 만들 것이다. 'POST' 요청을 보냈을 때 정확히 어떤 일이 발생하는지에 대해서는 우리가 사용하는 백엔드에 달려있게 된다. 'POST' 요청을 보내면 리소스가 생성된다는 게 일반적으로는 그런 의미로 통하지만 어떤 법칙 같은 것은 아니다. 다만 모두 API 에 달린 문제인 것이다.
+
+### fetch API 의 두 번째 인자 - body
+
+- Firebase 에서는 'POST' 요청을 보내게 되면 리소스를 만들어 둔다. 이제 저장해야 하는 리소스를 만들어야 한다는 이야기다. 이를 위해서 fetch API 의 두 번째 인자에 `body` 라는 옵션을 추가한다.
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json", {
+    method: "POST",
+    body: movie,
+  });
+
+  console.log(movie);
+}
+```
+
+- `body` 에는 우리가 추가하고자 하는 것을 적는다. 이번에는 movie 라는 매개 변수(객체)를 받아 `body` 에 넘겨줄 것이기 때문에 그 매개변수를 값으로 지정한다.
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json", {
+    method: "POST",
+    body: JSON.stringify(movie),
+  });
+
+  console.log(movie);
+}
+```
+
+- 하지만, `body`는 자바스크립트 객체가 아닌 `JSON` 데이터를 필요로 한다. `JSON`은 데이터 형태로 프론트엔드와 백엔드 간의 데이터 교환에 사용되는 유형이기 때문이다. 이제 매개변수로 넘겨 받은 자바스크립트 객체 movie 를 `JSON`으로 변환하려면 자바스크립트에 있는 내장 메소드인 `JSON.stringify()`를 사용해야 한다. `JSON.stringify()`를 사용하면 자바스크립트 객체나 배열을 JSON 형태로 변환해주기 때문이다.
+
+### fetch API 의 두 번째 인자 - headers
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json", {
+    method: "POST",
+    body: JSON.stringify(movie),
+    headers: {},
+  });
+
+  console.log(movie);
+}
+```
+
+- 마지막으로 조금 더 명확하게 하기 위해서 `headers` 키를 추가한다. `headers` 키를 추가할 때는 값으로 객체를 지정해야 한다.
+
+```js
+function addMovieHandler(movie) {
+  fetch("https://react-http2-xxxxxxx.firebaseio.com/movies.json", {
+    method: "POST",
+    body: JSON.stringify(movie),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log(movie);
+}
+```
+
+- `headers`의 객체 값 안에 "Content-Type" 을 키로 지정하고, 값으로는 "application/json" 을 넣어준다. Firebase 에는 `headers`가 반드시 필요한 것은 아니다. `headers` 키가 설정되어 있지 않더라도 요청은 정상저긍로 처리해주기 때문이다. 하지만 요청을 받는 또 다른 대다수의 API는 이러한 `headers` 를 필요로 하기 때문에 추가해주었다. 요청을 받는 API에서는 이 `headers`를 통해서 어떤 컨텐츠가 전달되는지를 알 수 있을 것이다.
+
+### `async/await`로 fetch API로 전송되는 데이터를 비동기적으로 처리하기
+
+- fetch API는 비동기 작업이며 프로미스를 돌려받을 것이기 때문에 앞서 영화 데이터를 받아왔을 때와 마찬가지로 `async/await`를 추가해줘야 한다.
+
+```js
+async function addMovieHandler(movie) {
+  const response = await fetch(
+    "https://react-http2-xxxxxxx.firebaseio.com/movies.json",
+    {
+      method: "POST",
+      body: JSON.stringify(movie),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json();
+  console.log(data);
+}
+```
+
+- fetch 하는 로직을 `response` 라는 상수로 await을 붙여 가져온 뒤 await 로 `response.json()`을 통해 JSON 형식으로 변환한 데이터를 `data` 상수에 할당한다. 그리고 마지막으로 데이터를 콘솔 로그에서 확인할 수 있도록 콘솔 로그도 추가해준다.
+
+> 물론 이 모든 과정에서 이전에 학습했던 것처럼 요청(response)에 대한 오류 처리도 추가할 수 있을 것이다.
+
+![ezgif com-gif-maker (78)](https://user-images.githubusercontent.com/53133662/171196695-ef9373f5-0b2d-4d7f-bdff-f11b12107d87.gif)
+
+- 새로 고침 후 영화 제목과 텍스트, 날짜를 적당히 적어서 "Add Movie" 버튼을 눌러보자. 우리가 콘솔에서 `data`를 출력했던 것이 그대로 추가된 것을 확인할 수 있다. 그리고 Firebase 백엔드로 돌아와 실시간 데이터 베이스 항목을 확인해보면 `movies` 라는 새로운 노드가 추가된 것을 알 수 있다. 우리가 이전에 URL 뒤에 `movies.json`을 적어서 전송 했기 때문이다. 그리고 이 `moives` 라는 노드 안에는 방금 Firebase가 자동 생성한 암호화 된 ID가 있고, 이 안을 보면 우리가 폼에 입력한 데이터가 저장된 것을 알 수 있다. 그리고 개발자 도구의 콘솔에서는 Firebase 로부터 받은 `response` 객체가 출력되어 있고, name 필드에 Firebase가 자동 생성된 ID 를 적어서 응답했다.
+
+
+
+</br>
