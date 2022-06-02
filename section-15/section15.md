@@ -5,6 +5,7 @@
 - [What are "Custom Hooks"?](#커스텀-훅이란-무엇인가)
 - [Creating a Custom React Hook Function](#커스텀-리액트-컴포넌트-ReEvaluation-Hook-함수-생성하기)
 - [Using Custom Hooks](#사용자-정의-훅-사용하기)
+- [Configuring Custom Hooks](#사용자-정의-훅-구성하기)
 
 </br>
 
@@ -236,3 +237,189 @@ const ForwardCounter = () => {
 - 커스텀 훅을 만드는 방법에서 가장 중요한 것은 '네이밍' 이다. 언제나 `use`로 시작해야 하고, 커스텀 훅 내부의 상태(state)와 관련된 로직을 사용한다던가, 다른 리액트 훅을 사용할 수 있으며, 이를 통해서 컴포넌트 간에 특정 로직을 공유할 수 있게 된다.
 
 </br>
+
+## 사용자 정의 훅 구성하기
+
+#### BackwardCounter.js
+
+```js
+const BackwardCounter = () => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return <Card>{counter}</Card>;
+};
+```
+
+- `BackwardCounter` 컴포넌트에도 `ForwardCounter` 컴포넌트와 동일한 로직을 가지고 있다. 다만 덧셈 대신 뺄셈을 이용할 뿐이다. 당연히 `ForwardCounter` 처럼 `useCounter` 커스텀 훅을 사용할 수 있을 것이다. 다만 이 두 개의 컴포넌트에서의 차이점(덧셈과 뺄셈)에 따른 조건부 로직을 사용하기 위해서는 매개변수를 받아들이게 해야만 한다. 커스텀 훅도 함수이기에 함수를 사용할 때 쓰던 것처럼 재사용 및 재설정을 위해서 인자와 매개변수를 받아올 수 있기 때문이다.
+
+### 사용자 정의(Custom) 훅에서 매개변수 받기
+
+- 앞서 설명한 것처럼 커스텀 훅도 함수이기 때문에 매개변수를 사용할 수 있다. 예를 들어, 내장 훅인 `useState` 역시 초기 값을 설정해주는 매개변수를 받을 수 있다. 두 개의 인자를 받는 `useEffect` 역시 2개의 매개변수를 받을 수 있다. `effect` 함수를 첫 번째 인자로 받고, 의존성 배열을 두 번째 인자로 받아들이기 떄문이다. 이는 지금까지 우리가 해왔던 방식이고, 이 방식은 커스텀 훅에서도 동일하게 사용할 수 있다. 그러면, 현재의 커스텀 훅에서는 어떤 매개변수를 사용할 수 있을까?
+
+```js
+const interval = setInterval(() => {
+  setCounter((prevCounter) => prevCounter - 1);
+}, 1000);
+```
+
+- 우리가 원하는 건 `counter`가 어떻게 증가하는지를 제어하는 지표이다. 이 상태(state) 갱신 함수 전체(`setCounter`)를 받아들여서 작동을 더 유연하게 할 수도 있다.
+
+#### useCounter.js
+
+```js
+const useCounter = (counterUpdateFn) => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return counter;
+};
+```
+
+- 여기에 `counterUpdateFn` 이라는 `counter` 상태 갱신 함수를 매개변수로 넣고, ㅓ스텀 훅에서는 이 `counterUpdateFn`를 실행해주기만 하면 된다.
+
+```js
+const useCounter = (counterUpdateFn) => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter(counterUpdateFn());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return counter;
+};
+```
+
+- 그리고 `useCounter` 에서 받게되는 `counterUpdateFn` 인자는 실행 가능한 함수이며, 이는 이전의 `counter`를 받아 새로운 `counter`를 만들어준다. 물론 위의 코드처럼 커스텀 훅을 이렇게 유연하게 만들 수도 있지만, 덧셈을 할지 뺄셈을 할지를 제어하는 boolean 플래그와 같은 것을 사용할 수도 있다. 예를 들어,
+
+```js
+const useCounter = (forwards) => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return counter;
+};
+```
+
+- `forwards` 라고 명명한 매개 변수를 입력한다고 해보자. `forwards`가 true 이면 덧셈을 할 것이고, false 면 뺄셈을 하도록 만들 것이다. 이 `forwards`는 초기값을 설정할 수도 있고, 그렇게 되면 이 매개변수는 boolean 방식으로 선택할 수 있을 것이다.
+
+```js
+const useCounter = (forwards = true) => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return counter;
+};
+```
+
+- `forwards` 라는 매개변수의 초기 값을 `true`로 설정했다. `setInterval()` 안에서는 이 `forwards`가 true 인지 false 인지를 확인해서 true 면 `setCounter`의 식을 덧셈으로 만들 것이고, false 이면 `setCounter`의 식을 뺄셈으로 만들 것이다.
+
+```js
+useEffect((forwards) => {
+  const interval = setInterval(() => {
+    if (forwards) {
+      setCounter((prevCounter) => prevCounter + 1);
+    } else {
+      setCounter((prevCounter) => prevCounter - 1);
+    }
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
+```
+
+- 간단하게 if 문을 사용해서 `setCounter`를 각각의 매개변수 조건에 맞게 갱신하도록 했지만, 앞서 했던 방식으로 전체 함수(ex. `counterUpdateFn`)를 받아들이는 방법도 가능하다. 어느 쪽이든 간에 이 커스텀 훅의 `effect` 안에는 이제 새로운 의존성이 생겼음을 알 수 있다.
+
+### 커스텀 훅의 useEffect에 매개변수를 의존성으로 주입하기
+
+- `useEffect` 안에서 사용하고 있는 매개변수 `forwards`는 분명 의존성이다. 이는 `useEffect` 함수 내부에서 정의된 것도 아니고, `useCounter` 커스텀 훅 '외부' 에서 설정된 것도 아니다. 대신에 이는 매개변수로서 `useCounter`가 받게 되는 값이기 때문에 이를 `useEffect`의 의존성으로 추가해야만 한다.
+
+```js
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (forwards) {
+      setCounter((prevCounter) => prevCounter + 1);
+    } else {
+      setCounter((prevCounter) => prevCounter - 1);
+    }
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [forwards]);
+```
+
+- `forwards` 를 의존성으로 추가함으로써 의존성(`forwards`) 변경이 일어날 때마다 `useEffect` 함수가 재실행 할 수 있도록 해준다.
+
+### 커스텀 훅의 useEffect에 매개변수를 의존성을 주입해야 하는 이유
+
+- 물론 이런 커스텀 훅을 사용하는 컴포넌트 코드에 따라서 이 의존성(`forwards`)이 바뀌지 않을 가능성도 있다. 컴포넌트 안에서 그 값이 항상 참 또는 거짓으로 고정될 수도 있기 때문이다. 하지만 괜찮다. 의존성이 바뀌지 않는 이상 `useEffect`는 재실행 되지 않기 때문이다. 또한, 의존성 값이 바뀌지 않을 가능성에도 불구하고 `useEffect`에 해당 의존성을 추가하기를 권장하는 것에는 큰 이유가 있다. `useCounter` 커스텀 훅을 호출해서 사용하는 컴포넌트(서로 다른 인자를 사용)가 있는 경우에 인자가 바뀌면 `effect` 함수 역시 재실행할 수 있도록 보장할 수 있기 때문이다.
+
+### BackwardCounter 에서 커스텀 훅 호출하기
+
+- 이제 `BackwardCounter` 컴포넌트에서 `useCounter` 훅을 호출해야만 한다. 이전과 동일하게 `useCounter`를 import 해온 뒤에 `useCounter`에 인자를 전달한다.
+
+```js
+import useCounter from "../hooks/use-counter";
+
+const BackwardCounter = () => {
+  const counter = useCounter(false);
+
+  return <Card>{counter}</Card>;
+};
+```
+
+- `BackwardCounter` 컴포넌트의 뺄셈 로직은 `useCounter`로 전달하는 매개변수(`forwards`)의 값이 false 여야 하기 때문에 `useCounter`에 `false` 를 전달한다.
+
+  > `ForwardCounter` 컴포넌트의 덧셈 로직은 매개변수가 true 이고, 매개변수의 초기값이 true 이기 때문에 그대로 `useCounter`를 호출만 한다.
+
+- 만약, 매개변수의 기본 값 외에 다른 값을 원한다면 당연히 `BackwardCounter` 컴포넌트의 `useCounter(false)` 처럼 해당 값을 지정해서 넘겨줘야 한다. 이제 모든 로직이 완료 되었다. `BackwardCounter` 컴포넌트 역시 `ForwardCounter` 컴포넌트처럼 로직이 매우 간결해진 것을 알 수 있다.
+
+```js
+const BackwardCounter = () => {
+  const counter = useCounter(false);
+
+  return <Card>{counter}</Card>;
+};
+```
+
+![ezgif com-gif-maker (82)](https://user-images.githubusercontent.com/53133662/171586355-b2bddc97-645b-4806-85f8-ec4c02034cf2.gif)
+
+- 두 개의 카운터가 모두 커스텀 훅(`useCounter`)를 통해 정상적으로 작동되는 걸 확인할 수 있다.
+
+### 정리
+
+- 지금까지의 코드들은 인위적인 예시일 뿐이며, 현실적으로 실무에서 사용하는 방법이 아닐 수도 있다. 예를 들면 두 개의 컴포넌트 대신 하나의 컴포넌트를 사용할 수도 있지만 커스텀 훅을 이해하기 위해 별개로 나눈 것이기 때문이다. 이 점을 인지하고 있도록 하자.
+
+  </br>
