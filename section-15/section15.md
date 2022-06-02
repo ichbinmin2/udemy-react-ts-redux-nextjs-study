@@ -9,6 +9,7 @@
 - [Configuring Custom Hooks](#사용자-정의-훅-구성하기)
 - [Onwards To A More Realistic Example](#좀-더-현실적인-예시를-위해)
 - [Building a Custom Http Hook](#사용자-정의-Http-훅-빌드하기)
+- [Using the Custom Http Hook](#사용자-정의-Http-훅-사용하기)
 
 </br>
 
@@ -523,3 +524,8 @@ const enterTaskHandler = async (taskText) => {
 
 ## 사용자 정의 Http 훅 빌드하기
 
+</br>
+
+## 사용자 정의 Http 훅 사용하기
+
+</br>

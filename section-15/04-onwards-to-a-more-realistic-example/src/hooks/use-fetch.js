@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const useFetch = (requestConfig, applyData) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -9,9 +9,11 @@ const useFetch = (requestConfig, applyData) => {
     setError(null);
     try {
       const response = await fetch(requestConfig.url, {
-        method: requestConfig.method,
-        headers: requestConfig.headers,
-        body: JSON.stringify(requestConfig.body),
+        method: requestConfig.method ? requestConfig.method : "GET",
+        headers: requestConfig.headers ? requestConfig.headers : {},
+        body: JSON.stringify(requestConfig.body)
+          ? JSON.stringify(requestConfig.body)
+          : null,
       });
 
       if (!response.ok) {
