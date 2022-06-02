@@ -4,6 +4,7 @@
 
 - [What are "Custom Hooks"?](#커스텀-훅이란-무엇인가)
 - [Creating a Custom React Hook Function](#커스텀-리액트-컴포넌트-ReEvaluation-Hook-함수-생성하기)
+- [Using Custom Hooks](#사용자-정의-훅-사용하기)
 
 </br>
 
@@ -73,7 +74,7 @@ const BackwardCounter = () => {
 
 ### 커스텀 훅을 만드는 규칙
 
-- 커스텀 훅에는 몇 가지 규칙이 있다. 첫 번쨰로 앞서 설명한 것처럼 독립된 파일에 저장할 수 없다. 그리고 두 번째 규칙으로는 커스텀 훅의 네이밍의 시작을 `use`로 시작해야 한다는 것에 있다.
+- 커스텀 훅에는 몇 가지 규칙이 있다. 첫 번째로 앞서 설명한 것처럼 독립된 파일에 저장할 수 없다. 그리고 두 번째 규칙으로는 커스텀 훅의 네이밍의 시작을 `use`로 시작해야 한다는 것에 있다.
 
 #### use-counter.js
 
@@ -105,7 +106,7 @@ const useCounter = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCounter((prevCounter) => prevCounter - 1);
+      setCounter((prevCounter) => prevCounter + 1);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -116,5 +117,122 @@ export default useCounter;
 ```
 
 - 그리고 `ForwardCounter` 컴포넌트에 있는 코드를 모두 복사(JSX 코드를 반환하는 코드는 남겨둔다.)해서 해당 커스텀 훅 함수 안에 이전시켜 준다.
+
+</br>
+
+## 사용자 정의 훅 사용하기
+
+- 사용자 정의(Custom) 훅을 사용할 때는 우리가 내장 훅을 사용하는 방법을 떠올리면 된다. 결국 커스텀 훅도 함수기 때문이다.
+
+```js
+import useCounter from "../hooks/use-counter";
+```
+
+- 먼저 `ForwardCounter` 컴포넌트에 해당 로직을 복사해두었던 커스텀 훅(`useCounter`)를 import 해온다.
+
+#### ForwardCounter.js
+
+```js
+import useCounter from "../hooks/use-counter";
+
+const ForwardCounter = () => {
+  useCounter();
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return <Card>{counter}</Card>;
+};
+```
+
+- 그리고 커스텀 훅인 `useCounter`를 호출한다. `useCounter`를 호출하게 되면 `useCounter`의 내부 코드들이 실행될 것이다.
+
+#### useCounter.js
+
+```js
+const useCounter = () => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+};
+```
+
+- 어떤 컴포넌트에서 커스텀 훅을 호출하게 되면, 호출한 커스텀 훅 함수 내부에 있는 상태(state)나 `effect`가 해당 컴포넌트에 묶이게 된다. 따라서 `ForwardCounter`에서 `useCounter`를 호출하게 되면 `useCounter`에서 만들어진 상태(state)가 `ForwardCounter` 컴포넌트에 묶이는 것이다. 또 다수의 컴포넌트에서 특정 커스텀 훅을 사용하게 되면 이 다수의 컴포넌트가 커스텀 훅의 상태(state)를 받게 된다. 물론 커스텀 훅을 사용한다고 해서 컴포넌트 전반에 걸쳐 동일한 상태(state)와 `effect`를 공유하는 것은 아니다. 다만 모든 컴포넌트에서 커스텀 훅이 재실행되고 이 커스텀 훅을 호출하는 모든 컴포넌트가 각자의 상태(state)를 받게 될 뿐이다.
+
+### 커스텀 훅을 호출하는 모든 컴포넌트는 커스텀 훅의 로직만을 공유한다
+
+- 잊지 말아야될 것은 앞서 설명한 것처럼 커스텀 훅의 로직만 공유할 뿐 상태(state)를 동일하게 공유한다는 사실이다. 따라서 `ForwardCounter` 컴포넌트에서 `useCounter`를 호출했으므로 `useCounter`의 상태인 `counter`는 `ForwardCounter`에 의해서 설정된다. 그리고 `useCounter`의 `useEffect` 역시 `ForwardCounter` 에 의해서 설정되고 발생된다. 그렇다면 `ForwardCounter`에서 `useCounter`의 상태 `counter`에 접근해서 설정하려면 어떻게 해야하는 걸까?
+
+### 컴포넌트에서 커스텀 훅의 상태(state) 접근하기
+
+- 컴포넌트에서 호출하는 커스텀 훅의 상태(state)에 접근하는 것은 내장 훅을 사용할 때와 동일한 방법을 사용하면 된다. `useState` 같은 내장 훅도 백그라운드에서 무언가를 하고 있다. 상태를 만들고 관리도 한다. 그리고 어떠한 중요한 역할도 맡아서 한다.
+
+```js
+const [counter, setCounter] = useState(0);
+```
+
+- 위의 `useState`의 코드를 보면 배열 구조분해할당을 통해 반환하고 있는 걸 알 수 있다. 커스텀 훅 역시 함수이므로, 커스텀 내부에 있는 어떤 것이든 반환할 수 있다는 뜻이다. `useCounter` 같은 커스텀 훅을 호출해서 사용하는 컴포넌트에서 `counter` 라는 상태(state)에 접근해 설정하기 위해서는 커스텀 훅인 `useCounter`에서 외부 컴포넌트가 사용할 수 있도록 반환을 해줘야 한다.
+
+```js
+const useCounter = () => {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return counter;
+};
+```
+
+- return `counter`를 추가해줌으로서 `useCounter` 커스텀 훅의 상태(state)를 외부 컴포넌트에서 접근할 수 있도록 해준다. 커스텀 훅에서는 외부 컴포넌트에서 필요한 무엇이든간에 반환이 가능하다. 배열이나 객체, 숫자도 반환할 수 있다.
+
+```js
+const [counter, setCounter] = useState(0);
+```
+
+- 이 상태(state)는 커스텀 훅이 설정하고 관리하는 것이다. 따라서 `useCounter`를 호출하고 있는 `ForwardCounter` 컴포넌트에서는 `useCounter`가 반환하는 값을 이용할 수 있다.
+
+#### ForwardCounter.js
+
+```js
+const counter = useCounter();
+```
+
+- `ForwardCounter` 컴포넌트에서 호출한 `useCounter()`를 `counter` 라는 상수로 지정하고, 이를 할당한다. 이렇게 하면, `useCounter`가 `counter`로 값을 반환하기 때문에 `ForwardCounter` 컴포넌트 안의 상수(`counter`)에 값을 지정할 수 있다.
+
+```js
+const ForwardCounter = () => {
+  const counter = useCounter();
+
+  return <Card>{counter}</Card>;
+};
+```
+
+- 이전에 사용했던 로직들을 모두 제거하니 `ForwardCounter` 컴포넌트의 로직이 매우 간결해졌다.
+
+![ezgif com-gif-maker (82)](https://user-images.githubusercontent.com/53133662/171586355-b2bddc97-645b-4806-85f8-ec4c02034cf2.gif)
+
+- 저장하고 새로고침 해보면, 커스텀 훅을 사용하던 이전과 동일하게 작동하는 것을 알 수 있다.
+
+### 정리
+
+- 커스텀 훅을 만드는 방법에서 가장 중요한 것은 '네이밍' 이다. 언제나 `use`로 시작해야 하고, 커스텀 훅 내부의 상태(state)와 관련된 로직을 사용한다던가, 다른 리액트 훅을 사용할 수 있으며, 이를 통해서 컴포넌트 간에 특정 로직을 공유할 수 있게 된다.
 
 </br>
