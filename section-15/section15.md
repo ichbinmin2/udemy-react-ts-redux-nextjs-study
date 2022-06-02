@@ -6,6 +6,8 @@
 - [Creating a Custom React Hook Function](#커스텀-리액트-컴포넌트-ReEvaluation-Hook-함수-생성하기)
 - [Using Custom Hooks](#사용자-정의-훅-사용하기)
 - [Configuring Custom Hooks](#사용자-정의-훅-구성하기)
+- [Configuring Custom Hooks](#사용자-정의-훅-구성하기)
+- [Onwards To A More Realistic Example](#좀-더-현실적인-예시를-위해)
 
 </br>
 
@@ -423,3 +425,97 @@ const BackwardCounter = () => {
 - 지금까지의 코드들은 인위적인 예시일 뿐이며, 현실적으로 실무에서 사용하는 방법이 아닐 수도 있다. 예를 들면 두 개의 컴포넌트 대신 하나의 컴포넌트를 사용할 수도 있지만 커스텀 훅을 이해하기 위해 별개로 나눈 것이기 때문이다. 이 점을 인지하고 있도록 하자.
 
   </br>
+
+## 좀 더 현실적인 예시를 위해
+
+- 먼저 이전에 HTTP 요청을 전송하는 것에 대한 방법을 학습한 적이 있을 것이다. 이때 사용했던 Firebase의 realtime database의 URL 주소가 필요하니, 그 주소를 긁어와 현재의 어플리케이션에서 fetch를 통해 사용하고 있는 URL 주소를 대체하도록 하자. 물론 Firebase 가 요구하는 조건 `/저장하고자 하는 노드의 이름.json`을 URL 주소 뒤에 붙이는 걸 잊지 말자.
+
+- 이 어플리케이션은 어떻게 돌아갈까? 먼저 URL을 Firebase의 realtime database의 URL 주소로 수정해주고 저장한 뒤, 새로고침을 해보자.
+
+![ezgif com-gif-maker (83)](https://user-images.githubusercontent.com/53133662/171605520-025dfb16-1df3-46c0-a211-7a140815dd9a.gif)
+
+- "Task 1"을 추가하고 "Add Button"을 누른 뒤 연결한 Firebase의 realtime database 로 이동하면
+
+![스크린샷 2022-06-02 오후 6 55 57](https://user-images.githubusercontent.com/53133662/171605490-aab4dc5d-3d7c-47d4-a5cf-e4a491fd0eaa.png)
+
+- 내가 설정한 새로운 노드(`tasks`)가 생성되었음을 확인할 수 있다.
+
+### 커스텀 훅으로 가져올 수 있는 공통된 로직 찾아보기
+
+- 현재 어플리케이션의 데이터(Task)를 렌더링하는 컴포넌트 로직들을 보면 Task 데이터를 fetch API 를 통해 Firebase의 database에 "POST" 하고, 이를 다시 "GET" 해오는 방식을 사용한 걸 알 수 있다. HTTP 를 전송하고 오류를 처리하고 로딩 상태(state)도 관리하며 도착한 데이터를 변경하거나 표시하는 모든 작업이 fetch API를 통해 이루어진 것이다. 여기에는 다양한 컴포넌트가 관리해주고 있지만 가장 중요한 것은 `App` 컴포넌트로 Task 데이터를 가져오는 `fetchTask` 함수가 있는 부분이다.
+
+#### App.js
+
+```js
+const fetchTasks = async (taskText) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(
+      "https://react-http-6b4a6.firebaseio.com/tasks.json"
+    );
+
+    if (!response.ok) {
+      throw new Error("Request failed!");
+    }
+
+    const data = await response.json();
+
+    const loadedTasks = [];
+
+    for (const taskKey in data) {
+      loadedTasks.push({ id: taskKey, text: data[taskKey].text });
+    }
+
+    setTasks(loadedTasks);
+  } catch (err) {
+    setError(err.message || "Something went wrong!");
+  }
+  setIsLoading(false);
+};
+```
+
+- 이 `fetchTasks` 함수는 `useEffect`로 인해 실행되거나 `App` 컴포넌트가 반환하는 `Tasks` 컴포넌트에 props로 전달되어 해당 컴포넌트 내부에서 버튼이 클릭되거나 하면서 실행되고 있다. 이렇게 `App` 컴포넌트 안에서 `fetchTasks` 함수가 트리거 되고 있다.
+
+#### NewTask.js
+
+```js
+const enterTaskHandler = async (taskText) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(
+      "https://react-http-6b4a6.firebaseio.com/tasks.json",
+      {
+        method: "POST",
+        body: JSON.stringify({ text: taskText }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Request failed!");
+    }
+
+    const data = await response.json();
+
+    const generatedId = data.name; // firebase-specific => "name" contains generated id
+    const createdTask = { id: generatedId, text: taskText };
+
+    props.onAddTask(createdTask);
+  } catch (err) {
+    setError(err.message || "Something went wrong!");
+  }
+  setIsLoading(false);
+};
+```
+
+- `NewTask` 컴포넌트도 fetch API를 사용하는 로직 함수 `enterTaskHandler` 를 가지고 있다. `enterTaskHandler` 함수는 `App`의 `fetchTasks` 함수처럼 HTTP 요청을 보내고 있지만, Firebase에 데이터를 저장하기 위한 "POST" 요청이 전송된다. 이 `enterTaskHandler` 함수는 `TaskForm` 컴포넌트가 최종적으로 제출될 때 트리거 되는 함수이다. 즉, `TaskForm` 컴포넌트는 `NewTask` 컴포넌트로부터 props로 함수를 받아 해당 함수에서 버튼이 클릭되거나 인풋에 입력된 값이 검증되는 시점에서 `enterTaskHandler`가 실행되는 것이다.
+
+### 정리
+
+- 이 두가지의 컴포넌트(`App`, `NewTask`)를 살펴보면서, fetch API를 사용해서 HTTP 요청을 하는 로직이 최소 하나 이상의 커스텀 훅을 추가할 수 있다는 걸 알 수 있었다. 이 두개의 HTTP 요청을 하는 함수가 모두 동일한 로직을 가진 것은 아니지만 크게 두 가지의 비슷한 종류의 작업을 하고 있을 것이다. 저장할 데이터를 전송하는 부분과, 데이터를 가져오기 위한 요청을 보내는 부분 말이다. 세밀하게 살펴보면 응답에 대한 변환 로직은 조금 다른 형태이지만 실제로 코드가 유사한 부분은 상당수 존재한다. 로딩과 오류 상태(state)를 관리하고 설정하는 것과 오류를 다루는 로직 역시 동일하다. 이처럼 비슷한 코드가 존재하고 있기 때문에 이 부분의 로직을 별도의 함수에 아웃소싱하는 것을 고려해볼 수 있을 것이다. 지금까지 배운 커스텀 훅을 통해서 말이다.
+
+</br>
