@@ -524,6 +524,222 @@ const enterTaskHandler = async (taskText) => {
 
 ## 사용자 정의 Http 훅 빌드하기
 
+- hooks 폴더를 생성하고 사용할 커스텀 훅 `useFetch.js` 파일을 만든다.
+
+```js
+const useFetch = () => {};
+export default useFetch;
+```
+
+- 그리고 먼저 `useFetch` 커스텀 훅으로 아웃소싱할 로직(`App.js`)을 확인한다.
+
+#### App.js
+
+```js
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState(null);
+
+const fetchTasks = async (taskText) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(
+      "https://react-http-6b4a6.firebaseio.com/tasks.json"
+    );
+
+    if (!response.ok) {
+      throw new Error("Request failed!");
+    }
+
+    const data = await response.json();
+
+    const loadedTasks = [];
+
+    for (const taskKey in data) {
+      loadedTasks.push({ id: taskKey, text: data[taskKey].text });
+    }
+
+    setTasks(loadedTasks);
+  } catch (err) {
+    setError(err.message || "Something went wrong!");
+  }
+  setIsLoading(false);
+};
+```
+
+- 위의 로직들을 살펴보면, 이것은 로딩과 오류 상태(state)에 대한 것임과 동시에 응답을 보내고 해당 응답을 평가하는 코드이기도 한 걸 알 수 있다. 그리고 이 모두가 아웃소싱 되어야 한다. 해당 `fetchTasks` 함수 전체와 `isLoding`, `error` 의 상태(state) 코드까지 모두 복사해서 `useFetch` 커스텀 훅 함수 안에 붙여 넣어준다.
+
+```js
+const [tasks, setTasks] = useState([]);
+```
+
+> `tasks` 상태(state)는 `App` 컴포넌트에만 사용하는 것이기 때문에 이를 제외하고 모두 복사해서 `useFetch` 커스텀 훅에 넣어주자.
+
+#### useFetch.js
+
+```js
+const useFetch = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const sendRequest = async (taskText) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        "https://react-http-6b4a6.firebaseio.com/tasks.json"
+      );
+
+      if (!response.ok) {
+        throw new Error("Request failed!");
+      }
+
+      const data = await response.json();
+
+      const loadedTasks = [];
+
+      for (const taskKey in data) {
+        loadedTasks.push({ id: taskKey, text: data[taskKey].text });
+      }
+
+      setTasks(loadedTasks);
+    } catch (err) {
+      setError(err.message || "Something went wrong!");
+    }
+    setIsLoading(false);
+  };
+
+  return {
+    isLoading: isLoading,
+    error: error,
+    sendRequest: sendRequest,
+  };
+};
+```
+
+- `App` 컴포넌트에서 긁어온 `fetchTasks` 함수의 이름을 `sendRequest`로 수정한다. 이렇게 수정한다면 내부에 있는 로직을 좀 더 일반화시킬 수 있다. 이 `useFetch` 커스텀 훅은 데이터 fetch 에만 국한되어 데이터를 가져오는 역할만 하는 것이 아니라, 데이터를 보내는 역할도 하기 때문에 조금 더 이름을 일반화 시키는 것이다. 이렇게 수정하게 되면 훅의 재사용성을 높이고 여러 작업에도 사용할 수 있다는 걸 명시적으로 알 수 있게 된다.
+
+### useFetch 커스텀 훅에 다수의 매개변수 추가하기
+
+- `useFetch` 커스텀 훅은 어떤 종류의 요청이든 받아서 모든 종류의 URL로 보낼 수 있어야 하고, 또한 어떤 데이터든 변환을 할 수 있어야 한다. 동시에 로딩(`isLoding`)과 오류(`error`) 상태(state)를 관리하고, 모든 과정을 동일한 순서대로 실행해야만 한다. 그리고 이런 유연한 커스텀 훅을 만들기 위해서는 몇 가지의 매개변수가 필요하다.
+
+#### App.js
+
+```js
+const response = await fetch(
+  "https://react-http-6b4a6.firebaseio.com/tasks.json"
+);
+```
+
+#### NewTask.js
+
+```js
+const response = await fetch(
+  "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  {
+    method: "POST",
+    body: JSON.stringify({ text: taskText }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+);
+```
+
+- 먼저, 이 fetch API 의 `response` 로직 부분을 보면 URL 과, 메소드, body, headers 등 유연성을 갖추어야 함을 알 수 있다. `NewTask` 컴포넌트에서 사용하는 HTTP 요청은 "POST"이기 떄문에 fetch API를 요청할 때 URL 뿐만 아니라, 두 번째 인자에 메소드, body, headers 가 필요하기 때문이다. 따라서 해당 설정을 위한 매개변수(`requestConfig`)를 추가한다.
+
+```js
+const useFetch = (requestConfig) => {
+  ...
+}
+```
+
+- 매개변수 `requestConfig`는 URL을 포함해서 어떤 종류의 설정 사항도 포함할 수 있는 객체 형태여야만 할 것이다.
+
+```js
+const response = await fetch(requestConfig.url, {
+  method: requestConfig.method,
+  headers: requestConfig.headers,
+  body: JSON.stringify(requestConfig.body),
+});
+```
+
+- 따라서 URL 주소와 설정 객체 등 하드 코딩된 것을 제거하고, URL은 `requestConfig.url` 그리고 설정 객체는 각각 `method`는 `requestConfig.method`, `headers`는 `requestConfig.headers`, `body`는 `JSON.stringify(requestConfig.body)`로 할당한다. 이렇게 해야, 외부 컴포넌트에서 커스텀 훅을 호출할 때 URL 주소를 담은 것과 해당 설정 속성을 가진 객체를 전달할 수 있기 때문이다. 이렇게 되면, "GET"으로 URL만 요청하는 로직 뿐만 아니라, "POST"로 요청할 때도 설정 객체를 넣어서 사용할 수 있게 된다.
+
+```js
+const data = await response.json();
+```
+
+- 당연하게도 이런 방식으로 `response`을 변환하기도 해야 한다. JSON 데이터만을 다룰 것이기 때문에, 이 부분은 수정하지 않고 그대로 둔다.
+
+```js
+const loadedTasks = [];
+
+for (const taskKey in data) {
+  loadedTasks.push({ id: taskKey, text: data[taskKey].text });
+}
+
+setTasks(loadedTasks);
+```
+
+- 하지만 위의 코드처럼 데이터를 최종적으로 처리하는 부분은 너무 구체적인 부분(`GET` 요청만을 위한 데이터 처리)이기 때문에 커스텀 훅에 포함되서는 안될 것이다. 대신에 여기에 데이터를 가져오면, `useFetch` 커스텀 훅을 사용하는 컴포넌트로부터 얻은 함수를 실행해서 그 함수에 데이터를 넘겨주는 방식을 사용할 것이다. 이렇게 하면 세부적인 변환 과정은 커스텀 훅이 사용되는 컴포넌트 안에서 정의할 수 있게 된다. 따라서 위의 코드를 커스텀 훅 내부에서 실행하지 않고, 매개변수로 받은 함수로 처리해줄 수 있도록 한다.
+
+```js
+const useFetch = (requestConfig, applyData) => {
+  ...
+}
+
+```
+
+- 해당 로직을 처리할 함수를 `applyData` 라는 이름의 매개변수로 받기로 한다. 요청을 통해 데이터를 가져온 다음 `applyData` 매개변수 함수를 호출해서 데이터를 전달한다.
+
+```js
+const data = await response.json();
+
+applyData(data);
+```
+
+- 즉, `useFetch` 커스텀 훅에서 `applyData` 함수로 데이터를 전달한 것이며, 함수 안에서 무엇이 발생하는지에 대해서는 `applyData` 커스텀 훅을 사용하는 컴포넌트에서 정의할 수 있게 되었다. 이제 `useFetch` 커스텀 훅에서 재사용과 재사용 로직을 준비했다. 하지만 데이터를 사용하는 세부적인 과정은 해당 커스텀 훅을 사용하는 컴포넌트에서만 정의할 수 있도록 했다. 그리고 이렇게 분리를 해주는 것이 조금 더 합리적으로 보인다. `useFetch` 커스텀 훅에는 `isLoding`과 `error` 같은 상태(state)와 HTTP 통신을 하는 `sendRequest` 함수가 포함되었다. 하지만 이것들은 결국 `useFetch` 커스텀 훅을 사용하는 컴포넌트에 필요한 것들이다.
+
+### 컴포넌트에서 커스텀 훅의 상태(state)와 함수에 접근하기
+
+- `useFetch` 커스텀 훅을 사용하는 컴포넌트들은 로딩(`isLoding`)과 오류(`error`) 상태에 대해 접근할 수 있어야 하고, `sendRequest` 함수에도 접근할 수 있어야 한다. 그래야지 해당 커스텀 훅을 사용하는 컴포넌트들이 이것들을 활성화하고 요청 또한 보낼 수 있을 것이다.
+
+```js
+const useFetch = (requestConfig, applyData) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const sendRequest = async (taskText) => {
+    ...
+  };
+
+  return {}
+};
+```
+
+- 따라서 `useFetch` 함수 내부의 가장 하단으로 이동하여 외부 컴포넌트들이 접근하여 사용할 수 있도록 상태(state)와 함수를 반환한다. 이전의 학습에서 언급했던 것처럼 커스텀 훅은 숫자나 문자열, 배열, 객체 등과 같이 무엇이든 반환할 수 있다. 이번에는 여러 개의 값들을 반환할 예정이기 때문에 객체의 형태로 반환할 것이다.
+
+```js
+return {
+  isLoading: isLoading,
+  error: error,
+  sendRequest: sendRequest,
+};
+```
+
+- 객체 안에 반환할 상태(`isLoading`, `error`)와 함수(`sendRequest`)를 반환한다. 객체의 키와 값에서 왼쪽의 키는 속성의 이름을 말하고, 오른쪽의 값은 말 그대로 값을 의미한다.
+
+```js
+return {
+  isLoading,
+  error,
+  sendRequest,
+};
+```
+
+- 물론, 객체 내부의 좌측의 속성 이름과 우측의 값을 똑같이 사용했기 때문에 모던 자바스크립트의 편의 기능을 통해 생략하여 사용할 수도 있다. 이전에 작성했던 코드와 같은 결과를 얻으면서 코드가 좀 더 짧아지는 효과이다. 그리고 이렇게 생략을 하여 사용해도, 이전의 긴 문법으로 변환한 뒤 사용되기 때문에 간단하게 생략하여 사용하는 것이 더 좋을 것이다.
+
 </br>
 
 ## 사용자 정의 Http 훅 사용하기
