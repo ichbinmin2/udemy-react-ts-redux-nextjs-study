@@ -524,7 +524,7 @@ const enterTaskHandler = async (taskText) => {
 
 ## 사용자 정의 Http 훅 빌드하기
 
-- hooks 폴더를 생성하고 사용할 커스텀 훅 `useFetch.js` 파일을 만든다.
+- hooks 폴더를 생성하고 사용할 커스텀 훅 `use-fetch.js` 파일을 만든다.
 
 ```js
 const useFetch = () => {};
@@ -575,7 +575,7 @@ const [tasks, setTasks] = useState([]);
 
 > `tasks` 상태(state)는 `App` 컴포넌트에만 사용하는 것이기 때문에 이를 제외하고 모두 복사해서 `useFetch` 커스텀 훅에 넣어주자.
 
-#### useFetch.js
+#### use-fetch.js
 
 ```js
 const useFetch = () => {
@@ -646,7 +646,7 @@ const response = await fetch(
 );
 ```
 
-- 먼저, 이 fetch API 의 `response` 로직 부분을 보면 URL 과, 메소드, body, headers 등 유연성을 갖추어야 함을 알 수 있다. `NewTask` 컴포넌트에서 사용하는 HTTP 요청은 "POST"이기 떄문에 fetch API를 요청할 때 URL 뿐만 아니라, 두 번째 인자에 메소드, body, headers 가 필요하기 때문이다. 따라서 해당 설정을 위한 매개변수(`requestConfig`)를 추가한다.
+- 먼저, 이 fetch API 의 `response` 로직 부분을 보면 URL 을 비롯하여, 메소드, body, headers 등 유연성을 갖추어야 함을 알 수 있다. `NewTask` 컴포넌트에서 사용하는 HTTP 요청은 "POST"이기 떄문에 fetch API를 요청할 때 URL 뿐만 아니라, 두 번째 인자에 메소드, body, headers 가 필요하기 때문이다. 따라서 해당 설정을 위한 매개변수(`requestConfig`)를 추가한다.
 
 ```js
 const useFetch = (requestConfig) => {
@@ -657,14 +657,33 @@ const useFetch = (requestConfig) => {
 - 매개변수 `requestConfig`는 URL을 포함해서 어떤 종류의 설정 사항도 포함할 수 있는 객체 형태여야만 할 것이다.
 
 ```js
-const response = await fetch(requestConfig.url, {
-  method: requestConfig.method,
-  headers: requestConfig.headers,
-  body: JSON.stringify(requestConfig.body),
-});
+const sendRequest = async (taskText) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    // ⚡️ --------
+    const response = await fetch(requestConfig.url, {
+      method: requestConfig.method,
+      headers: requestConfig.headers,
+      body: JSON.stringify(requestConfig.body),
+    });
+    // ⚡️ --------
+
+    if (!response.ok) {
+      throw new Error("Request failed!");
+    }
+
+    const data = await response.json();
+
+    applyData(data);
+  } catch (err) {
+    setError(err.message || "Something went wrong!");
+  }
+  setIsLoading(false);
+};
 ```
 
-- 따라서 URL 주소와 설정 객체 등 하드 코딩된 것을 제거하고, URL은 `requestConfig.url` 그리고 설정 객체는 각각 `method`는 `requestConfig.method`, `headers`는 `requestConfig.headers`, `body`는 `JSON.stringify(requestConfig.body)`로 할당한다. 이렇게 해야, 외부 컴포넌트에서 커스텀 훅을 호출할 때 URL 주소를 담은 것과 해당 설정 속성을 가진 객체를 전달할 수 있기 때문이다. 이렇게 되면, "GET"으로 URL만 요청하는 로직 뿐만 아니라, "POST"로 요청할 때도 설정 객체를 넣어서 사용할 수 있게 된다.
+- 따라서 URL 주소와 설정 객체 등 하드 코딩된 것을 제거한 뒤, URL은 `requestConfig.url` 그리고 설정 객체는 각각 `method`는 `requestConfig.method`, `headers`는 `requestConfig.headers`, `body`는 `JSON.stringify(requestConfig.body)`로 할당한다. 이렇게 해야, 외부 컴포넌트에서 커스텀 훅을 호출할 때 URL 주소를 담은 것과 해당 설정 속성을 가진 객체(`requestConfig`)를 전달할 수 있기 때문이다. 이렇게 되면, "GET"으로 URL만 요청하는 로직 뿐만 아니라, "POST"로 요청할 때도 설정 객체를 넣어서 사용할 수 있게 된다.
 
 ```js
 const data = await response.json();
@@ -691,7 +710,7 @@ const useFetch = (requestConfig, applyData) => {
 
 ```
 
-- 해당 로직을 처리할 함수를 `applyData` 라는 이름의 매개변수로 받기로 한다. 요청을 통해 데이터를 가져온 다음 `applyData` 매개변수 함수를 호출해서 데이터를 전달한다.
+- 해당 로직(데이터 처리)을 처리할 함수를 `applyData` 라는 이름의 매개변수로 받기로 한다. 요청을 통해 데이터를 가져온 다음 `applyData` 매개변수 함수를 호출해서 데이터를 전달한다.
 
 ```js
 const data = await response.json();
@@ -699,11 +718,11 @@ const data = await response.json();
 applyData(data);
 ```
 
-- 즉, `useFetch` 커스텀 훅에서 `applyData` 함수로 데이터를 전달한 것이며, 함수 안에서 무엇이 발생하는지에 대해서는 `applyData` 커스텀 훅을 사용하는 컴포넌트에서 정의할 수 있게 되었다. 이제 `useFetch` 커스텀 훅에서 재사용과 재사용 로직을 준비했다. 하지만 데이터를 사용하는 세부적인 과정은 해당 커스텀 훅을 사용하는 컴포넌트에서만 정의할 수 있도록 했다. 그리고 이렇게 분리를 해주는 것이 조금 더 합리적으로 보인다. `useFetch` 커스텀 훅에는 `isLoding`과 `error` 같은 상태(state)와 HTTP 통신을 하는 `sendRequest` 함수가 포함되었다. 하지만 이것들은 결국 `useFetch` 커스텀 훅을 사용하는 컴포넌트에 필요한 것들이다.
+- 즉, `useFetch` 커스텀 훅에서 `applyData` 함수로 데이터를 전달한 것이며, `applyData` 함수 안에서 무엇이 발생하는지에 대해서는 `applyData` 커스텀 훅을 사용하는 컴포넌트에서 정의할 수 있게 되었다. 이제 `useFetch` 커스텀 훅에서 재사용과 재사용 로직을 준비했다. 하지만 데이터를 사용하는 세부적인 과정은 해당 커스텀 훅을 사용하는 컴포넌트에서만 정의할 수 있도록 했다. 그리고 이렇게 분리를 해주는 것이 이전보다는 조금 더 합리적으로 보인다. `useFetch` 커스텀 훅에는 `isLoding`과 `error` 같은 상태(state)와 HTTP 통신을 하는 `sendRequest` 함수가 포함되었다. 하지만 이것들은 결국 `useFetch` 커스텀 훅을 사용하는 컴포넌트에 필요한 것들이다.
 
 ### 컴포넌트에서 커스텀 훅의 상태(state)와 함수에 접근하기
 
-- `useFetch` 커스텀 훅을 사용하는 컴포넌트들은 로딩(`isLoding`)과 오류(`error`) 상태에 대해 접근할 수 있어야 하고, `sendRequest` 함수에도 접근할 수 있어야 한다. 그래야지 해당 커스텀 훅을 사용하는 컴포넌트들이 이것들을 활성화하고 요청 또한 보낼 수 있을 것이다.
+- `useFetch` 커스텀 훅을 사용하는 컴포넌트들은 로딩(`isLoding`)과 오류(`error`) 상태에 대해 접근할 수 있어야 하고, `sendRequest` 함수에도 접근할 수 있어야 한다. 그래야지 해당 커스텀 훅을 사용하는 컴포넌트들이 이것들을 활성화하고 요청 또한 보낼 수 있기 때문이다.
 
 ```js
 const useFetch = (requestConfig, applyData) => {
@@ -738,10 +757,202 @@ return {
 };
 ```
 
-- 물론, 객체 내부의 좌측의 속성 이름과 우측의 값을 똑같이 사용했기 때문에 모던 자바스크립트의 편의 기능을 통해 생략하여 사용할 수도 있다. 이전에 작성했던 코드와 같은 결과를 얻으면서 코드가 좀 더 짧아지는 효과이다. 그리고 이렇게 생략을 하여 사용해도, 이전의 긴 문법으로 변환한 뒤 사용되기 때문에 간단하게 생략하여 사용하는 것이 더 좋을 것이다.
+- 물론, 객체 내부의 좌측의 속성 이름과 우측의 값의 이름이 동일하기 때문에 모던 자바스크립트의 편의 기능을 통해 생략하여 사용할 수도 있다. 이전에 작성했던 코드와 같은 결과를 얻으면서 코드가 좀 더 짧아지는 효과이다. 그리고 이렇게 생략을 하여 사용해도, 이전의 긴 문법으로 변환한 뒤 사용되기 때문에 간단하게 생략하여 사용하는 것이 더 좋을 것이다.
 
 </br>
 
 ## 사용자 정의 Http 훅 사용하기
 
-</br>
+- 이제 `App` 컴포넌트로 돌아와 커스텀 훅(`useFetch`)을 사용해보자.
+
+```js
+import useFetch from "./hooks/use-fetch";
+```
+
+- 먼저 사용할 `useFetch` 훅을 import 해온 뒤 호출해오자.
+
+```js
+useFetch();
+```
+
+- 여기에는 두 개의 인자(매개변수)를 전달해주어야 한다. 이전에 우리가 `useFetch`에서 외부 컴포넌트로부터 받기로 한 그 매개변수들 말이다.
+
+```js
+useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  데이터 처리 함수
+);
+```
+
+- 먼저 `useFecth` 내부에서 `fetch()` 안에 넣어줄 URL과 method, headers, body 등의 속성을 포함하고 있는 `requestConfig` 에 보낼 객체와 데이터를 처리해주는 함수(`applyData`)를 전달해야 한다. `requestConfig` 에 보내는 객체는 내부에 필요한 속성들이 포함되어 있어야 한다. 커스텀 훅 내부에서 URL 과 method, headers, body 등의 속성에 접근하기 때문이다. 따라서 `App` 컴포넌트의 url 속성에 해당 문자열 주소를 할당해준다. 그렇다면 나머지 method, headers, body 속성은 왜 넣어주지 않을까?
+
+### `App` 컴포넌트 내부에서 `requestConfig`에 보내는 객체에는 왜 URL 만 포함시켰을까
+
+- `useFetch` 커스텀 훅을 사용하고자 하는 두개의 컴포넌트의 차이점을 확인해보자. `App` 컴포넌트에서는 데이터를 그저 가져오기만 하면 되기 때문에 "GET" 요청으로만 처리가 가능하고, 여기에는 method, headers, body 등이 필요하지 않다. 반면, `NewTask` 컴포넌트는 "POST" 요청으로 데이터를 서버에 보내야 하고 여기에는 method, headers, body 의 속성이 필요하다. 이렇게 필요한 속성들이 다르기 떄문에 우리는 유연성을 조금 더 갖춰야할 필요가 있다. 모든 컴포넌트가 더미 데이터를 보낼 필요가 없기 때문이다. 이제 다시 커스텀 훅으로 돌아가 `fetch()`의 Request 부분을 유연성을 갖춘 로직으로 수정해야 한다.
+
+### 커스텀 훅의 fetch() 두 번째 속성에 유연성 부여하기
+
+```js
+const response = await fetch(requestConfig.url, {
+  method: requestConfig.method,
+  headers: requestConfig.headers,
+  body: JSON.stringify(requestConfig.body),
+});
+```
+
+- `useFetch` 커스텀 훅으로 돌아와 response 변수의 `fetch()` 로직을 수정한다.
+
+```js
+const response = await fetch(requestConfig.url, {
+  method: requestConfig.method ? requestConfig.method : "GET",
+  headers: requestConfig.headers ? requestConfig.headers : {},
+  body: JSON.stringify(requestConfig.body)
+    ? JSON.stringify(requestConfig.body)
+    : null,
+});
+```
+
+- `method`의 경우에는 `requestConfig.method`가 적용 되었는지를 확인하고(`?`) 설정되었을 때만 `requestConfig.method`를 부여하고 아닐 때(`:`)는 "GET"으로 요청을 보낼 수 있도록 수정한다.
+- `headers`의 경우에는 `requestConfig.headers`가 적용 되었는지를 확인하고(`?`) 설정되었을 때만 `requestConfig.headers`를 부여하고 아닐 때(`:`)는 빈 객체(`{}`)를 할당한다.
+- `body`의 경우에는 `JSON.stringify(requestConfig.body)`의 설정 상태를 확인하고(`?`) 설정되었을 때만 `JSON.stringify(requestConfig.body)`를 부여하고 아닐 때(`:`)는 `null`로 할당한다. 이렇게 수정함으로써 커스텀 훅은 충분한 유연성을 갖추게 되었다.
+
+```js
+useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  데이터 처리 함수
+);
+```
+
+- 다시 `App` 컴포넌트로 돌아오자. 이제 `App` 컴포넌트에서 호출한 `useFetch`가 이런 형태의 객체를 전달할 수 있게 되었다. 가독성을 위해 데이터 처리 로직을 `useFetch` 위에 작성한다. 이제 남은 건 데이터를 처리하는 함수인 두 번째 인자를 준비하는 일이다.
+
+```js
+const transformTasks = (taskObj) => {};
+
+useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- 먼저 데이터 처리를 담당할 함수의 이름을 `transformTasks` 라고 한다. 여기에는 `taskObj`를 매개변수로 받는다. 이 `transformTasks` 함수 내부에 `useFetch` 안에서 사용했던 즉, 이전에 제거했던 그 데이터 처리 로직을 그대로 복사해서 붙여넣기 해준다.
+
+```js
+const transformTasks = (taskObj) => {
+  const loadedTasks = [];
+
+  for (const taskKey in data) {
+    loadedTasks.push({ id: taskKey, text: data[taskKey].text });
+  }
+
+  setTasks(loadedTasks);
+};
+```
+
+- 그리고 여기에서 `taskObj` 인자를 `data` 로 표기된 자리에 대신 넣어주고,
+
+```js
+const transformTasks = (taskObj) => {
+  const loadedTasks = [];
+
+  for (const taskKey in taskObj) {
+    loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text });
+  }
+
+  setTasks(loadedTasks);
+};
+```
+
+- `for in` 문을 통해서 읽어와서 객체 형태로 `loadedTasks` 이라는 빈 배열에 push 해준다. 이제 Firebase에서 받는 객체의 모든 작업은 프론트엔드에서 필요한 구조와 유형을 갖는 객체로 변환될 것이다. 그리고 `setTasks` 상태(state) 업데이트 함수에 전달한다. 이것으로 `useFetch()` 의 두 번째 인자인 데이터 처리 함수가 준비되었다.
+
+```js
+useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- `transformTasks` 이 함수는 커스텀 훅이 응답을 받게 되면 알아서 호출될 것이다. 이런 방법이 좋은 이유는 이렇게 하면 주요 로직은 커스텀 훅에 아웃소싱 할 수 있게 되고 로직에 대한 데이터는 그 데이터가 필요한 컴포넌트에 위치하게 되기 때문이다.
+
+### `useFetch` 요청 활성화하기
+
+- `useFetch` 커스텀 훅은 매개변수만 받는 것이 아니라 무언가를 반환하기도 한다. `isLoding`과 `error` 상태(state)가 있는 객체를 반환하며, `sendRequest` 함수의 포인터 역시 반환한다. 그리고 `useFetch` 요청을 활성화하기 위해서는 호출이 필요하다. 따라서 `App` 컴포넌트에서 `httpData`란 이름으로 `useFetch`를 호출할 수 있도록 하고,
+
+```js
+const httpData = useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- 이제 `httpData`를 포인터해서 구조를 분해하는 로직을 작성한다.
+
+```js
+const httpData = useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+const {} = httpData;
+```
+
+- 그리고 `isLoding`, `error`, `sendRequest`를 객체 구조 분해 할당을 통해 추출한다.
+
+```js
+const { isLoading, error, sendRequest } = httpData;
+```
+
+- 그리고 여기에서 `App` 컴포넌트에서 사용할 별칭을 생성할 것인데, 자바스크립트에서 이 분해 문법에 콜론(`:`)을 추가하면 다른 이름을 부여할 수 있기에 이 방법을 사용해서 새로운 이름을 부여한다.
+
+```js
+const { isLoading, error, sendRequest: fetchTasks } = httpData;
+```
+
+- `sendRequest`의 새로운 이름으로 `fetchTasks`를 설정한다. 이는 커스텀 훅 내부의 `sendRequest` 함수를 가리키고 있는 포인터의 이름인 것이다. 단순히 이것을 사용할 `App` 컴포넌트 함수 안에서 `sendRequest` 함수를 가리키는 이름만 바꾼 것이다.
+
+```js
+useEffect(() => {
+  fetchTasks();
+}, []);
+```
+
+- 그렇게 되면, 기존에 HTTP 요청을 담당했던 함수 이름인 `fetchTasks()`를 그대로 사용할 수 있게 되고, 아래의 `useEffect` 훅 로직을 수정할 필요도 없을 것이다.
+
+### `useEffect`의 의존성을 추가 문제
+
+- 커스텀 훅으로 HTTP 요청을 하는 주요 로직들을 아웃소싱하면서 `useEffect` 훅의 의존성 배열에 무언가 오류가 있음을 경고하는 걸 알 수 있다. 이전에 사용하던 `fetchTasks` 함수에서는 문제가 되지 않던 것이다. 이전에는 상태 갱신 함수만 호출하고 있었기 때문에 의존성 배열을 굳이 주입하지 않아도 상관 없었기 때문이다. 하지만 `fetchTasks` 함수, 즉 내부의 `sendRequest` 함수는 커스텀 훅 내부에 위치해있고, 이를 추출해서 사용한 것이기 때문에 `useEffect`는 이 `sendRequest` 함수 안에서 무슨 일이 일어나고 있는지를 알지 못한다. 때문에 `fetchTasks` 함수가 변화할 때마다 `useEffect`를 재실행하려면 `fetchTasks`를 의존성으로 추가해야 한다.
+
+#### 🚨 무한루프 발생
+
+```js
+useEffect(() => {
+  fetchTasks();
+}, [fetchTasks]);
+```
+
+- 하지만 이는 현재로서는 큰 문제가 될 수 있다. 현 시점에서는 무한 루프가 만들어지고 에러 상황을 발생시키기 때문에 이는 좋은 솔루션이 될 수 없기 때문이다. 그러니 다시 의존성을 제거한다.
+
+```js
+useEffect(() => {
+  fetchTasks();
+}, []);
+```
+
+### 정리
+
+- 지금까지 커스텀 훅을 통해서 `App` 컴포넌트를 재구축했다. 이제 `isLoding`과 `error` 상태에 접근이 가능하고, 이것들은 `Tasks` 컴포넌트 내부에 있는 자식 컴포넌트인 `Task` 컴포넌트에 전달된다. `fetchTasks` 함수에도 접근 가능하지만 요청을 보내거나 오류를 처리하는 부분은 커스텀 훅의 일부가 되었다.
+
+![ezgif com-gif-maker (86)](https://user-images.githubusercontent.com/53133662/172176252-b67ac421-6e47-4d77-b401-e3a97cf7d381.gif)
+
+- 저장하고, 새로고침을 해오면 현재 작업을 모두 불러오며 작업을 추가하는 기능도 동일하게 작동하는 걸 알 수 있다.
+  </br>
