@@ -1129,4 +1129,322 @@ const transformTasks = useCallback((taskObj) => {
 }, []);
 ```
 
+- 먼저, `transformTasks` 함수를 `useCallback`으로 래핑한다. 여기에서의 의존성 배열에는 아무 것도 추가하지 않는다. 상태(state) 업데이트를 하는 `setTasks` 외에는 그 어떠한 것도 외부에서 쓰고 있지 않기 때문이다. 이제 우리는 `transformTasks` 함수가 변하지 않음을 `useCallback`을 통해 보증했다.
+
+```js
+const httpData = useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- 하지만 이 객체(`httpData`) 내부에서 첫 번째 인자로 url 을 담아 전달하는 객체는 `App` 컴포넌트가 재평가할 때마다 재생성되고 있다. 이를 막으려면, `useMemo`와 같은 것을 이용해서 객체가 변하지 않도록 보증해야 할 것이다. 또는 `useMemo`를 사용하는 대신 커스텀 훅을 조금 수정하는 방법을 사용해도 될 것이다.
+
+#### use-fetch.js
+
+```js
+const useFetch = (requestConfig, applyData) => {
+  ...
+
+  const sendRequest = useCallback(
+    async (taskText) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(requestConfig.url, {
+          method: requestConfig.method ? requestConfig.method : "GET",
+          headers: requestConfig.headers ? requestConfig.headers : {},
+          body: JSON.stringify(requestConfig.body)
+            ? JSON.stringify(requestConfig.body)
+            : null,
+        });
+
+        if (!response.ok) {
+          throw new Error("Request failed!");
+        }
+
+        const data = await response.json();
+
+        applyData(data);
+      } catch (err) {
+        setError(err.message || "Something went wrong!");
+      }
+      setIsLoading(false);
+    },
+    // ⚡️ --------
+    [requestConfig, applyData]
+    // ⚡️ --------
+  );
+
+  ...
+};
+```
+
+- `useFetch` 커스텀 훅에서 매개변수로 받는 `requestConfig`는 훅 자체에서 받지 않고 해당 `requestConfig`를 사용하는 `sendRequest` 함수의 인자로 직접 받아온다면 어떨까? 결국 `sendRequest` 함수 역시 함께 호출되기 때문이다.
+
+```js
+const useFetch = (applyData) => {
+  ...
+
+  const sendRequest = useCallback(
+    // ⚡️ --------
+    async (requestConfig) => {
+    // ⚡️ --------
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(requestConfig.url, {
+          method: requestConfig.method ? requestConfig.method : "GET",
+          headers: requestConfig.headers ? requestConfig.headers : {},
+          body: JSON.stringify(requestConfig.body)
+            ? JSON.stringify(requestConfig.body)
+            : null,
+        });
+
+        if (!response.ok) {
+          throw new Error("Request failed!");
+        }
+
+        const data = await response.json();
+
+        applyData(data);
+      } catch (err) {
+        setError(err.message || "Something went wrong!");
+      }
+      setIsLoading(false);
+    },
+    // ⚡️ --------
+    [applyData]
+    // ⚡️ --------
+  );
+
+  ...
+};
+```
+
+- 이제 `requestConfig`를 커스텀 훅 자체가 아닌 `sendRequest`에서 직접 받아올 수 있도록 수정했다. 이렇게 되면 `requestConfig`를 의존성 배열에 추가하지 않아도 될 것이다. 이제 `requestConfig`는 외부의 의존성 배열이 아니라, `useCallback`으로 래핑된 함수의 매개변수가 되었기 때문이다.
+
+#### App.js
+
+```js
+const httpData = useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- 다시 `App` 컴포넌트로 이동해서 이 url 객체를 제거하도록 하자.
+
+```js
+const httpData = useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- 그렇게 되면 `transformTasks`가 `useFetch`에 전달되는 유일한 매개변수가 된다.
+
+```js
+const httpData = useFetch(transformTasks);
+const { isLoading, error, sendRequest: fetchTasks } = httpData;
+```
+
+- 로직이 길어지는 걸 방지하기 위해 간단하게 한 줄로 작성하면 가독성이 더 높아질 것이다.
+
+```js
+const { isLoading, error, sendRequest: fetchTasks } = useFetch(transformTasks);
+
+useEffect(() => {
+  fetchTasks();
+}, [fetchTasks]);
+```
+
+- `useEffect`에서는 `fetchTasks()`를 통해서 최종적으로 요청을 전달하고 있다. `fetchTasks()`가 결국에는 우리가 이전에 `useFetch` 커스텀 훅 내부에서 설정했던 `sendRequest` 함수라는 걸 기억해보자. 여기에 우리가 전달하기로 한 매개변수 `requestConfig`를 `fetchTasks()`에 직접 전달 해주어야 할 것이다.
+
+```js
+useEffect(() => {
+  fetchTasks({
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  });
+}, [fetchTasks]);
+```
+
+- 이것은 우리가 할 수 있는 수 많은 방법 중에 하나일 뿐임을 기억하자. 그리고 당연히 데이터를 처리해주는 함수(`transformTasks`)에도 이와 동일한 작업을 해줄 수 있다.
+
+```js
+const transformTasks = useCallback((taskObj) => {
+  const loadedTasks = [];
+
+  for (const taskKey in taskObj) {
+    loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text });
+  }
+
+  setTasks(loadedTasks);
+}, []);
+
+const { isLoading, error, sendRequest: fetchTasks } = useFetch(transformTasks);
+
+useEffect(() => {
+  fetchTasks({
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  });
+}, [fetchTasks]);
+```
+
+- `App` 컴포넌트에서 `useCallback`을 사용하는 것이 너무 번거롭다고 생까할 경우 `useCallback`을 제거하고 `transformTasks` 함수를 직접 `fetchTasks()` 에 전달하는 방법도 있을 것이다.
+
+```js
+// ⚡️ --------
+const transformTasks = (taskObj) => {
+  const loadedTasks = [];
+
+  for (const taskKey in taskObj) {
+    loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text });
+  }
+
+  setTasks(loadedTasks);
+};
+
+// ⚡️ --------
+const { isLoading, error, sendRequest: fetchTasks } = useFetch();
+
+useEffect(() => {
+  fetchTasks(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+    },
+    // ⚡️ --------
+    transformTasks
+  );
+}, [fetchTasks]);
+```
+
+- 그리고, `transformTasks`를 `useEffect`를 내부에서 실행할 수 있도록 수정해준다.
+
+```js
+const { isLoading, error, sendRequest: fetchTasks } = useFetch();
+
+useEffect(() => {
+  const transformTasks = (taskObj) => {
+    const loadedTasks = [];
+
+    for (const taskKey in taskObj) {
+      loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text });
+    }
+
+    setTasks(loadedTasks);
+  };
+
+  fetchTasks(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+    },
+    transformTasks
+  );
+}, [fetchTasks]);
+```
+
+- 이렇게 `transformTasks` 함수를 `useEffect` 내부에서 실행하게 되면, `Effect` 함수 안에 남아있는 외부 의존성은 사라지게 된다. 이제 `useFetch` 커스텀 훅은 의존성이나 어떠한 매개변수 없이도 호출이 가능해진 것이다.
+
+```js
+fetchTasks(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+```
+
+- 왜냐하면, 우리가 요청에 대한 설정(`requestConfig`)과 데이터 전송 후 데이터 처리를 해주는 로직(`transformTasks`)을 직접 보내기 때문이다.
+
+> 지금까지 두 가지 방법을 사용해서 `useEffect`의 무한 루프에 대한 솔루션을 적용해봤다. 두 방법 모두 사용 가능한 방법이니 취향대로 선택해서 사용하면 될 것이다.
+
+- 마지막으로 우리가 직접 보내고 있는 `transformTasks` 데이터 처리 함수도 `useFetch` 커스텀 훅에서 직접 받지 않고 `sendRequest` 함수에서 매개변수로 받을 수 있도록 수정해준다.
+
+```js
+const useFetch = () => {
+  ...
+
+  const sendRequest = useCallback(
+    async (requestConfig, applyData) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(requestConfig.url, {
+          method: requestConfig.method ? requestConfig.method : "GET",
+          headers: requestConfig.headers ? requestConfig.headers : {},
+          body: JSON.stringify(requestConfig.body)
+            ? JSON.stringify(requestConfig.body)
+            : null,
+        });
+
+        if (!response.ok) {
+          throw new Error("Request failed!");
+        }
+
+        const data = await response.json();
+
+        applyData(data);
+      } catch (err) {
+        setError(err.message || "Something went wrong!");
+      }
+      setIsLoading(false);
+    },
+    [applyData]
+  );
+
+  ...
+};
+```
+
+- 그리고 마지막으로 `useCallback`의 의존성으로 추가했던 `applyData`를 삭제해준다. `useFetch` 커스텀 훅에서는 더이상 의존성이 필요하지 않으며, 이는 해당 커스텀 훅이 다루는 모든 데이터는 `useCallback`으로 래핑된 함수에서 매개변수로 직접 받아오고 있기 때문이다.
+
+```js
+const useFetch = () => {
+  ...
+
+  const sendRequest = useCallback(
+    async (requestConfig, applyData) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(requestConfig.url, {
+          method: requestConfig.method ? requestConfig.method : "GET",
+          headers: requestConfig.headers ? requestConfig.headers : {},
+          body: JSON.stringify(requestConfig.body)
+            ? JSON.stringify(requestConfig.body)
+            : null,
+        });
+
+        if (!response.ok) {
+          throw new Error("Request failed!");
+        }
+
+        const data = await response.json();
+
+        applyData(data);
+      } catch (err) {
+        setError(err.message || "Something went wrong!");
+      }
+      setIsLoading(false);
+    },
+    // ⚡️ --------
+    []
+    // ⚡️ --------
+  );
+
+  ...
+};
+```
+
+![ezgif com-gif-maker (86)](https://user-images.githubusercontent.com/53133662/172176252-b67ac421-6e47-4d77-b401-e3a97cf7d381.gif)
+
+- 저장하고, 새로고침 해보면 동일하게 작업이 문제 없이 돌아가고 있다는 걸 알 수 있다.
+
  </br>
