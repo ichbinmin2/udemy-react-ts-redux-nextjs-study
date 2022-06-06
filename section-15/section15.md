@@ -10,6 +10,7 @@
 - [Onwards To A More Realistic Example](#좀-더-현실적인-예시를-위해)
 - [Building a Custom Http Hook](#사용자-정의-Http-훅-빌드하기)
 - [Using the Custom Http Hook](#사용자-정의-Http-훅-사용하기)
+- [Adjusting the Custom Hook Logic](#사용자-정의-훅-로직-조정하기)
 
 </br>
 
@@ -567,7 +568,7 @@ const fetchTasks = async (taskText) => {
 };
 ```
 
-- 위의 로직들을 살펴보면, 이것은 로딩과 오류 상태(state)에 대한 것임과 동시에 응답을 보내고 해당 응답을 평가하는 코드이기도 한 걸 알 수 있다. 그리고 이 모두가 아웃소싱 되어야 한다. 해당 `fetchTasks` 함수 전체와 `isLoding`, `error` 의 상태(state) 코드까지 모두 복사해서 `useFetch` 커스텀 훅 함수 안에 붙여 넣어준다.
+- 위의 로직들을 살펴보면, 이것은 로딩과 오류 상태(state)에 대한 것임과 동시에 응답을 보내고 해당 응답을 평가하는 코드이기도 한 걸 알 수 있다. 그리고 이 모두가 아웃소싱 되어야 한다. 해당 `fetchTasks` 함수 전체와 `isLoading`, `error` 의 상태(state) 코드까지 모두 복사해서 `useFetch` 커스텀 훅 함수 안에 붙여 넣어준다.
 
 ```js
 const [tasks, setTasks] = useState([]);
@@ -621,7 +622,7 @@ const useFetch = () => {
 
 ### useFetch 커스텀 훅에 다수의 매개변수 추가하기
 
-- `useFetch` 커스텀 훅은 어떤 종류의 요청이든 받아서 모든 종류의 URL로 보낼 수 있어야 하고, 또한 어떤 데이터든 변환을 할 수 있어야 한다. 동시에 로딩(`isLoding`)과 오류(`error`) 상태(state)를 관리하고, 모든 과정을 동일한 순서대로 실행해야만 한다. 그리고 이런 유연한 커스텀 훅을 만들기 위해서는 몇 가지의 매개변수가 필요하다.
+- `useFetch` 커스텀 훅은 어떤 종류의 요청이든 받아서 모든 종류의 URL로 보낼 수 있어야 하고, 또한 어떤 데이터든 변환을 할 수 있어야 한다. 동시에 로딩(`isLoading`)과 오류(`error`) 상태(state)를 관리하고, 모든 과정을 동일한 순서대로 실행해야만 한다. 그리고 이런 유연한 커스텀 훅을 만들기 위해서는 몇 가지의 매개변수가 필요하다.
 
 #### App.js
 
@@ -718,11 +719,11 @@ const data = await response.json();
 applyData(data);
 ```
 
-- 즉, `useFetch` 커스텀 훅에서 `applyData` 함수로 데이터를 전달한 것이며, `applyData` 함수 안에서 무엇이 발생하는지에 대해서는 `applyData` 커스텀 훅을 사용하는 컴포넌트에서 정의할 수 있게 되었다. 이제 `useFetch` 커스텀 훅에서 재사용과 재사용 로직을 준비했다. 하지만 데이터를 사용하는 세부적인 과정은 해당 커스텀 훅을 사용하는 컴포넌트에서만 정의할 수 있도록 했다. 그리고 이렇게 분리를 해주는 것이 이전보다는 조금 더 합리적으로 보인다. `useFetch` 커스텀 훅에는 `isLoding`과 `error` 같은 상태(state)와 HTTP 통신을 하는 `sendRequest` 함수가 포함되었다. 하지만 이것들은 결국 `useFetch` 커스텀 훅을 사용하는 컴포넌트에 필요한 것들이다.
+- 즉, `useFetch` 커스텀 훅에서 `applyData` 함수로 데이터를 전달한 것이며, `applyData` 함수 안에서 무엇이 발생하는지에 대해서는 `applyData` 커스텀 훅을 사용하는 컴포넌트에서 정의할 수 있게 되었다. 이제 `useFetch` 커스텀 훅에서 재사용과 재사용 로직을 준비했다. 하지만 데이터를 사용하는 세부적인 과정은 해당 커스텀 훅을 사용하는 컴포넌트에서만 정의할 수 있도록 했다. 그리고 이렇게 분리를 해주는 것이 이전보다는 조금 더 합리적으로 보인다. `useFetch` 커스텀 훅에는 `isLoading`과 `error` 같은 상태(state)와 HTTP 통신을 하는 `sendRequest` 함수가 포함되었다. 하지만 이것들은 결국 `useFetch` 커스텀 훅을 사용하는 컴포넌트에 필요한 것들이다.
 
 ### 컴포넌트에서 커스텀 훅의 상태(state)와 함수에 접근하기
 
-- `useFetch` 커스텀 훅을 사용하는 컴포넌트들은 로딩(`isLoding`)과 오류(`error`) 상태에 대해 접근할 수 있어야 하고, `sendRequest` 함수에도 접근할 수 있어야 한다. 그래야지 해당 커스텀 훅을 사용하는 컴포넌트들이 이것들을 활성화하고 요청 또한 보낼 수 있기 때문이다.
+- `useFetch` 커스텀 훅을 사용하는 컴포넌트들은 로딩(`isLoading`)과 오류(`error`) 상태에 대해 접근할 수 있어야 하고, `sendRequest` 함수에도 접근할 수 있어야 한다. 그래야지 해당 커스텀 훅을 사용하는 컴포넌트들이 이것들을 활성화하고 요청 또한 보낼 수 있기 때문이다.
 
 ```js
 const useFetch = (requestConfig, applyData) => {
@@ -883,7 +884,7 @@ useFetch(
 
 ### `useFetch` 요청 활성화하기
 
-- `useFetch` 커스텀 훅은 매개변수만 받는 것이 아니라 무언가를 반환하기도 한다. `isLoding`과 `error` 상태(state)가 있는 객체를 반환하며, `sendRequest` 함수의 포인터 역시 반환한다. 그리고 `useFetch` 요청을 활성화하기 위해서는 호출이 필요하다. 따라서 `App` 컴포넌트에서 `httpData`란 이름으로 `useFetch`를 호출할 수 있도록 하고,
+- `useFetch` 커스텀 훅은 매개변수만 받는 것이 아니라 무언가를 반환하기도 한다. `isLoading`과 `error` 상태(state)가 있는 객체를 반환하며, `sendRequest` 함수의 포인터 역시 반환한다. 그리고 `useFetch` 요청을 활성화하기 위해서는 호출이 필요하다. 따라서 `App` 컴포넌트에서 `httpData`란 이름으로 `useFetch`를 호출할 수 있도록 하고,
 
 ```js
 const httpData = useFetch(
@@ -906,7 +907,7 @@ const httpData = useFetch(
 const {} = httpData;
 ```
 
-- 그리고 `isLoding`, `error`, `sendRequest`를 객체 구조 분해 할당을 통해 추출한다.
+- 그리고 `isLoading`, `error`, `sendRequest`를 객체 구조 분해 할당을 통해 추출한다.
 
 ```js
 const { isLoading, error, sendRequest } = httpData;
@@ -940,7 +941,7 @@ useEffect(() => {
 }, [fetchTasks]);
 ```
 
-- 하지만 이는 현재로서는 큰 문제가 될 수 있다. 현 시점에서는 무한 루프가 만들어지고 에러 상황을 발생시키기 때문에 이는 좋은 솔루션이 될 수 없기 때문이다. 그러니 다시 의존성을 제거한다.
+- 하지만 이는 현재로서는 큰 문제가 될 수 있다. 현 시점에서는 무한 루프가 만들어지고 에러 상황을 발생시키기 때문에 이는 좋은 솔루션이 될 수 없기 때문이다. 그러니 나중에 다시 논의하기로 하고, 다시 의존성을 제거한다.
 
 ```js
 useEffect(() => {
@@ -950,9 +951,182 @@ useEffect(() => {
 
 ### 정리
 
-- 지금까지 커스텀 훅을 통해서 `App` 컴포넌트를 재구축했다. 이제 `isLoding`과 `error` 상태에 접근이 가능하고, 이것들은 `Tasks` 컴포넌트 내부에 있는 자식 컴포넌트인 `Task` 컴포넌트에 전달된다. `fetchTasks` 함수에도 접근 가능하지만 요청을 보내거나 오류를 처리하는 부분은 커스텀 훅의 일부가 되었다.
+- 지금까지 커스텀 훅을 통해서 `App` 컴포넌트를 재구축했다. 이제 `isLoading`과 `error` 상태에 접근이 가능하고, 이것들은 `Tasks` 컴포넌트 내부에 있는 자식 컴포넌트인 `Task` 컴포넌트에 전달된다. `fetchTasks` 함수에도 접근 가능하지만 요청을 보내거나 오류를 처리하는 부분은 커스텀 훅의 일부가 되었다.
 
 ![ezgif com-gif-maker (86)](https://user-images.githubusercontent.com/53133662/172176252-b67ac421-6e47-4d77-b401-e3a97cf7d381.gif)
 
 - 저장하고, 새로고침을 해오면 현재 작업을 모두 불러오며 작업을 추가하는 기능도 동일하게 작동하는 걸 알 수 있다.
   </br>
+
+## 사용자 정의 훅 로직 조정하기
+
+- 이제 `App` 컴포넌트의 `useEffect`에 `fetchTasks`를 의존성으로 추가해야 한다. 왜냐하면 컴포넌트 함수 안에서 설정된 모든 데이터, 또는 함수는 그 함수의 의존성으로서 추가되어야 하기 때문이다.
+
+#### 🚨 무한루프 발생
+
+```js
+useEffect(() => {
+  fetchTasks();
+}, [fetchTasks]);
+```
+
+- 하지만 여기서, 이전에 거론한 문제가 발생한다. 무한루프가 발생하는 것이다. `useEffect` 내부에서 `fetchTasks()` 함수를 호출하는데, 그렇게 되면 커스텀 훅 안에 있는 `sendRequest` 함수를 실행하게 되고, 몇 몇 상태(state)가 새로 설정 되기 때문이다.
+
+### 커스텀 훅의 상태(state) 설정이 발생하면 커스텀 훅을 사용하는 컴포넌트는 재렌더링 된다.
+
+- 상태(state)를 설정하는 커스텀 훅을 만들고, `App` 컴포넌트 내부에서 훅을 사용하게 되면, 컴포넌트는 묵시적으로 커스텀 훅이 설정한 상태(state)를 사용하게 된다. 즉, 커스텀 훅에서 구성된 상태(state)가 그 커스텀 훅을 사용하는 컴포넌트에 설정되게 되는 것이라는 뜻이다.
+
+#### use-fetch.js
+
+```js
+const sendRequest = async (taskText) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(requestConfig.url, {
+      method: requestConfig.method ? requestConfig.method : "GET",
+      headers: requestConfig.headers ? requestConfig.headers : {},
+      body: JSON.stringify(requestConfig.body)
+        ? JSON.stringify(requestConfig.body)
+        : null,
+    });
+
+    if (!response.ok) {
+      throw new Error("Request failed!");
+    }
+
+    const data = await response.json();
+
+    applyData(data);
+  } catch (err) {
+    setError(err.message || "Something went wrong!");
+  }
+  setIsLoading(false);
+};
+```
+
+- 여기 `sendRequest` 함수에서 `setIsLoading` 과 `setErrer`를 호출하면 이는 `App` 컴포넌트의 재렌더링을 발생시킨다. 왜 그럴까? 이는 `App` 컴포넌트 안에 있는 커스텀 훅을 사용하는 것이기 때문이다. 그렇게 되면, 재렌더링이 되는 순간 커스텀 훅(`useFetch`)이 다시 호출되고, 커스텀 훅(`useFetch`)이 다시 호출되면 `sendRequest` 함수가 또 다시 재생성되면서 새로운 함수 객체를 반환하고 `App` 컴포넌트의 `useEffect`가 재실행된다.
+
+#### App.js
+
+```js
+useEffect(() => {
+  fetchTasks();
+}, [fetchTasks]);
+```
+
+### 무한 루프가 발생하는 이유
+
+- 이전의 강의(section-12) 에서 살펴봤듯이 자바스크립트에서 함수는 객체이다. 그리고 내부에 같은 로직을 품고 있더라도 함수가 재생성되면 이는 메모리에서 새로운 객체로 인식되기 때문에 `useEffect`가 이를 새로운 값으로 받아들이게 되며 기술적으로 같은 함수일지라도 재실행을 유발하게 된다.
+
+### useCallback 으로 무한 루프를 방지하기
+
+- 이를 방지하기 위해서는 다시 `useFetch` 커스텀 훅으로 돌아가서 `sendRequest` 부분을 수정해야 한다.
+
+```js
+const sendRequest = useCallback(async (taskText) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(requestConfig.url, {
+      method: requestConfig.method ? requestConfig.method : "GET",
+      headers: requestConfig.headers ? requestConfig.headers : {},
+      body: JSON.stringify(requestConfig.body)
+        ? JSON.stringify(requestConfig.body)
+        : null,
+    });
+
+    if (!response.ok) {
+      throw new Error("Request failed!");
+    }
+
+    const data = await response.json();
+
+    applyData(data);
+  } catch (err) {
+    setError(err.message || "Something went wrong!");
+  }
+  setIsLoading(false);
+}, []);
+```
+
+- `async/await` 구문이 있더라도 문제가 없기 때문에 해당 함수 부분을 `useCallback`으로 감싸자. 알다시피 `useCallback`은 의존성 배열이 필요하다. 여기에 무엇을 주입해야 할까?
+
+```js
+const useFetch = (requestConfig, applyData) => {
+  ...
+
+  const sendRequest = useCallback(
+    async (taskText) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(requestConfig.url, {
+          method: requestConfig.method ? requestConfig.method : "GET",
+          headers: requestConfig.headers ? requestConfig.headers : {},
+          body: JSON.stringify(requestConfig.body)
+            ? JSON.stringify(requestConfig.body)
+            : null,
+        });
+
+        if (!response.ok) {
+          throw new Error("Request failed!");
+        }
+
+        const data = await response.json();
+
+        applyData(data);
+      } catch (err) {
+        setError(err.message || "Something went wrong!");
+      }
+      setIsLoading(false);
+    },
+    // ⚡️ --------
+    [requestConfig, applyData]
+    // ⚡️ --------
+  );
+
+  ...
+};
+```
+
+- 의존성 배열은 이 안에서 사용되는 모든 것을 나열해야 한다. 이 경우에는 `useFetch` 커스텀 훅이 매개변수로 받아오는 `requestConfig` 와 `applyData`를 추가할 수 있을 것이다. 하지만 이렇게 했을 경우 또 다른 문제가 발생한다. 당연한 이야기겠지만 이 두가지 모두 객체이다. `requestConfig`는 자바스크립트 기본 객체이고, `applyData`는 함수인데 자바스크립트에서는 함수 역시 객체이기 때문이다. 다시 `App` 컴포넌트로 돌아가서 `useFetch`에 전달한 객체들을 살펴보자.
+
+#### App.js
+
+```js
+const transformTasks = (taskObj) => {
+  const loadedTasks = [];
+
+  for (const taskKey in taskObj) {
+    loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text });
+  }
+
+  setTasks(loadedTasks);
+};
+
+const httpData = useFetch(
+  {
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  },
+  transformTasks
+);
+
+const { isLoading, error, sendRequest: fetchTasks } = httpData;
+```
+
+- 우리는 `useFetch`에 인자로 전달하는 두 개의 객체가 `App` 컴포넌트가 재실행될 때마다 재생성되지 않도록 해야 한다. 현재로서는 `App` 컴포넌트가 재실행될 때마다 재실행되고 있기 때문이다.
+
+```js
+const transformTasks = useCallback((taskObj) => {
+  const loadedTasks = [];
+
+  for (const taskKey in taskObj) {
+    loadedTasks.push({ id: taskKey, text: taskObj[taskKey].text });
+  }
+
+  setTasks(loadedTasks);
+}, []);
+```
+
+ </br>
