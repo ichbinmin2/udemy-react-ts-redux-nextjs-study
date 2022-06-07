@@ -11,6 +11,7 @@
 - [Building a Custom Http Hook](#사용자-정의-Http-훅-빌드하기)
 - [Using the Custom Http Hook](#사용자-정의-Http-훅-사용하기)
 - [Adjusting the Custom Hook Logic](#사용자-정의-훅-로직-조정하기)
+- [Using The Custom Hook In More Components](#더-많은-컴포넌트에서-사용자-정의-훅-사용하기)
 
 </br>
 
@@ -1448,3 +1449,313 @@ const useFetch = () => {
 - 저장하고, 새로고침 해보면 동일하게 작업이 문제 없이 돌아가고 있다는 걸 알 수 있다.
 
  </br>
+
+## 더 많은 컴포넌트에서 사용자 정의 훅 사용하기
+
+- 마지막으로 `NeweTasks` 컴포넌트에 커스텀 훅을 적용해보려고 한다. 먼저 `NewTasks` 컴포너트에 `useFetch`를 import 해온 후,
+
+```js
+import useFetch from "../../hooks/use-fetch";
+```
+
+- `useFetch`를 호출한다.
+
+```js
+useFetch();
+```
+
+- `App` 컴포넌트에서 작성했던 것처럼 `NewTasks` 컴포넌트에서 사용하고자 하는 커스텀 훅(`useFetch`)의 상태(state)와 함수를 구조 분해 할당으로 추출한다.
+
+```js
+const { isLoading, error, sendRequest: sendTaskRequest } = useFetch();
+```
+
+- 이제 `enterTaskHandler` 함수가 트리거 될 때마다 해당 커스텀 훅을 호출하도록 작성해준다. 즉, 매번 `TaskForm` 컴포넌트에서 폼이 제출될 때마다 `enterTaskHandler` 함수가 트리거 되고, 내부의 함수`sendTaskRequest` 함수가 호출될 수 있도록 하는 것이다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest();
+
+  ...
+};
+```
+
+- 먼저, `App` 컴포넌트에서 커스텀 훅에 전달하였던 것과 동일하게 `sendTaskRequest` 함수 내부에 적합한 매개변수들을 전달해줘야 한다. 첫 번째 인자로는, response 를 할 때 필요했던 속성들이 담긴 객체가 필요할 것이다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest({
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+  });
+
+  ...
+};
+```
+
+- 여기서 `App` 컴포넌트와는 다르게 "POST" 요청을 보낼 것이기 때문에, "POST" 요청을 보낼 때 필요한 속성(`method`, `headers`, `body`) 또한 포함해서 작성해주어야 한다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest({
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  ...
+};
+```
+
+- `body` 속성의 값은 `JSON.stringify({text: taskText})`로 변환하여 보냈지만, 이미 커스텀 훅 내부에서 JSON 변환을 해주고 있으므로 객체 형태로 작성해서 보내준다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest({
+    url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: { text: taskText },
+  });
+
+  ...
+};
+```
+
+- 이제 `useFetch` 커스텀 훅에서 받을 첫 번째 인자인 `requestConfig` 객체가 완성되었다. 두 번째로 전달할 인자는 응답 데이터를 받아서 처리해주는 함수 `applyData`이다. `NewTasks` 컴포넌트에서 데이터를 처리하는 방식을 살펴보면,
+
+```js
+const data = await response.json();
+// ⚡️ --------
+const generatedId = data.name;
+const createdTask = { id: generatedId, text: taskText };
+props.onAddTask(createdTask);
+// ⚡️ --------
+```
+
+- 이 로직들이 해당 역할을 담당하고 있는 걸 알 수 있다. `generatedId` 는 Firebase 가 자동으로 만들어주는 `name`으로 `id`를 생성해준 것이고, 이 `id`를 비롯하여 폼으로 부터 전달받은 `taskText`와 함께 포함하고 있는 것이 `createdTask` 객체이다. 그리고 이것들을 `props.onAddTask(createdTask)`로 호출해서 넣어주어야 한다.
+
+### 데이터 처리 함수 만들기
+
+```js
+const createTask = (taskData) => {
+  const generatedId = data.name;
+  const createdTask = { id: generatedId, text: taskText };
+  props.onAddTask(createdTask);
+};
+```
+
+- `createTask` 함수는 앞의 로직들을 담은 새로운 함수이다. 이 함수에서는 `taskData`를 인자로 받도록 작성해준다. 그리고 그 인자에 따라 로직들을 수정해준다.
+
+```js
+const createTask = (taskData) => {
+  const generatedId = taskData.name;
+  const createdTask = { id: generatedId, text: taskText };
+
+  props.onAddTask(createdTask);
+};
+```
+
+- 그리고,`sendTaskRequest`의 두 번째 인자로 해당 함수(`createTask`)를 포인터한다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask
+  );
+};
+```
+
+- 해당 로직에서 역시 `useCallback`을 사용해야 할지 고민되겠지만 여기에서는 해당 훅을 사용하지 않아도 된다. `App` 컴포넌트처럼 `useEffect`를 사용해서 `sendRequest`를 호출하는 것이 아니라, `enterTaskHandler`에서만 `sendTaskRequest`를 호출하고 있기 때문이다. 그리고 이 요청은 컴포넌트가 재평가되어도 전송되지 않으며, 단지 물리적으로 우리가 폼을 제출했을 때에만 함수가 재실행될 것이다. 이는 `App` 컴포넌트와 분명 다른 점이다.
+
+### taskText 를 전달하는 방법
+
+- 우리는 여기서 새로운 이슈를 마주하게 된다. `createTask` 함수를 보면,
+
+```js
+const createTask = (taskData) => {
+  const generatedId = taskData.name;
+  const createdTask = { id: generatedId, text: taskText };
+
+  props.onAddTask(createdTask);
+};
+```
+
+- `text` 속성 값으로 전달해야 하는 `taskText` 부분이 제대로 전달되지 않았음을 알 수 있다. 폼에서 HTTP 요청을 통해 전달된 텍스트 부분이 빠져있는 것이다. 이 `taskText`는 `enterTaskHandler` 함수의 매개변수를 통해 받아오고 있다. 그렇다면 어떻게 이를 전달해야 하는 걸까? 이 `taskText`를 사용하기 위해서는 두 개의 선택지가 있다. 첫 번째로는
+
+```js
+const enterTaskHandler = async (taskText) => {
+  const createTask = (taskData) => {
+    const generatedId = taskData.name;
+    const createdTask = { id: generatedId, text: taskText };
+
+    props.onAddTask(createdTask);
+  };
+
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask.bind(null, taskText)
+  );
+};
+```
+
+- `createTask` 함수를 통째로 가져와서 `enterTaskHandler` 함수 안에서 정의하는 방법이 있다. 이는 자바스크립트 스코프에 따라 함께 작동되고, `taskText`를 직접 받기 때문에 더는 문제가 되지 않을 것이다. 이처럼 복잡한 중첩 구조를 피하기 위해서 다른 방법을 사용해도 된다.
+
+```js
+const createTask = (taskData, taskText) => {
+  const generatedId = taskData.name;
+  const createdTask = { id: generatedId, text: taskText };
+
+  props.onAddTask(createdTask);
+};
+```
+
+- 이전처럼 각 함수들을 따로 둔 다음에, `taskText`를 `createTask` 함수의 두 번째 인자로 추가해주는 것이다. 따라서 커스텀 훅에는 2개의 매개변수가 필요하게 된다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask
+  );
+};
+```
+
+- 현재 `createTask` 함수를 호출하는 커스텀 훅은 하나의 매개변수만을 전달한다.
+
+#### use-fetch.js
+
+```js
+applyData(data);
+```
+
+- 이를 해결하기 위해선 자바스크립트 내부에 있는 메소드인 `bind()`를 사용하면 된다.
+
+### `bind()` 메소드 사용하기
+
+- 우리가 `sendTaskRequest`에 전달하려는 `createTask`에 `bind()` 메소드를 호출한다. 그러면 `bind()` 메소드는 함수를 사전에 구성할 수 있도록 해준다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask.bind()
+  );
+};
+```
+
+- 우리가 `sendTaskRequest` 에 전달하려는 `creatTask` 에 `bind()`를 호출해준다. 그러면 `bind` 메소드는 함수를 사전에 구성해줄 것이다.
+  > 호출 즉시 함수가 실행되지는 않는다. 이것은 자바스크립트의 기본적인 메소드이므로 어떤 함수에 대해서도 사전에 구성하기 위해서는 `bind()`를 사용할 수 있다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask.bind(null)
+  );
+};
+```
+
+- `bind()` 메소드에 보내는 첫 번째 인자는 실행이 예정된 함수에서 `this` 예약어를 사용하게 만드는 것이지만 여기서는 필요가 없기 때문에 `null`로 설정한다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask.bind(null, taskText)
+  );
+};
+```
+
+- `bind()` 메소드에 보내는 두 번째 인자는 호출 예정인 함수(`createTask`)가 전달받는 첫 번째 인자여야만 한다.
+
+```js
+const createTask = (taskData, taskText) => {
+  ...
+};
+```
+
+- 즉, 이렇게 `taskText`를 전달하려면 `bind()` 메소드의 두 번째 인자에 `taskText`를 전달해서 제출된 폼(`enterTaskHandler`)에서 `taskText`를 찾도록 만들면 된다.
+
+```js
+const enterTaskHandler = async (taskText) => {
+  sendTaskRequest(
+    {
+      url: "https://react-http-9914f-default-rtdb.firebaseio.com/tasks.json",
+      method: "POST",
+      body: { text: taskText },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    createTask.bind(null, taskText)
+  );
+};
+```
+
+- 함수가 실제로 호출되는 `useFetch` 에서 전달되는 다른 인자의 경우 간단하게 이 매개변수의 목록 끝에 추가하여 처리하면 된다.
+
+#### use-fetch.js
+
+```js
+const sendRequest = useCallback(async (requestConfig, applyData) => {
+  ...
+    const data = await response.json();
+    applyData(data);
+  ...
+}, []);
+```
+
+- 이것으로 커스텀 훅의 `applyData` 의 유일한 인자로 전달되는 데이터는 `createTask`의 두 번째 인자로 추가된다. 이제 호출이 되면, 이는 우리가 원하는 모든 데이터를 받게 된다.
+
+### 정리
+
+- 지금까지 HTTP 요청을 전송하는 커스텀 훅의 생성 방법에 대해 학습했다. 확실히 복잡하고 어려운 부분이 있었지만, 이런 방식으로 커스텀 훅을 사용하게 된다면 중복되는 로직 특히 상태(state) 설정과 같은 로직들을 커스텀 훅으로 아웃소싱할 수 있다는 점에서 필요한 작업임을 알 수 있었다. 또한 이를 서로 다른 컴포넌트에 적용해서 다양한 종류의 요청을 보내고, 응답 데이터에 대해 다양한 작업을 처리하며 로딩 및 오류 상태를 공유 로직을 통해 최적화할 수 있었다.
+
+</br>
