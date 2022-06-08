@@ -3,6 +3,7 @@
 ## 목차
 
 - [What's So Complex About Forms?](#무엇이-폼을-복잡하게-하는가)
+- [Dealing With Form Submission & Getting User Input Values](#양식-제출-처리-및-사용자-입력-값-가져오기)
 
 </br>
 
@@ -51,3 +52,162 @@
 - 지금까지 폼이 복잡해진 이유와 입력 값의 유효성 검사에 대한 시기를 살펴보았다. 앞서 사용자의 입력 값을 확인하는 시기에 대해서는 저마다 장/단점이 있기 때문에 여러 조건들을 고려해서 방법을 다양하게 사용하는 방식으로 접근해야 할 것이다. 예를 들어, 입력 값이 유효하지 않게 되었을 때 키 입력마다 유효성 검증을 한다면 피드백을 실시간으로 전달하기 때문에 입력이 유효해진 순간 사용자에게 알릴 수 있다면 어떨까? 보다 나은 사용자 경험을 제공할 수 있을 것이다.
 
   </br>
+
+## 양식 제출 처리 및 사용자 입력 값 가져오기
+
+- 간단한 입력 값을 받는 폼 양식이 있는 `SimpleInput` 컴포넌트를 사용해서, 사용자의 입력을 받고 그 입력 값에 대한 유효성을 검증하여 에러 메세지를 띄워볼 것이다.
+
+```js
+const SimpleInput = (props) => {
+  return (
+    <form>
+      <div className="form-control">
+        <label htmlFor="name">Your Name</label>
+        <input type="text" id="name" />
+      </div>
+      <div className="form-actions">
+        <button>Submit</button>
+      </div>
+    </form>
+  );
+};
+```
+
+### 사용자의 입력 값 가져오기
+
+- 사용자의 입력 값을 가져오는 방법에는 두가지가 있다. 첫 번째로 `useState`를 사용해서 모든 키 입력 마다 확인하고 해당 입력 값을 어떤 상태(state) 변수에 저장하는 방법이 있다. 두 번째로는 `useRef`를 사용해서 사용자가 값을 모두 입력했을 때 사용자의 입력 값을 가져올 수 있는 방법이다.
+
+### 사용자의 입력 값 가져오기 1. `useState`
+
+- 먼저, `useState`를 사용해서 사용자의 입력 값을 가져오는 방법이다.
+
+```js
+import { useState } from "react";
+
+const SimpleInput = (props) => {
+  const [enteredName, setEnteredName] = useState("");
+  ...
+}
+```
+
+- `useState`를 import 하고 컴포넌트 내부에서 호출한다. 해당 상태(state)의 이름은 `enteredName`으로 지정했다. 해당 상태는 문자열로 받을 것이기에 초기값을 ""로 설정한다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+};
+```
+
+- 이제 `enteredName` 상태를 업데이트해줄 수 있도록 `nameInputChangeHandler` 이벤트 트리거 함수를 받고, 상태 업데이트 함수(`setEnteredName`)에 `target.value` 값으로 받아올 수 있도록 한다.
+  > `nameInputChangeHandler` 함수의 `event` 매개변수는 `event` 객체로 받는 것이다. 이것은 자바스크립트가 브라우저에서 작동하는 방식임을 기억하자. `nameInputChangeHandler` 함수를 input 요소의 `onChange`에 연결해주고 나면 자동적으로 이벤트를 설명하는 `event` 객체를 얻을 수 있으며, 이 `event` 객체를 통해서 입력된 값에 접근할 수 있게 되는 것이다. 즉, `event.target.value` 는 리액트가 아닌 자바스크립트 문법이며 연결된 input 요소에 이벤트가 발생하면 `event.taget` 으로ㄹ 접근하여 `value` 값을 얻을 수 있도록 한다.
+
+```js
+<input type="text" id="name" onChange={nameInputChangeHandler} />
+```
+
+- 그리고 입력 값을 받아온 input 요소에 `onChange` 이벤트로 `nameInputChangeHandler` 함수를 포인터 해준다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+};
+```
+
+- 다음으로, 두 번째 함수인 `formSubmitssionHandler` 을 추가한다. 이 함수는 폼이 제출될 때 작동하는 함수가 될 것이다. 이 함수도 이벤트 객체로 만들 것이기 때문에 매개변수로 `event` 객체를 받을 수 있도록 작성해준다.
+
+```js
+<form onSubmit={formSubmitssionHandler}>...</form>
+```
+
+- 그리고 `form` 요소에 `onSubmit` 이벤트로 해당 함수를 연결해준다.
+
+### 폼에서 `event.preventDafult()` 를 추가해야 하는 이유
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+};
+```
+
+- `form` 양식을 제출(`onSubmit`)하는 함수에서 `event.preventDafult()`를 왜 추가해야만 하는 걸까? 왜냐하면 여기서는 브라우저에서 작동하는 바닐라 자바스크립트를 다루고 있기 때문이다. 기본적으로 브라우저는 폼 안에 있는 버튼을 통해서 폼 양식을 제출(`onSubmit`)하게 되면, 웹사이트를 제공하는 서버로 HTTP 요청을 보내게 된다. 이 과정은 모두 자동적으로 이루어지는 것이기에 실제로 현 시점에서 우리의 어플리케이션에서는 HTTP 요청을 처리할 서버가 없는 상태이고 HTML과 자바스크립트만 전송하는 정적 서버만 있는 상태이면 이 자동화 과정은 큰 문제가 된다. 따라서 이 문제가 발생되기 전에 `event.preventDafult()`를 통해서 자동적으로 요청이 보내지지 않도록 해야한다.
+
+- 결론적으로, `event.preventDafult()`가 필요한 이유는 이를 사용하지 않고 폼을 제출하게 되면 자동적으로 브라우저에서 HTTP 요청이 보내게 되면서 결국 페이지가 새로고침 될 것이고, 이는 리액트 어플리케이션이 전부 재시작된다는 것에 있다. 리액트 어플리케이션이 재시작 되면서 우리가 넣어둔 상태(state)들은 초기화될 것이고, 원하는 대로 작동하지 않을 확률이 높다. 그렇기 때문에 폼 양식을 제출할 때에는 `event.preventDafult()`를 통해서 브라우저의 기본 과정인 HTTP 요청을 보내지 않도록 명령해줘야 한다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+
+  console.log(enteredName);
+};
+```
+
+- 저장하고, 버튼을 눌러 폼을 제출해보면
+
+![ezgif com-gif-maker (87)](https://user-images.githubusercontent.com/53133662/172587545-c8ef033c-09d9-4b4f-8394-d34584f7aede.gif)
+
+- 내가 input 요소에 입력한 값이 그대로 콘솔에 출력되고 있음을 확인할 수 있다.
+
+### 사용자의 입력 값 가져오기 2. `useRef`
+
+- 사용자의 입력 값을 가져오는 또 다른 방법에는 input 요소에 `ref`를 설정함으로써 필요할 때 input 요소로부터 값을 '읽어'오는 것이다.
+
+```js
+import { useState, useRef } from "react";
+
+const SimpleInput = (props) => {
+  const nameInputRef = useRef();
+};
+```
+
+- 동일하게 `useRef`를 import 해온 후, `nameInputRef`라는 이름으로 `useRef`를 호출한다.
+
+```js
+<input
+  ref={nameInputRef}
+  type="text"
+  id="name"
+  onChange={nameInputChangeHandler}
+/>
+```
+
+- 값을 읽어올 input 요소에 `ref`prop을 작성하고 `nameInputRef`를 포인터해준다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  console.log("useState :", enteredName);
+
+  const enteredValue = nameInputRef.current.value;
+  console.log("useRef :", enteredValue);
+};
+```
+
+- 폼이 제출(`onSubmit`)되면 이 입력된 값(`value`)을 `nameInputRef`의 `current` 속성으로 접근하여 가져올 수 있게 되었다. `ref`는 항상 `current` 속성을 갖는 '객체' 이기 때문에 리액트에서 `ref`는 언제나 `current` 속성으로 `value` 값에 접근할 수 있다.
+
+> 자바스크립트에서 input 요소는 자바스크립트의 객체처럼 작동하며, input 요소는 항상 value 라는 속성을 가지고 있다.
+
+- 저장하고, input 창에 무언가를 입력한 뒤 버튼을 눌러 폼 양식을 제출해보면
+
+![ezgif com-gif-maker (88)](https://user-images.githubusercontent.com/53133662/172590988-386a7740-0470-40b8-b162-61fe90313f3c.gif)
+
+- 콘솔에서 각각의 방법으로 입력 값을 받아오는 값들이 출력되고 있음을 확인할 수 있다.
+
+### 결론
+
+- 실제로는 앞서 이 두가지 방법은 동시에 사용하지 않으며, 둘 중에 하나만 선택해서 사용하게 될 것이다. 그렇다면 둘 중에 어떤 것을 사용해야만 할까? 이는 입력된 값으로 어떤 일을 처리할 것인지에 달려있다. 만약 입력 값이 폼이 제출되었을 때 딱 한 번만 필요하다면 모든 키 입력마다 상태(state) 값을 업데이트하기엔 조금 지나칠 것이기에 `ref`를 사용하는 게 더 나을지도 모른다. 반면 즉각적으로 유효성 검증을 해야만 한다면, 그러니까 키 입력 마다 입력 값이 필요하다면 `ref` 로는 해당 작업을 할 수 없기 때문에 상태(state)를 이용하는 게 더 나을 것이다. 또한 입력된 값을 초기화 할 때도
+
+#### `ref`
+
+```js
+nameInputRef.current.value = "";
+```
+
+#### `useState`
+
+```js
+setEnteredName("");
+```
+
+- 상태(state)를 이용한다면 상태 업데이트 함수를 사용해서 간단하게 빈 문자열로 초기화시켜줄 수 있다. 물론 `ref`도 이와 동일하게 출력할 수 있는 방법이 있지만 바람직한 방법은 아니다. 직접적으로 `DOM`을 조작하는 방식이고 자바스크립트 코드를 이용해서 `DOM`을 직접 조작하는 것은 지양해야하는 방식이기 때문이다. 우리는 리액트로만 `DOM`을 조작해야 하고, `ref`를 통해서 입력 값을 초기화하는 방식은 결코 좋은 방법이라 할 수 없을 것이다.
+
+</br>
