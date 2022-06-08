@@ -5,6 +5,7 @@
 - [What's So Complex About Forms?](#무엇이-폼을-복잡하게-하는가)
 - [Dealing With Form Submission & Getting User Input Values](#양식-제출-처리-및-사용자-입력-값-가져오기)
 - [Adding Basic Validation](#기본-검증-추가하기)
+- [Providing Validation Feedback](#검증-피드백-제공하기)
 
 </br>
 
@@ -257,5 +258,79 @@ const formSubmitssionHandler = (event) => {
 ![ezgif com-gif-maker (89)](https://user-images.githubusercontent.com/53133662/172601433-85233f5a-25df-4e26-8240-4b976e677c3d.gif)
 
 - 저장하고 초기화 한 뒤, 입력창이 비어있는 채로 제출을 해도 콘솔 창에 그 어떤 것도 출력되지 않는 걸 볼 수 있다. 반면, 입력창에 무언가를 입력하고 제출을 하면 콘솔 창에 입력한 값이 그대로 출력되고 있다.
+
+</br>
+
+## 검증 피드백 제공하기
+
+- 기본적인 유효성 검증을 위해서 더 많은 상태(state)들을 추가할 수 있다.
+
+```js
+const [enteredNameIsValid, setEnteredNameIsValie] = useState(true);
+```
+
+- `enteredNameIsValid`는 boolean 으로 처리되는 `enteredName`의 유효성의 상태를 관리해주는 상태(stete)가 될 것이다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+    return;
+  }
+
+  setEnteredNameIsValie(true);
+  console.log("useState :", enteredName);
+};
+```
+
+- 그리고 기존에 작성한 유효성을 판단하는 `if` 문 내부에 return 하여 해당 함수가 종료되기 전에 `setEnteredNameIsValid`를 `false`로 업데이트 해주고, 유효성 검사가 true 가 되었을 때는 `setEnteredNameIsValid`를 `true`로 업데이트 해준다.
+
+```js
+<input
+  ref={nameInputRef}
+  type="text"
+  id="name"
+  onChange={nameInputChangeHandler}
+/>;
+{
+  !enteredNameIsValid && <p className="error-text">Name must not be empty.</p>;
+}
+```
+
+- 그리고 input 창 아래에 `{}`를 추가하고, `enteredNameIsValid`가 false 일 때 어떤 경고 메세지를 띄울 수 있도록 `<p>` 태그를 사용하여 마크업을 작성해준다.
+
+```js
+<div className="form-control">
+  <label htmlFor="name">Your Name</label>
+  <input
+    ref={nameInputRef}
+    type="text"
+    id="name"
+    onChange={nameInputChangeHandler}
+  />
+
+  {!enteredNameIsValid && <p className="error-text">Name must not be empty.</p>}
+</div>
+```
+
+- 빈 값으로 제출하면 input 창이 빨간색으로 스타일링되어 사용자에게 확보하기 쉬운 경고를 보여주도록 `<div>` 태그의 className 을 변수로 작성해준다.
+
+```js
+const nameInputClasses = enteredNameIsValid
+  ? "form-control"
+  : "form-control invalid";
+
+return (
+  <form onSubmit={formSubmitssionHandler}>
+    <div className={nameInputClasses}>...</div>
+  </form>
+);
+```
+
+- 이를 저장하고 확인해보면, 입력창이 비어있는 채로 폼을 제출했을 때 input 창의 컬러가 변하고, 아래에 경고 메세지도 함께 출력되는 걸 알 수 있다.
+
+![ezgif com-gif-maker (90)](https://user-images.githubusercontent.com/53133662/172604274-6e44c8ff-2c50-48b8-aa52-1c6070fc45f1.gif)
 
 </br>
