@@ -10,10 +10,15 @@ const SimpleInput = (props) => {
 
   const formSubmitssionHandler = (event) => {
     event.preventDefault();
+
+    if (enteredName.trim() === "") {
+      return;
+    }
+
     console.log("useState :", enteredName);
 
     const enteredValue = nameInputRef.current.value;
-    console.log("useRef :", enteredValue);
+    // console.log("useRef :", enteredValue);
   };
 
   return (
