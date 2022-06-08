@@ -15,6 +15,9 @@
 - [Styling React Components](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-06/section06.md)
 - [Debugging React Apps](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-07/section07.md)
 - [First Practice Project: React](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-08/section08.md)
+
+## Advanced React
+
 - [Diving Deeper: Working with Fragments, Portals & "Refs"](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-09/section09.md)
 - [Advanced: Handling Side Effects, Using Reducers & Using the Context API](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-10/section10.md)
 - [Second Practice Project: Building a Food Order App](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-11/section11.md)
