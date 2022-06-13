@@ -1,52 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const SimpleInput = (props) => {
   const [enteredName, setEnteredName] = useState("");
-  // const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
-  const [enteredNameTouched, setEnteredNameTouched] = useState(false);
 
-  // useEffect(() => {
-  //   if (enteredNameIsValid) {
-  //     // true 일 때
-  //     console.log("Name Input Is valid!"); // 콘솔에 출력한다
-  //   }
-  // }, [enteredNameIsValid]);
+  const [enteredNameTouched, setEnteredNameTouched] = useState(false);
 
   const enteredNameIsValid = enteredName.trim() !== "";
   const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
 
   const nameInputChangeHandler = (event) => {
     setEnteredName(event.target.value);
-
-    // if (enteredName.trim() !== "") {
-    // if (event.target.value.trim() !== "") {
-    //   setEnteredNameIsValie(true);
-    // }
   };
 
-  const nameInputBlurHandler = (event) => {
+  const nameInputBlurHandler = () => {
     setEnteredNameTouched(true);
-
-    // if (enteredName.trim() === "") {
-    //   setEnteredNameIsValie(false);
-    //   return;
-    // }
   };
 
   const formSubmitssionHandler = (event) => {
     event.preventDefault();
     setEnteredNameTouched(true);
 
-    // if (enteredName.trim() === "") {
-    //   setEnteredNameIsValie(false);
-    //   return;
-    // }
-
     if (!enteredNameIsValid) {
       return;
     }
 
-    // setEnteredNameIsValie(true);
     setEnteredName("");
     setEnteredNameTouched(false);
   };
