@@ -6,6 +6,7 @@
 - [Dealing With Form Submission & Getting User Input Values](#양식-제출-처리-및-사용자-입력-값-가져오기)
 - [Adding Basic Validation](#기본-검증-추가하기)
 - [Providing Validation Feedback](#검증-피드백-제공하기)
+- [Handling the "was touched" State](#was-touched-State-처리하기)
 
 </br>
 
@@ -169,6 +170,7 @@ const SimpleInput = (props) => {
   type="text"
   id="name"
   onChange={nameInputChangeHandler}
+  value={enteredName}
 />
 ```
 
@@ -293,6 +295,7 @@ const formSubmitssionHandler = (event) => {
   type="text"
   id="name"
   onChange={nameInputChangeHandler}
+  value={enteredName}
 />;
 {
   !enteredNameIsValid && <p className="error-text">Name must not be empty.</p>;
@@ -309,6 +312,7 @@ const formSubmitssionHandler = (event) => {
     type="text"
     id="name"
     onChange={nameInputChangeHandler}
+    value={enteredName}
   />
 
   {!enteredNameIsValid && <p className="error-text">Name must not be empty.</p>}
@@ -332,5 +336,141 @@ return (
 - 이를 저장하고 확인해보면, 입력창이 비어있는 채로 폼을 제출했을 때 input 창의 컬러가 변하고, 아래에 경고 메세지도 함께 출력되는 걸 알 수 있다.
 
 ![ezgif com-gif-maker (90)](https://user-images.githubusercontent.com/53133662/172604274-6e44c8ff-2c50-48b8-aa52-1c6070fc45f1.gif)
+
+</br>
+
+## was touched State 처리하기
+
+- 지금까지 우리가 추가한 유효성 검증 방식에는 단점이 하나 있다.
+
+```js
+const [enteredNameIsValid, setEnteredNameIsValie] = useState(true);
+```
+
+- 이 `enteredNameIsValid`라는 상태(state)는 초기 값의 true 로, 처음에 입력을 유효하다고 취급한다는 의미이며 유효하지 않으면 false로 변하도록 했다. 이는 단지 유효성 검사에서 우리가 설정한 에러를 초반에 띄우지 않기 위한 목적으로 설정된 것이며, 일종에 속임수에 더 가깝다. 그리고 이 `enteredNameIsValid` 상태 값은 유효성을 출력할 때를 제외하고는 사실 필요하지 않기에 목적에만 부합하되 부정확한 방식으로 처리를 해주었다. 그리고 이는 어떤 문제를 일으킬 가능성을 내포하고 있다는 뜻이다.
+
+### `enteredNameIsValid`의 상태 값이 문제가 되는 이유
+
+```js
+const [enteredNameIsValid, setEnteredNameIsValie] = useState(true);
+```
+
+- 이 상태(state) 값이 왜 문제가 되는지 예시를 들어보자.
+
+```js
+useEffect(() => {
+  if (enteredNameIsValid) {
+    // true 일 때
+    console.log("Name Input Is valid!"); // 콘솔에 출력한다
+  }
+}, [enteredNameIsValid]);
+```
+
+- 여기에서 `useEffect`를 통해 `enteredNameIsValid`가 true 일 때마다 실제 앱의 콘솔 창에서 어떤 텍스트를 출력하도록 해보자.
+
+![ezgif com-gif-maker (92)](https://user-images.githubusercontent.com/53133662/173320599-fd578b0a-a7d7-4cba-9866-04293cd13e45.gif)
+
+- 저장하고 콘솔창을 확인해보면, 그 어떤 것도 실행되지 않은 상태임에도 불구하고 처음부터 우리가 입력한 "Name Input Is valid!" 텍스트가 출력되고 있음을 알 수 있다. 앞서 설명한대로 `enteredNameIsValid` 상태를 true로 약간은 부정확하게 설정했기 때문에 발생하는 문제인데, 이는 시작할 때 이 값이 유효하다는 뜻이 아니며, 다만 옳지 않은 것이라는 이야기다. 그리고 이는 단지 에러에 대한 피드백을 주기 위한 임시방편일 뿐이다. 만약 `useEffect`가 없었다면 이렇게 편법을 이용했더라도 실질적인 손해가 없으니 만족할지 모른다. 하지만 그렇다고 하더라도 이 코드가 좋은 코드라는 의미는 아닐 것이다.
+
+```js
+const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
+```
+
+- `enteredNameIsValid` 가 처음부터 true 일리는 없기 때문이다. 오히려 이 상태(state)의 초기 값은 false 여야 더 자연스러워 보인다. 따라서 우리는 세 번째 상태(state)를 추가하고자 한다.
+
+### 세 번째 상태(state) 값 추가하기
+
+```js
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+```
+
+- `enteredNameTouched` 상태는 기본적으로 사용자가 입력 창에 입력해서 `enteredName`이 있는지를 확인하기 위한 목적으로 추가하였다. 그리고 이 값의 초기 값은 어플리케이션이 시작됐을 즉시 사용자가 입력창을 건드리지 않았을 것이기 때문에 false 로 지정한다.
+
+### `enteredNameIsValid`와 `enteredNameTouched`를 조합하여 유효성 검증 코드 업데이트 하기
+
+- 먼저 `enteredNameIsValid`와 `enteredNameTouched`를 조합하여 에러 메세지를 출력하는 목적으로 사용하고, 이를 통해서 `invalid` 클래스를 더해줄 수 있도록 한다. 이제 `enteredNameTouched` 상태를 통해서 입력 값이 유효한지를 체크함과 동시에 사용자가 입력 창을 건드렸는지에 대한 여부도 체크할 수 있기 때문이다. 그리고 만약 사용자가 입력창을 건드릴 기회조차 없었다면, 에러 메세지를 띄울 이유가 없을 것이다.
+
+```js
+const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+```
+
+- 이 두가지의 상태(state)를 조합해서 사용하기 위해서 상수 `nameInputIsInvalid`를 추가하고, `enteredNameIsValid`는 false 이고, `enteredNameTouched`는 true 일 때 true 값이 될 수 있도록 작성한다. 사용자가 입력창을 건드리기 시작하면서 값이 유효하지 않을 때만 유효성 검증을 하기 위해서다.
+
+```js
+{
+  !enteredNameIsValid && <p className="error-text">Name must not be empty.</p>;
+}
+```
+
+- 우리가 `!enteredNameIsValid` 상태와 `&&`을 통해서 에러 메세지를 띄우도록 설정하였는데, 이제 `nameInputIsInvalid` 으로 조건문을 대체해줄 수 있게 되었다.
+
+```js
+{
+  nameInputIsInvalid && <p className="error-text">Name must not be empty.</p>;
+}
+```
+
+- `nameInputIsInvalid` 일 때만 에러 메세지를 띄우도록 조건문을 작성한다. `nameInputIsInvalid` 상수는 우리가 위에서 작성한 것처럼 `enteredNameIsValid`는 false 이면서 동시에 `enteredNameTouched`는 true 일 때를 의미할 것이다.
+
+```js
+const nameInputClasses = enteredNameIsValid // true 이면,
+  ? "form-control"
+  : "form-control invalid"; // 경고 css
+```
+
+- 그리고 `enteredNameIsValid` 상태를 이용해서 클래스명을 조건문으로 할당한 것 역시 `nameInputIsInvalid`으로 수정해준다.
+
+```js
+const nameInputClasses = nameInputIsInvalid // true 이면,
+  ? "form-control invalid" // 경고 css
+  : "form-control";
+```
+
+- 여기서 주의할 점은, `nameInputIsInvalid`가 true 일 때는 유효성 검증에서 false 라는 뜻이므로 `invalid` 클래스 명을 `nameInputIsInvalid`가 true 일 때 가져갈 수 있도록 수정해야한다는 것이다.
+
+![ezgif com-gif-maker (93)](https://user-images.githubusercontent.com/53133662/173327906-1facd14d-7618-48da-9e44-3025845cedde.gif)
+
+- 저장하고 새로고침 해보면 `enteredNameIsValid`의 초기값을 false로 설정해두었음에도 처음에 에러 메세지가 출력되지 않으면서 콘솔에도 아무런 메세지가 출력되지 않는 걸 알 수 있다. 하지만 문제는 Submit 버튼을 클릭해도 이전처럼 아무런 변화가 일어나지 않는다. 왜 일까?
+
+### `enteredNameTouched` 상태 업데이트하기
+
+- Submit 버튼을 눌러도 그대로인 이유는 `enteredNameTouched` 상태를 업데이트한 적이 없기 때문이다. 물론 이 부분을 어떻게 할지는 각자의 선택에 달려있다. 만약 폼이 제출 되었다면 당연히 `enteredNameTouched`는 업데이트 되어야 한다. 폼이 제출된 상태라면 사용자가 아무런 텍스트도 입력하지 않았더라도 전체 폼을 제출한 것이고 이는 사용자가 전체 폼을 확인했다는 의미이기도 하기 때문에 모든 입력창은 사용자가 건드렸음을 전제로 여겨져야 할지도 모른다. 따라서 이런 경우에는 사용자가 모든 입력창을 건드린 것을 전제로 `enteredNameTouched`을 업데이트 하고자 한다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+    return;
+  }
+
+  setEnteredNameIsValie(true);
+};
+```
+
+- 우리가 `enteredName`와 `if` 문을 통해서 유효성을 검증하기 전에 폼이 제출된 그 순간 `setEnteredNameTouched`을 업데이트하도록 해야 한다. 왜냐하면 여기서 폼이 제출되는 순간 모든 입력 창을 사용자가 확인했다고 볼 수도 있기 때문이다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  setEnteredNameTouched(true);
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+    return;
+  }
+
+  setEnteredNameIsValie(true);
+};
+```
+
+![ezgif com-gif-maker (94)](https://user-images.githubusercontent.com/53133662/173329341-4a7dd29f-cbba-4687-b513-a39a082ebbbb.gif)
+
+- 저장하고 아무런 것도 입력하지 않고 Submit 버튼을 눌러보면 에러 메세지가 출력 되며, 메세지를 입력하고 다시 Submit 버튼을 누르면 콘솔 창에 "Name Input Is valid!"가 출력되는 것을 확인할 수 있다.
+
+### 정리
+
+- 분명 코드의 길이는 길어졌을지 몰라도, 조금 더 나은 코드 또 깔끔한 코드가 된 것을 알 수 있다. 또한 이런 리팩토링을 통하여 더 많은 유스 케이스를 다룰 수 있게 되었고, 동시에 이전의 눈 속임수에 가까운 부정확한 방법으로 초기 값을 작성한 것이 아니라, 정확한 값을 작성하여 정상적으로 작동될 수 있게 되었다.
 
 </br>

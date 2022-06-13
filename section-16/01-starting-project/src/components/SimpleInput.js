@@ -1,9 +1,18 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const SimpleInput = (props) => {
   const nameInputRef = useRef();
   const [enteredName, setEnteredName] = useState("");
-  const [enteredNameIsValid, setEnteredNameIsValie] = useState(true);
+  const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
+
+  const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+
+  useEffect(() => {
+    if (enteredNameIsValid) {
+      // true 일 때
+      console.log("Name Input Is valid!"); // 콘솔에 출력한다
+    }
+  }, [enteredNameIsValid]);
 
   const nameInputChangeHandler = (event) => {
     setEnteredName(event.target.value);
@@ -11,6 +20,7 @@ const SimpleInput = (props) => {
 
   const formSubmitssionHandler = (event) => {
     event.preventDefault();
+    setEnteredNameTouched(true);
 
     if (enteredName.trim() === "") {
       setEnteredNameIsValie(false);
@@ -18,15 +28,13 @@ const SimpleInput = (props) => {
     }
 
     setEnteredNameIsValie(true);
-    console.log("useState :", enteredName);
-
-    const enteredValue = nameInputRef.current.value;
-    // console.log("useRef :", enteredValue);
   };
 
-  const nameInputClasses = enteredNameIsValid
-    ? "form-control"
-    : "form-control invalid";
+  const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+
+  const nameInputClasses = nameInputIsInvalid // true 이면,
+    ? "form-control invalid" // 경고 css
+    : "form-control";
 
   return (
     <form onSubmit={formSubmitssionHandler}>
@@ -37,9 +45,10 @@ const SimpleInput = (props) => {
           type="text"
           id="name"
           onChange={nameInputChangeHandler}
+          value={enteredName}
         />
 
-        {!enteredNameIsValid && (
+        {nameInputIsInvalid && (
           <p className="error-text">Name must not be empty.</p>
         )}
       </div>
