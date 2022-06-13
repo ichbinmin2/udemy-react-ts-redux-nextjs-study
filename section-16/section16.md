@@ -9,6 +9,7 @@
 - [Handling the "was touched" State](#was-touched-State-처리하기)
 - [React To Lost Focus](#포커스를-잃은-리액트)
 - [Refactoring & Deriving States](#리팩토링-및-State-파생)
+- [Managing The Overall Form Validity](#전체-양식-유효성-관리하기)
 
 </br>
 
@@ -787,4 +788,137 @@ const formSubmitssionHandler = (event) => {
 
 - 지금까지 작성한 코드를 보면 확실히 이전보다 코드가 간단해져서 훨씬 더 읽기 쉽고 관리하기 쉬운 코드가 된 것을 알 수 있다. 여러 상태(state)를 이용하는 것을 두 개의 상태로 줄이고, 반복되는 로직 역시 논리 연산자를 통해 작성한 상수를 이용해서 유효성을 도출할 수 있게 되었다.
 
-  </br>
+</br>
+
+## 전체 양식 유효성 관리하기
+
+- 우리가 지금까지 유효성 검증을 위한 로직들을 작성했고, 꽤나 만족스럽게 로직이 정상적으로 작동되는 것까지 확인했다. 하지만 우리가 잊지 말아야 할 사실이 있다. 우리가 작성한 것은 겨우 전체 폼 중에 하나의 input 값의 유효성 검증이라는 사실이다. 지금 우리의 어플리케이션은 하나의 input 창으로 하나의 입력 값을 받고 있지만 많은 경우에는 폼에서 다양한 입력 값을 받아야 한다.
+
+![image](https://user-images.githubusercontent.com/53133662/173364856-25f9e08b-548d-410f-b993-5a199b18d890.png)
+
+- 일단 먼저 지금 우리가 보고 있는 `SimpleInput` 컴포넌트를 살펴보면, 여기에서 전체 폼이 유효한지 아닌지를 확인할 수 있으면 더 좋을 것 이다.
+
+### 전체 폼의 유효성 검증하기
+
+- 입력 값이 하나만 있을 때는 하나만 유효하다면 전체 폼이 유효한 것이지만, 만약 여러 입력 값이 있고 이에 대한 유효성 검증이 저마다 다르다면 전체 폼은 유효하지 않을 것이다. 왜냐하면 전체 폼이 유효하기 위해서는 모든 입력 값이 유효해야 하기 때문이다. 따라서 하나의 입력 값이라도 유효하지 않은 순간 전체 폼은 유효하지 않도록 처리해줘야 한다.
+
+```js
+const [formIsValid, setFormIsValid] = useState(false);
+```
+
+- 한가지 방법은 `formIsValid` 상태(state)를 추가하는 것이다. 초기 값은 false로 지정해놓고, `formIsValid` 상태의 값을 폼에 있는 input 값이 변화할 때마다 업데이트 되도록 해준다. 그리고 이를 위해서 다시 `useEffect`를 사용할 것이다.
+
+```js
+const enteredNameIsValid = enteredName.trim() !== "";
+
+useEffect(() => {
+  if (enteredNameIsValid) {
+  }
+}, [enteredNameIsValid]);
+```
+
+- `useEffect`를 호출해서 전체 폼의 유효성을 설정한다. 이를 위해서는 폼의 입력 값의 유효성이 필요하므로, 폼에 있는 모든 입력 값의 유효성을 의존성 배열에 추가하도록 한다.
+
+```js
+useEffect(() => {
+  if (enteredNameIsValid) {
+    setFormIsValid(true);
+  } else {
+    setFormIsValid(false);
+  }
+}, [enteredNameIsValid]);
+```
+
+- `enteredNameIsValid` 와 `if` 문을 사용해서 추가한다. 만약 폼 안에 입력 값이 두개라면 의존성 배열과 if 문 안에서 또 다른 상수 값을 추가하면 될 것이다. 앞서 배웠던 대로 의존성 배열에 들어가는 값이 바뀔 때마다 `useEffect`는 다시 실행될 것이다. 따라서 `useEffect` 호출에서는 모든 의존성 값들을 합친 뒤에 이 값이 모두 유효한지를 확인하고, 만약 입력 값 모두가 유효하다면 전체 폼 또한 유효하다(`setFormIsValid(true)`)고 설정해준다. 그리고 하나라도 유효하지 않다면, 전체 폼 또한 유효하지 않다(`setFormIsValid(false)`)고 설정해준다.
+
+### `formIsValid` 상태(state)를 이용한 버튼 비활성화
+
+- 이제 `formIsValid` 상태를 사용할 수 있게 되었다. 예를 들면, 버튼을 `formIsValid`의 상태 값에 따라 비활성화할 수도 있을 것이다.
+
+```js
+<button disabled={!formIsValid}>Submit</button>
+```
+
+- 만약 `formIsValid`이 false 라면(폼이 유효하지 않다면), 버튼 태그에 `disabled` 라는 속성이 작동될 수 있도록 한다.
+
+#### index.css
+
+```css
+button:disabled,
+button:disabled:hover,
+button:disabled:active {
+  background-color: #ccc;
+  color: #292929;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+```
+
+- 이를 가시화해주기 위해서 버튼이 `disabled` 되었을 때의 스타일링도 설정해준다.
+
+![ezgif com-gif-maker (98)](https://user-images.githubusercontent.com/53133662/173369220-ddc4ab2e-222f-4ae6-a4c5-800231487cea.gif)
+
+- 이제 시작할 때 버튼이 비활성화 되어 있는 걸 확인할 수 있다. 빈칸으로만 두어도 비활성화 되어 있지만 유효한 글자를 하나라도 입력하면 다시 버튼이 활성화되고, 글자를 모두 지우고 빈칸으로 두면 다시 버튼은 비활성화 된다.
+
+### 값이 유효하지 않으면 폼이 제출될 수도 없다.
+
+- 이제는 값이 유효하지 않으면, 폼을 제출할 수도 없게 되었다. 이런 경우 버튼의 비활성화 여부는 선택에 달려있다. 이 시점에 대해 의견이 분분하며, 어떤 사람들은 사용자가 무엇을 입력해야할 지도 모르는 상태에서 유효하지 않은 값이라도 제출할 수 있도록 해야 한다고 주장하기도 하기 때문이다. 다만 이것은 선택의 문제이며, 언제든 목적과 요구에 따라 이 시점은 변경할 수 있다.
+
+### `useEffect`를 꼭 사용해야만 할까?
+
+```js
+useEffect(() => {
+  if (enteredNameIsValid) {
+    setFormIsValid(true);
+  } else {
+    setFormIsValid(false);
+  }
+}, [enteredNameIsValid]);
+```
+
+- 사실 이 로직을 조금만 더 살펴보면 이는 어떠한 효과(`effect`)도 없기 때문에 `useEffect`를 사용할 필요가 없다는 걸 알 수 있다. 또한 `useEffect` 없이도 그 어떤 문제도 발생하지 않는다는 사실도 말이다.
+
+```js
+const enteredNameIsValid = enteredName.trim() !== "";
+const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+```
+
+- 따지고보면 `useEffect` 내부에서 실행하고 있는 현 로직들은 위의 `enteredNameIsValid` 나 `nameInputIsInvalid`와 거의 동일한 방법으로 값을 얻고 있다. 즉 완전히 같은 작업이라 말할 수도 있는데, 다만 `useEffect` 내부의 로직들은 폼 전체에 대한 로직이라는 차이가 있을 뿐이다. 결론적으로 지금 `useEffect`를 사용할 수는 있지만 이득은 없으며, 재평가를 할 때 추가적인 컴포넌트만 생길 뿐이다. 그리고 이는 확실히 손해이다. 이렇게 하는 대신 우리는 다른 방법으로 접근할 수 있다.
+
+```js
+const [formIsValid, setFormIsValid] = useState(false);
+
+useEffect(() => {
+  if (enteredNameIsValid) {
+    setFormIsValid(true);
+  } else {
+    setFormIsValid(false);
+  }
+}, [enteredNameIsValid]);
+```
+
+- `formIsValid` 상태(state)와 `useEffect`를 제거하고,
+
+```js
+let formIsValid = false;
+
+if (enteredNameIsValid) {
+  formIsValid = true;
+} else {
+  formIsValid = false;
+}
+```
+
+- 단순히 `formIsValid` 이라는 동일한 이름의 변수를 추가해서 기본값을 false로 둔 뒤, `if` 문 내부에 단순하게 조건문이 참이면 true로 할당하고, 조건문이 거짓이면 false 로 할당하도록 작업해주었다.
+
+```js
+let formIsValid = false;
+
+if (enteredNameIsValid) {
+  formIsValid = true;
+}
+```
+
+- 사실 `else` 문도 필요 없다. 모든 값이 true 일 때에만 `formIsValid` 변수가 true 이기만 하면 되기 때문이다. 이제 코드는 동일한 기능을 수행하지만 이전 보다 간결해졌고 `useEffect`를 통한 쓸데 없는 낭비가 사라지며 한결 가벼워졌다.
+
+</br>
