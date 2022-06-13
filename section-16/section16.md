@@ -8,6 +8,7 @@
 - [Providing Validation Feedback](#검증-피드백-제공하기)
 - [Handling the "was touched" State](#was-touched-State-처리하기)
 - [React To Lost Focus](#포커스를-잃은-리액트)
+- [Refactoring & Deriving States](#리팩토링-및-State-파생)
 
 </br>
 
@@ -528,8 +529,8 @@ const nameInputBlurHandler = (event) => {
 - 첫 번째로는 `setEnteredNameTouched`를 사용해서 true 로 업데이트 해줄 것이다. 입력창에서 포커스 아웃 되었다는 의미는 직전에 사용자가 입력창을 건드렸기 때문에 발생할 수 있는 이벤트이기 때문이다. 즉, 입력할 기회가 있었다는 뜻이다.
 
 ```js
-const nameInputChangeHandler = (event) => {
-  setEnteredName(event.target.value);
+const nameInputBlurHandler = (event) => {
+  setEnteredNameTouched(true);
 
   if (enteredName.trim() === "") {
     setEnteredNameIsValie(false);
@@ -549,3 +550,237 @@ const nameInputChangeHandler = (event) => {
 - 이제 이러한 오류를 고칠 기회를 사용자에게 줘야한다. 여기에 무언가를 입력하기 시작하는 순간에 에러 메세지가 사라진다면 어떨까? 훨씬 나은 사용자 경험을 제공할 수 있을 것이다. 이렇게 피드백을 실시간으로 전달한다면 사용자가 유효하지 않은 값을 입력했을 때 이를 즉시 인지할 수 있게 해주고 잘못된 입력을 멈출 수 있다. 이와 같은 경우에는 키 입력마다 유효성을 검증하는 방식이 좋을 것이다. 그리고 이는 이전에 우리가 추가한 다른 검증 절차와 조합해서 사용되어야 할 것이다. 왜냐하면 키 입력마다 유효성을 검증하는 방식만 사용한다면, 사용자가 유효한 값을 입력할 기회조차 주지 않고 에러를 출력할지도 모르기 때문이다. 반면 우리가 앞서 사용한 방식들을 조합하게 되면 입력 창이 포커스 아웃되거나 폼이 제출되는 것을 확인해서 사용자가 유효한 값을 제출할 기회를 줄 수 있게 될 것이다.
 
 </br>
+
+## 리팩토링 및 State 파생
+
+- 이번에는 키를 입력할 때마다 유효성을 검증해볼 것이다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+};
+```
+
+- input의 입력 값을 실시간으로 받아오는 `nameInputChangeHandler` 함수에 우리가 유효성 검사를 했던 로직을 그대로 복사해서 가져온다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+    return;
+  }
+};
+```
+
+- 사실 이 방법은 부정확한 방법이다. 이 방법은 값이 유효하지 않은지를 확인해서 그때 `setEnteredNameIsValie`을 false 로 업데이트하기 때문이다. 하지만 키를 입력할 때마다 값이 유효한지를 확인하기 위해서는 최대한 빠르게 유효하지 않았을 때 출력되는 에러를 제거해야 한다. 따라서 여기에서는 약간의 로직을 수정해야 할 필요가 있다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+
+  if (enteredName.trim() !== "") {
+    setEnteredNameIsValie(true);
+  }
+};
+```
+
+- 이 로직에서는 `===`를 `!==`로 바꾸고, `enteredName.trim()`이 빈 값이 아닐 때에 `setEnteredNameIsValie`이 true 가 될 수 있도록 수정해주었다. 이렇게 되면 조건문 뒤에 실행할 코드가 없기에 return 은 필요 없어지므로 제거 한다.
+
+```js
+const nameInputBlurHandler = (event) => {
+  setEnteredNameTouched(true);
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+  }
+};
+```
+
+- 위의 사례와 동일하기에 `nameInputBlurHandler` 함수 내부의 로직도 return 을 제거할 수 있게 된다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+
+  if (enteredName.trim() !== "") {
+    setEnteredNameIsValie(true);
+  }
+};
+```
+
+- 이제, `nameInputChangeHandler` 함수에서 입력 값을 검증하게 되었다. 여기에서 참고할 점은 우리가 폼을 제출할 때 사용했던 것처럼 `enteredName` 상태(state)값을 이용해서 유효성을 검증하는 것이 아니라, `event.target.value`를 이용해야 한다는 점이다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+
+  if (event.target.value.trim() !== "") {
+    setEnteredNameIsValie(true);
+  }
+};
+```
+
+- 왜냐하면 `nameInputChangeHandler` 함수에서 `setEnteredName`를 통해서 업데이트해주고 있긴 하지만 이전에 배웠던 것처럼 이러한 상태(state)들은 리액트에서 비동기적으로 처리되기 때문에 즉각적으로 반영되지 않기 때문이다. `setEnteredName` 에서 `event.target.value`를 통해서 `enteredName`을 업데이트하고 있지만 다음 줄이 실행될 때에 이 `enteredName`를 사용한다면 최신의 상태(state)를 반영하지 못하고, 이전의 상태(state)를 참고하게 된다. 따라서 `nameInputChangeHandler` 함수 내부에서 상태를 업데이트 하는데에 사용된 `event.target.value`를 사용해야만 한다.
+
+### 코드의 문제점
+
+- 이제 포커스를 잃는 순간이나 폼을 제출하는 순간 값의 유효성을 검증하여 유효하지 않다면 에러 메세지를 띄우며, 사용자는 즉각적인 피드백을 얻게 되고 동시에 키 입력에 따라 에러를 고칠 수 있게 되었다. 사용자 경험 측면에서 분명히 많은 것들이 좋아졌지만 input 요소 하나에 엄청나게 많은 코드들이 중복되어 사용되고 있다는 점에서 분명 좋은 코드라고 말하기는 어려울 것이다.
+
+### 중복된 코드를 정리하기
+
+- 해당 코드의 문제점은 무엇일까? 먼저 반복되는 코드 로직이 많다는 것이다. 유효성 검증에 따른 코드만으로도 이미 많은 줄을 차지하게 되었는데, 보통의 어플리케이션이라면 이보다 더 많은 로직들이 추가될 것이니 확실히 지금까지는 좋은 코드라 말하긴 힘들 것이다. 그러니 중복된 코드를 제거하고 불필요하게 길어진 코드들을 정리할 필요가 있다. 최종적으로 우리가 해야하는 것은 입력 값이 유효한지를 확인하고 사용자가 입력창을 건드렸는지 또한 확인하며 값이 유효하지 않은 상태로 입력창을 건드렸을 때 사용자에게 에러를 보여주거나 보여주지 않는 등의 일일 것이다. 그리고 이러한 목표를 위해서 우리는 굳이 `enteredNameIsValid`를 사용할 필욘 없다.
+
+```js
+const [enteredName, setEnteredName] = useState("");
+const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+```
+
+- 먼저 이제는 필요하지 않은 `useEffect` 함수부터 지워주자.
+
+```js
+// useEffect(() => {
+//   if (enteredNameIsValid) {
+//     // true 일 때
+//     console.log("Name Input Is valid!"); // 콘솔에 출력한다
+//   }
+// }, [enteredNameIsValid]);
+```
+
+- 대신 `enteredNameIsValid` 상태를 제거하고, 동일한 이름의 상수를 추가한다.
+
+```js
+const [enteredName, setEnteredName] = useState("");
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+
+const enteredNameIsValid;
+```
+
+- 이제 우리는 `enteredName`와 `enteredNameTouched` 상태만 사용한다. 왜냐하면 `enteredNameIsValid` 는 어쨌든 `enteredName` 라는 상태로부터 얻어낼 수 있는 값이기 때문이며, 새로운 값이 입력될 때마다 이 전체 컴포넌트가 다시 실행되기 때문에 `enteredNameIsValid`의 값은 가장 최신의 `enteredName`와 가장 최신의 `setEnteredNameTouched` 상태를 반영하게 되기 떄문이다. 어쨌든 이 두 상태 중 하나라도 업데이트 된다면, 해당 컴포넌트는 리렌더링 될 것이다.
+
+```js
+const [enteredName, setEnteredName] = useState("");
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+
+const enteredNameIsValid = enteredName.trim() !== "";
+```
+
+- 상수 `enteredNameIsValid`의 값에는 `enteredName` 상태 값에 공백을 제거한 값이 빈 문자열이 아닐 때 true 일 수 있게끔 작성해준다. `enteredNameIsValid`의 조건식 값이 true 라면 `enteredNameIsValid`도 true인 셈이다. 그리고 이제 더이상 `enteredNameIsValid`를 상태로 관리해주지 않고 있기 때문에 `setEnteredNameIsValid`가 사용된 모든 코드를 지울 수 있게 된다.
+
+```js
+const enteredNameIsValid = enteredName.trim() !== "";
+
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+};
+```
+
+- 왜냐하면 이 값을 이미 존재하는 상태(state)로 부터 얻어내기에 충분하기 때문이다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+
+  if (event.target.value.trim() !== "") {
+    setEnteredNameIsValie(true);
+  }
+};
+```
+
+- `nameInputBlurHandler` 함수는 어떨까? 여기에서도 결국엔 유효성 검증이 필요 없으니, 이 부분을 삭제할 수 있게 된다.
+
+```js
+const enteredNameIsValid = enteredName.trim() !== "";
+const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+
+const nameInputBlurHandler = (event) => {
+  setEnteredNameTouched(true);
+};
+```
+
+- 대신 `enteredName` 상태(state)를 통해서 얻은 `enteredNameIsValid`과 논리연산을 통해 얻은 `nameInputIsInvalid`를 사용하면 되기 때문이다.
+
+```js
+const [enteredName, setEnteredName] = useState("");
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+
+const enteredNameIsValid = enteredName.trim() !== "";
+const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+```
+
+- 이렇게 아래 두 줄은 함께 작동한다. 먼저 `enteredName`이 유효한지를 확인하고(`enteredNameIsValid`) 유효하지 않다면, `enteredNameTouched`와 조합(`nameInputIsInvalid`) 한다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  setEnteredNameTouched(true);
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+    return;
+  }
+
+  setEnteredNameIsValie(true);
+  setEnteredName("");
+};
+```
+
+- 이제 `enteredNameIsValid`라는 상태(state)는 사라졌다. 폼을 제출하는 함수인 `formSubmitssionHandler` 역시 수정할 필요가 있을 것이다. 하지만 입력 값이 유효하지 않을 때 해당 함수를 중단해야 하기 때문에 조건문은 유지해야 한다. 그렇기에 유효성을 바꿔주는 대신에 사라진 상태 업데이트 값인 `setEnteredNameIsValie`를 사용한 로직은 모두 지워주고, 조건식에 `enteredNameIsValid`가 false 인지만 확인하면 된다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  setEnteredNameTouched(true);
+
+  if (!enteredNameIsValid) {
+    return;
+  }
+
+  setEnteredName("");
+};
+```
+
+- 이제 `enteredNameIsValid`가 false 라면, 해당 함수가 중단될 수 있도록 return 해주었다. `formSubmitssionHandler` 함수는 컴포넌트가 리렌더링 될 때마다 다시 생성되며, 따라서 `formSubmitssionHandler`은 매번 `enteredNameIsValid`의 최신 값을 가져오게 된다.
+
+![ezgif com-gif-maker (96)](https://user-images.githubusercontent.com/53133662/173348724-71214c32-8d0a-4368-b019-521e6ad91275.gif)
+
+- 저장하고, 새로고침 한 뒤에 값을 적어 Submit 버튼으로 폼을 제출하고 나면 제대로 된 값을 제출했음에도 에러 메세지가 뜨는 걸 확인할 수 있다. 이는 버그가 아니라, 우리가 작성한 코드의 결과일 뿐이니 수정이 필요하다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  setEnteredNameTouched(true);
+
+  if (!enteredNameIsValid) {
+    return;
+  }
+
+  setEnteredName("");
+};
+```
+
+- 폼을 제출하는 `formSubmitssionHandler` 함수를 보면, 유효성 검증이 끝난 후로 그러니까 유효성 검증에서 true가 되었을 때 값은 제출되면서 `setEnteredName` 를 통해 빈 값으로 초기화 해주었다. 그러니까 유효성 검사에서 빈 값일 때 에러 메세지가 출력되도록 우리가 지정해놓았기에 발생한 문제이다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  setEnteredNameTouched(true);
+
+  if (!enteredNameIsValid) {
+    return;
+  }
+
+  setEnteredName("");
+  setEnteredNameTouched(false);
+};
+```
+
+- 이를 해결하기 위해서는 폼이 제출되고 난 후로 `setEnteredNameTouched` 를 통해서 값을 false 로 초기화해주면 된다. `setEnteredName`을 통해 폼이 제출되고 빈 문자열이 만들어지면, 그 다음에 바로 `setEnteredNameTouched`로 초기화를 하는 것이다. 폼이 제출되고 난 뒤에는 새로운 폼으로 돌아가서 사용자가 건드리지 않은 가장 최초의 상태와 같이 작동해야만 하기 때문이다.
+
+![ezgif com-gif-maker (97)](https://user-images.githubusercontent.com/53133662/173349637-a15be5f6-fef3-4f43-a6b1-c2bc0445b6f1.gif)
+
+- 저장 후 새로고침해보면 폼을 제출해도 더이상 에러 메세지가 뜨지 않는 걸 볼 수 있다.
+
+  </br>

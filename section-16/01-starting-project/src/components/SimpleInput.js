@@ -1,45 +1,55 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const SimpleInput = (props) => {
-  const nameInputRef = useRef();
   const [enteredName, setEnteredName] = useState("");
-  const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
+  // const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
   const [enteredNameTouched, setEnteredNameTouched] = useState(false);
 
-  useEffect(() => {
-    if (enteredNameIsValid) {
-      // true 일 때
-      console.log("Name Input Is valid!"); // 콘솔에 출력한다
-    }
-  }, [enteredNameIsValid]);
+  // useEffect(() => {
+  //   if (enteredNameIsValid) {
+  //     // true 일 때
+  //     console.log("Name Input Is valid!"); // 콘솔에 출력한다
+  //   }
+  // }, [enteredNameIsValid]);
+
+  const enteredNameIsValid = enteredName.trim() !== "";
+  const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
 
   const nameInputChangeHandler = (event) => {
     setEnteredName(event.target.value);
 
-    if (enteredName.trim() === "") {
-      setEnteredNameIsValie(false);
-      return;
-    }
+    // if (enteredName.trim() !== "") {
+    // if (event.target.value.trim() !== "") {
+    //   setEnteredNameIsValie(true);
+    // }
   };
 
   const nameInputBlurHandler = (event) => {
     setEnteredNameTouched(true);
+
+    // if (enteredName.trim() === "") {
+    //   setEnteredNameIsValie(false);
+    //   return;
+    // }
   };
 
   const formSubmitssionHandler = (event) => {
     event.preventDefault();
     setEnteredNameTouched(true);
 
-    if (enteredName.trim() === "") {
-      setEnteredNameIsValie(false);
+    // if (enteredName.trim() === "") {
+    //   setEnteredNameIsValie(false);
+    //   return;
+    // }
+
+    if (!enteredNameIsValid) {
       return;
     }
 
-    setEnteredNameIsValie(true);
+    // setEnteredNameIsValie(true);
     setEnteredName("");
+    setEnteredNameTouched(false);
   };
-
-  const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
 
   const nameInputClasses = nameInputIsInvalid // true 이면,
     ? "form-control invalid" // 경고 css
@@ -50,7 +60,6 @@ const SimpleInput = (props) => {
       <div className={nameInputClasses}>
         <label htmlFor="name">Your Name</label>
         <input
-          ref={nameInputRef}
           type="text"
           id="name"
           onChange={nameInputChangeHandler}
