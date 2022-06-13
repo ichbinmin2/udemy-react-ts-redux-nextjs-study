@@ -7,6 +7,7 @@
 - [Adding Basic Validation](#기본-검증-추가하기)
 - [Providing Validation Feedback](#검증-피드백-제공하기)
 - [Handling the "was touched" State](#was-touched-State-처리하기)
+- [React To Lost Focus](#포커스를-잃은-리액트)
 
 </br>
 
@@ -284,6 +285,8 @@ const formSubmitssionHandler = (event) => {
 
   setEnteredNameIsValie(true);
   console.log("useState :", enteredName);
+
+  setEnteredName("");
 };
 ```
 
@@ -446,6 +449,7 @@ const formSubmitssionHandler = (event) => {
   }
 
   setEnteredNameIsValie(true);
+  setEnteredName("");
 };
 ```
 
@@ -462,6 +466,7 @@ const formSubmitssionHandler = (event) => {
   }
 
   setEnteredNameIsValie(true);
+  setEnteredName("");
 };
 ```
 
@@ -472,5 +477,75 @@ const formSubmitssionHandler = (event) => {
 ### 정리
 
 - 분명 코드의 길이는 길어졌을지 몰라도, 조금 더 나은 코드 또 깔끔한 코드가 된 것을 알 수 있다. 또한 이런 리팩토링을 통하여 더 많은 유스 케이스를 다룰 수 있게 되었고, 동시에 이전의 눈 속임수에 가까운 부정확한 방법으로 초기 값을 작성한 것이 아니라, 정확한 값을 작성하여 정상적으로 작동될 수 있게 되었다.
+
+</br>
+
+## 포커스를 잃은 리액트
+
+- 우리는 지금까지 form 이 제출되었을 때만 유효성을 검증하는 방식을 사용했다. 아직 입력창이 포커스 아웃 될 때나 키 입력이 될 때마다 유효성을 검증하지 않았다는 의미이다. 이미 form 을 제출하면서 유효성을 검증하는 방식 만으로 괜찮을 수 있다는 걸 알았다. 하지만 이제는 조금 더 다양한 관점에서 또 다른 방식으로 유효성 검증이 작동해야 하는지에 대해서 알아볼 필요가 있다.
+
+```js
+const [enteredName, setEnteredName] = useState("");
+const [enteredNameIsValid, setEnteredNameIsValie] = useState(false);
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+```
+
+- 지금까지 세 가지의 상태(state) 를 추가하여 유효성 검증에 사용했다. 하지만 이러한 작동 방식이 아직은 사용자 경험 측면에서 효율적이라고 할 수는 없다. form 이 제출되었을 때 에러 메세지를 띄우는 것은 꽤 괜찮은 방법이지만, 만약 사용자가 입력창에 클릭만 했다면 그러니까 입력창을 건드리기만 했다면 에러 메세지는 뜨지 않는다. 그리고 무언가를 입력하고 다시 지운 후 입력창 바깥을 클릭했을 때 비어있는 입력은 허용되지 않기에 유효하지 않은 값이지만 이 역시 에러 메세지는 뜨지 않는다. 오로지 사용자가 form 을 제출하는 버튼을 눌렀을 때에만 이것이 유효한 값인지에 대해 체크할 수 있게 되고, 이는 사용자에게 느린 피드백을 주며 최적의 사용자 경험을 제공할 수 없다는 뜻이 된다.
+
+### 입력 창이 포커스 아웃 될 때 에러 메세지를 띄우기
+
+- 여기서 더 나은 사용자 경험을 제공하기 위해서는 사용자가 입력 창에 어떤 값을 입력할 수 있을 때에 에러 메세지를 보여준다면 더 빠른 피드백을 줄 수 있다. 또 입력 창을 빈칸으로 둔 채로 바깥을 클릭한다면 이러한 값은 허용되지 않는다는 메세지 역시 띄울 수도 있다. 왜냐하면 이때 사용자는 입력할 수 있었음에도 그렇게 하지 않았기 때문에 입력 칸에 무언가를 반드시 입력해야 한다고 피드백을 줘야 하기 때문이다. 따라서 우리는 블러라는 것이 되었을 때에도 유효성 검사를 할 수 있도록 작업해줄 요량이다.
+
+### onBlur 사용하기
+
+- 블러는 input 요소가 포커스 아웃 되었다는 의미로, 사실 그렇게 어려운 개념은 아니다.
+
+```js
+<input
+  ref={nameInputRef}
+  type="text"
+  id="name"
+  onChange={nameInputChangeHandler}
+  onBlur={}
+  value={enteredName}
+/>
+```
+
+- `<input>` 태그 속성에 `onBlur`를 추가한다. 이는 자바스크립트 이벤트 속성으로 input 요소가 포커스 아웃 되는 이벤트가 발생했을 시에 사용할 수 있다.
+
+```js
+const nameInputBlurHandler = (event) => {};
+```
+
+- `onBlur` 에 바인딩할 함수 `nameInputBlurHandler`를 작성한다. 이제 이 함수에서는 두 가지를 할 것인데,
+
+```js
+const nameInputBlurHandler = (event) => {
+  setEnteredNameTouched(true);
+};
+```
+
+- 첫 번째로는 `setEnteredNameTouched`를 사용해서 true 로 업데이트 해줄 것이다. 입력창에서 포커스 아웃 되었다는 의미는 직전에 사용자가 입력창을 건드렸기 때문에 발생할 수 있는 이벤트이기 때문이다. 즉, 입력할 기회가 있었다는 뜻이다.
+
+```js
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+
+  if (enteredName.trim() === "") {
+    setEnteredNameIsValie(false);
+    return;
+  }
+};
+```
+
+- 두 번째로 해줄 일은 함수 내부에서 유효성 검증을 하는 것이다. 이를 위해서 아래의 `formSubmitssionHandler`에서 추가해주었던 유효성 검증 로직을 긁어와 그대로 붙여넣기 해준다. 이 역시 `enteredName`가 공백이 없는 상태에서 빈 문자열인지를 확인하고, 이 값이 만약 빈 문자열이라면 `enteredNameIsValid`를 false 로 바꿔준다. 이렇게 하면 코드가 중복되지만 이후에 리팩토링을 할 예정이니 미리 걱정하지 말자.
+
+![ezgif com-gif-maker (95)](https://user-images.githubusercontent.com/53133662/173338433-3b2be6de-7600-47a9-9be3-8e12212cc5a7.gif)
+
+- 입력창을 클릭하고 다시 입력창 바깥을 클릭하면 경고 메세지가 출력되는 걸 알 수 있다. 이는 결과적으로 이전보다는 더 나은 사용자 경험을 주는 것처럼 보인다.
+
+### 정리
+
+- 이제 이러한 오류를 고칠 기회를 사용자에게 줘야한다. 여기에 무언가를 입력하기 시작하는 순간에 에러 메세지가 사라진다면 어떨까? 훨씬 나은 사용자 경험을 제공할 수 있을 것이다. 이렇게 피드백을 실시간으로 전달한다면 사용자가 유효하지 않은 값을 입력했을 때 이를 즉시 인지할 수 있게 해주고 잘못된 입력을 멈출 수 있다. 이와 같은 경우에는 키 입력마다 유효성을 검증하는 방식이 좋을 것이다. 그리고 이는 이전에 우리가 추가한 다른 검증 절차와 조합해서 사용되어야 할 것이다. 왜냐하면 키 입력마다 유효성을 검증하는 방식만 사용한다면, 사용자가 유효한 값을 입력할 기회조차 주지 않고 에러를 출력할지도 모르기 때문이다. 반면 우리가 앞서 사용한 방식들을 조합하게 되면 입력 창이 포커스 아웃되거나 폼이 제출되는 것을 확인해서 사용자가 유효한 값을 제출할 기회를 줄 수 있게 될 것이다.
 
 </br>
