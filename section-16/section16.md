@@ -927,10 +927,470 @@ if (enteredNameIsValid) {
 
 ## 사용자 지정 입력 훅 추가하기
 
--
+#### SimpleInput.js
 
 ```js
+const [enteredName, setEnteredName] = useState("");
+const [enteredNameTouched, setEnteredNameTouched] = useState(false);
 
+const [enteredEmail, setEnteredEmail] = useState("");
+const [enteredEmailTouched, setEnteredEmailTouched] = useState(false);
+
+const enteredNameIsValid = enteredName.trim() !== "";
+const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+
+const enteredEmailIsValid =
+  enteredEmail.trim() !== "" && enteredEmail.includes("@");
+const emailInputIsInvalid = !enteredEmailIsValid && enteredEmailTouched;
+
+let formIsValid = false;
+
+if (enteredNameIsValid && enteredEmailIsValid) {
+  formIsValid = true;
+} else {
+  formIsValid = false;
+}
+
+const nameInputChangeHandler = (event) => {
+  setEnteredName(event.target.value);
+};
+
+const emailInputChangeHandler = (event) => {
+  setEnteredEmail(event.target.value);
+};
+
+const nameInputBlurHandler = () => {
+  setEnteredNameTouched(true);
+};
+
+const emailInputBlurHandler = () => {
+  setEnteredEmailTouched(true);
+};
+
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  setEnteredNameTouched(true);
+  setEnteredEmailTouched(true);
+
+  if (!enteredNameIsValid || !enteredEmailIsValid) {
+    return;
+  }
+
+  setEnteredName("");
+  setEnteredNameTouched(false);
+
+  setEnteredEmail("");
+  setEnteredEmailTouched(false);
+};
+
+const nameInputClasses = nameInputIsInvalid // true 이면,
+  ? "form-control invalid" // 경고 css
+  : "form-control";
+
+const emailInputClasses = emailInputIsInvalid // true 이면,
+  ? "form-control invalid" // 경고 css
+  : "form-control";
 ```
 
-</br>
+- 현재 `SimpleInput` 컴포넌트 코드를 보면, 정상적으로 작동이 되고 있지만 중복되는 로직이 많은 걸 알 수가 있다. 물론 상수 이름과, 로직의 디테일은 다르지만 전반적인 로직의 구조는 사실상 완전히 같은 것이나 다름 없기 때문이다. 만약 최소 세개의 input이 있을 때 최종적으로는 똑같은 구조를 가진 코드를 세 번이나 반복해야만 할 것이다. 그렇다면, 이런 중복된 코드들을 어떻게 하면 줄일 수 있을까? 물론, input 에 대한 컴포넌트를 만들어서 관련된 로직들을 그 컴포넌트로 분리해서 사용할 수 있을 것이다. 그리고 그 컴포넌트 마다 유효성 검증 로직과 상태(state)를 따로 관리해서 사용하면 꽤 괜찮을지도 모른다. 하지만 이것도 컴포넌트를 분리했을 뿐이지, 복잡한 전체적인 폼을 관리하기에는 어딘가 석연치 않다.
+
+### 전체 폼의 유효성을 관리하는 것이 해결책이다
+
+- 우리의 해결 포인트는 전체 폼의 유효성을 관리하는 것에 있다. 전체 폼의 유효성을 관리하는 것이 까다로운 이유는 모든 입력을 개별적인 것으로 다루는데 각각의 입력에 대한 유효성을 체크하면서도 전체 폼이 유효한지 알 수 있는 방법이 필요하기 때문이다. 만약 컴포넌트로 분리해서 관리한다면, 이는 prop을 통해 컴포넌트에서 호출하는 방식을 사용하면 해결될 것이다. 하지만 이보다 더 나은 방식이 있다. 그것은 바로 커스텀 훅을 사용하는 것이다.
+
+### 커스텀 훅을 이용해서 상태에 관련된 모든 로직을 관리하자
+
+- 우리가 앞서 커스텀 훅을 학습했을 때를 기억해보자. 커스텀 훅을 이용한다면, 상태에 관련된 로직을 아웃소싱 해서 커스텀 훅을 import 해서 사용하는 컴포넌트 로직은 훨씬 간결하게 사용할 수 있다.
+
+### 커스텀 훅 생성하기
+
+#### use-input.js
+
+```js
+const useInput = () => {};
+
+export default useInput;
+```
+
+- 먼저 `hooks` 폴더를 만들고, `use-input.js`라는 파일을 생성한다. 이 `use-input.js` 파일은 상태(state)를 다루는 훅과 input에 대한 로직을 담을 것이다. 파일 안에 `useInput` 이라는 훅을 만들고, 외부에서 import 해올 수 있도록 export 도 해준다. `useInput` 이라는 커스텀 훅을 이용해서 input 값과 input 창이 touched 되었는지에 대한 상태를 다룰 것이다. 그리고 이 둘을 조합해 유효성 또한 검증할 것이다. 해당 커스텀 훅은 유연하게 작동할 수 있어야 하기 때문에, 외부에서 정확한 검증 로직을 커스텀 훅에서 전달 받을 수 있도록 해야만 한다.
+
+```js
+import { useState } from "react";
+
+const useInput = () => {
+  const [enteredName, setEnteredName] = useState("");
+  const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+};
+```
+
+- 먼저, `SimpleInput` 컴포넌트에서 `name`에 대한 input 상태(state)를 관리해주던 상태들을 복사해서 긁어온다. 그리고 이 상태들은 유연하게 작동되어야 하기 때문에 조금 더 포괄적이고 일반적인 이름으로 수정해준다.
+
+```js
+const useInput = () => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  // const enteredNameIsValid = enteredName.trim() !== "";
+  // const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+  const valueIsValid = enteredName.trim() !== "";
+  const hasError = !valueIsValid && isTouched;
+};
+```
+
+- 유효성에 대한 값들인 `enteredNameIsValid`와 `nameInputIsInvalid`도 `SimpleInput` 컴포넌트에서 긁어와 이전의 방식처럼 일반적인 이름으로 수정해준다.
+
+```js
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  // const valueIsValid = enteredName.trim() !== "";
+  const valueIsValid = validateValue();
+  const hasError = !valueIsValid && isTouched;
+};
+```
+
+- `valueIsValid` 같은 검증 로직의 경우 하드 코딩을 지양해야 하고(외부의 컴포넌트에서 유효성 검증에 대한 정확한 로직을 받아와야 하기 때문에.) 훅이 사용되는 곳에서 어떤 검증 로직을 사용할지 가져와야하기 때문에 `useInput` 커스텀 훅에서 `validateValue` 이라는 매개변수(함수가 될 것이다)를 받아와 호출하도록 한다.
+
+```js
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  const valueIsValid = validateValue(validateValue);
+  const hasError = !valueIsValid && isTouched;
+};
+```
+
+- 그리고 외부의 컴포넌트로부터 받는 매개변수 `validateValue` 함수 안에 `enteredValue`를 입력해 실행한 값이 될 수 있도록 작성해준다.
+
+```js
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  const valueIsValid = validateValue(enteredValue);
+  const hasError = !valueIsValid && isTouched;
+
+  return {
+    value: enteredValue,
+    hasError: hasError, // hasError 하나만 써도 된다.
+  };
+};
+```
+
+- 이제 `useInput` 커스텀 훅은 무언가를 return(반환) 해줘야 하는데, 이는 객체가 될 수도 배열이 될 수도 있음을 기억하자. 어쨌든 현재는 하나 이상의 값을 커스텀 훅에서 반환해야 하기 때문에 객체로 반환하도록 하고, 여기서 반환하는 객체 안에는 반환해야 하는 것들의 이름을 키, 반환하는 값들을 값으로 넣고 외부에서 그 키 값으로 접근할 수 있도록 한다. 물론, 같은 이름을 키와 값으로 사용한다면 모던 자바스크립트의 문법으로 한 번만 사용해도 동일한 작동원리로 반환된다. 이제 외부의 컴포넌트에서 해당 커스텀 훅의 `setEnteredValue`와 `setIsTouched`를 사용할 방법이 필요하다.
+
+```js
+import { useState } from "react";
+
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  const valueIsValid = validateValue(enteredValue);
+  const hasError = !valueIsValid && isTouched;
+
+  // const nameInputChangeHandler = (event) => {
+  //   setEnteredName(event.target.value);
+  // };
+  const valueChangeHandler = (event) => {
+    setEnteredValue(event.target.value);
+  };
+
+  // const nameInputBlurHandler = () => {
+  //   setEnteredNameTouched(true);
+  // };
+  const inputBlurHandler = () => {
+    setIsTouched(true);
+  };
+
+  return {
+    value: enteredValue,
+    hasError: hasError,
+  };
+};
+```
+
+- 이를 위해서, `SimpleInput` 컴포넌트에서 사용하던 `nameInputChangeHandler`와 `nameInputBlurHandler` 함수를 그대로 긁어와 붙여 넣어준다. `SimpleInput` 컴포넌트에서 사용하던 상태 업데이트 함수의 이름은 커스텀 훅에서 변경되었기에 이 부분도 수정해준다. 그리고 이전처럼 조금 더 일반적인 이름 `valueChangeHandler`, `inputBlurHandler` 으로 수정한다.
+
+```js
+return {
+  value: enteredValue,
+  hasError: hasError,
+  valueChangeHandler: valueChangeHandler,
+  inputBlurHandler: inputBlurHandler,
+};
+```
+
+- 물론, 외부 컴포넌트에서 해당 커스텀 훅의 함수를 사용하기 위해서는 반환(return)하는 것을 잊으면 안될 것이다. 이렇게 커스텀 훅에서 정의된 함수들은 커스텀 훅을 사용하는 컴포넌트에서 호출할 수 있게 되었다.
+
+### 커스텀 훅 사용하기
+
+- `useInput` 커스텀 훅을 사용할 컴포넌트인 `SimpleInput` 컴포넌트로 이동하여, import 해준다.
+
+```js
+import useInput from "../hooks/use-input";
+
+const SimpleInput = (props) => {
+  const {} = useInput();
+  ...
+};
+```
+
+- `useInput`를 호출하고, 이제 객체 구조 분해 할당을 사용해서 해당 커스텀 훅에서 객체 형식으로 반환된 값들을 추출한다.
+
+```js
+const SimpleInput = (props) => {
+    const {
+    value: enteredName,
+    hasError: nameInputHasError,
+    valueChangeHandler: nameChangeHandler,
+    inputBlurHandler: nameBlurHandler,
+  } = useInput();
+  ...
+};
+```
+
+- `value`란 이름으로 반환한 값에 `enteredName`을 할당한다. 그리고 `hasError`는 `nameInputHasError`라는 이름으로 할당한다. (여기서 값으로 들어가는 이름은 우리가 사용하는 컴포넌트 내부에서 사용하는 것이니, 직관적으로 보여지도록 작성해주면 더 좋다.) 나머지 반환하는 함수들인 `valueChangeHandler`와 `inputBlurHandler`도 각각의 사용할 이름을 지어서 입력해준다.
+
+```js
+const SimpleInput = (props) => {
+    const {
+    value: enteredName,
+    hasError: nameInputHasError,
+    valueChangeHandler: nameChangeHandler,
+    inputBlurHandler: nameBlurHandler,
+  } = useInput();
+  ...
+};
+```
+
+- 이제 우리가 뭘 해야 할까? 이전에 우리가 `useInput` 커스텀 훅에서 받아오기로 한 매개변수를 기억할 것이다. 외부 컴포넌트에서 해당 커스텀 훅을 사용할 때 어떤 매개변수를 넘겨주기로 약속했으니, 이를 작성해보자.
+
+#### use-input.js
+
+```js
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  const valueIsValid = validateValue(enteredValue);
+  const hasError = !valueIsValid && isTouched;
+...
+}
+```
+
+### 커스텀 훅에 전달하는 매개변수로 인라인 함수를 정의하기
+
+- 우리는 `useInput()` 커스텀 훅을 호출하면서 매개변수를 넘겨주기로 했다. 그리고 이를 위해서 우리는 인라인 함수를 정의할 수 있다.
+
+#### SimpleInput.js
+
+```js
+const SimpleInput = (props) => {
+    const {
+    value: enteredName,
+    hasError: nameInputHasError,
+    valueChangeHandler: nameChangeHandler,
+    inputBlurHandler: nameBlurHandler,
+  } = useInput((value) => value.trim() !== "");
+  ...
+};
+```
+
+- `useInput` 커스텀 훅에 넘겨주는 매개변수에 `value`를 입력 받아 빈 문자열을 비교한 결과를 출력하는 `value.trim() !== ""` 을 정의하자. 이는 화살표 함수를 사용해서 매개변수로 넘겨준 것인데, 이 컴포넌트에서는 인라인 함수로 정의만 되고 실행되지 않으며 그저 `useInput`에 전달할 뿐이다. 이는 커스텀 훅인 `useInput`에서 전달 받기로 한 `validateValue` 매개변수로 전해지고,
+
+```js
+import { useState } from "react";
+
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  ...
+  const valueIsValid = validateValue(enteredValue);
+  ...
+};
+```
+
+- `useInput` 커스텀 훅의 내부인 `valueIsValid` 라는 변수의 값으로 할당한 `validateValue()`가 호출 되었을 때 비로소 인라인 함수가 실행된다는 의미이다. 그리고 `enteredValue` 상태(state)는 해당 커스텀 훅에서 다루는 상태이기 때문에 `validateValue()` 가 호출되었을 때 `value` 가 되어 실행된다.
+
+  > 여기서 의미하는 `value` 는 `useInput((value) => value.trim() !== "")` 에서 인라인 함수가 전달받아 처리하는 `value`를 의미하는 것이다.
+
+- 이는 결국 함수를 다른 함수의 입력 값으로 넣는 자바스크립트의 문법일 뿐이다. 이를 통해서 해당 커스텀 훅이 필요한 컴포넌트가 유효성 검증 로직을 바꾸고 그 검증 로직을 커스텀 훅 안에서 실행될 수가 있는 것이다. 유효성에 대한 정보 또한 외부 컴포넌트에서 사용되어야 하기 때문에 이 역시 반환해주도록 한다.
+
+```js
+const useInput = (validateValue) => {
+  ...
+
+  const valueIsValid = validateValue(enteredValue);
+  const hasError = !valueIsValid && isTouched;
+
+  ...
+
+  return {
+    value: enteredValue,
+    isValid: valueIsValid,
+    hasError: hasError,
+    valueChangeHandler: valueChangeHandler,
+    inputBlurHandler: inputBlurHandler,
+  };
+};
+```
+
+- 입력 값이 유효한지에 대한 값 `valueIsValid`를 `isValid`라는 이름으로 반환하고,
+
+#### SimpleInput.js
+
+```js
+const SimpleInput = (props) => {
+  const {
+    value: enteredName,
+    isValid: enteredNameIsValid,
+    hasError: nameInputHasError,
+    valueChangeHandler: nameChangeHandler,
+    inputBlurHandler: nameBlurHandler,
+    reset: resetNameInput,
+  } = useInput((value) => value.trim() !== "");
+
+  // 상태 로직
+  // const [enteredName, setEnteredName] = useState("");
+  // const [enteredNameTouched, setEnteredNameTouched] = useState(false);
+
+  // 유효성 검증 로직
+  // const enteredNameIsValid = enteredName.trim() !== "";
+  // const nameInputIsInvalid = !enteredNameIsValid && enteredNameTouched;
+
+  let formIsValid = false;
+
+  if (enteredNameIsValid && enteredEmailIsValid) {
+    formIsValid = true;
+  } else {
+    formIsValid = false;
+  }
+
+  // const nameInputChangeHandler = (event) => {
+  //   setEnteredName(event.target.value);
+  // };
+
+  // const nameInputBlurHandler = () => {
+  //   setEnteredNameTouched(true);
+  // };
+};
+```
+
+- 다시 `SimpleInput` 컴포넌트로 돌아와서, `isValid`를 추출하여 `enteredNameIsValid` 라는 이름으로 할당한다. 이렇게 수정을 해주면, 현재 컴포넌트에서 name 에 대한 상태(state)를 관리하던 로직을 전부 지워도 전체 폼의 유효성을 검사하는 아래의 로직에서 `enteredNameIsValid`를 사용할 수 있게 된다. 물론 나머지 `nameInputChangeHandler`와 `nameInputBlurHandler` 함수도 커스텀 훅에서 처리하는 로직이기 때문에 모두 지워준다.
+
+```js
+<input
+  type="text"
+  id="name"
+  // onChange={nameInputChangeHandler}
+  // onBlur={nameInputBlurHandler}
+  onChange={nameChangeHandler}
+  onBlur={nameBlurHandler}
+  value={enteredName}
+/>
+```
+
+- 그리고 지워진 해당 함수를 사용하던 `input` 태그 속성에 우리가 커스텀 훅에서 반환한 함수들을 추출하면서 이름으로 지정해주었던 `nameChangeHandler`와 `nameBlurHandler` 함수를 각각의 이벤트 값으로 할당하고, `value`도 `enteredName`으로 할당한다.
+
+```js
+// {
+//   nameInputIsInvalid && <p className="error-text">Name must not be empty.</p>;
+// }
+
+{
+  nameInputHasError && <p className="error-text">Name must not be empty.</p>;
+}
+```
+
+- 그리고 아래의 경고 메세지를 띄우는 로직에 사용하던 `nameInputIsInvalid` 대신 우리가 커스텀 훅에서 추출한 `nameInputHasError`를 대신 넣어준다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+  // setEnteredNameTouched(true);
+  // setEnteredEmailTouched(true);
+
+  if (!enteredNameIsValid || !enteredEmailIsValid) {
+    return;
+  }
+
+  setEnteredName("");
+  setEnteredNameTouched(false);
+
+  setEnteredEmail("");
+  setEnteredEmailTouched(false);
+};
+```
+
+- 폼을 제출하는 함수인 `formSubmitssionHandler` 또한 수정이 필요하다. 해당 함수에서는 상태(state)를 변경해주고, 폼을 초기화 해주고 있다. 먼저, 입력 값이 유효하지 않다면 제출 조차 되지 않도록 우리가 설정해주었기 때문에 `setEnteredNameTouched(true)`나 `setEnteredEmailTouched(true)`처럼 input 창을 사용자가 건드렸는지에 대한 여부를 체크할 필요가 없기에 삭제해준다. 그리고 아래의 폼을 초기화해주는 로직 역시 반복되고 있으므로 이 부분도 커스텀 훅에 아웃소싱 해주는 게 좋겠다.
+
+```js
+const useInput = (validateValue) => {
+  const [enteredValue, setEnteredValue] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+
+  ...
+  const reset = () => {
+    setEnteredValue("");
+    setIsTouched(false);
+  };
+
+  return {
+  value: enteredValue,
+  isValid: valueIsValid,
+  hasError: hasError,
+  valueChangeHandler: valueChangeHandler,
+  inputBlurHandler: inputBlurHandler,
+  reset: reset,
+  };
+};
+```
+
+- `useInput` 커스텀 훅으로 돌아와, 세 번째 함수 `reset()`을 추가하고 `enteredValue`와 `isTouched`를 초기화 해준 뒤, 해당 함수도 동일한 이름으로 반환해준다.
+
+```js
+const SimpleInput = (props) => {
+  const {
+    value: enteredName,
+    isValid: enteredNameIsValid,
+    hasError: nameInputHasError,
+    valueChangeHandler: nameChangeHandler,
+    inputBlurHandler: nameBlurHandler,
+    // ⚡️
+    reset: resetNameInput,
+    // ⚡️
+  } = useInput((value) => value.trim() !== "");
+  ...
+
+
+    const formSubmitssionHandler = (event) => {
+    event.preventDefault();
+    if (!enteredNameIsValid || !enteredEmailIsValid) {
+      return;
+    }
+    // ⚡️
+    resetNameInput();
+    // ⚡️
+    setEnteredEmail("");
+    setEnteredEmailTouched(false);
+  };
+};
+```
+
+- `SimpleInput` 컴포넌트에서 역시나 이전과 마찬가지로 해당 커스텀 훅에서 반환한 `reset` 함수를 `resetNameInput`라는 이름으로 할당하고 `formSubmitssionHandler` 폼 제출 함수 내부에서 `resetNameInput()`를 호출해서 초기화해줄 수 있도록 한다.
+
+```js
+const nameInputClasses = nameInputHasError // true 이면,
+  ? "form-control invalid" // 경고 css
+  : "form-control";
+```
+
+- 마지막으로, input 창의 css 클래스를 정하는 곳에서 `nameInputIsInvalid` 대신 커스텀 훅에서 가져온 `nameInputHasError`를 대체하여 수정해준다.
+
+![ezgif com-gif-maker (100)](https://user-images.githubusercontent.com/53133662/174330102-a694e171-8ea5-4b85-bed3-af23e74b4ee6.gif)
+
+- 저장하고 새로고침하면, name input 창은 이전과 같은 방식으로 작동하고, 전체 폼에 대한 유효성 검증 역시 전과 동일한 것을 알 수 있다.
+
+  </br>
