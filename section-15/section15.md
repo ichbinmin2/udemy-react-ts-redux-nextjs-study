@@ -6,7 +6,6 @@
 - [Creating a Custom React Hook Function](#커스텀-리액트-컴포넌트-ReEvaluation-Hook-함수-생성하기)
 - [Using Custom Hooks](#사용자-정의-훅-사용하기)
 - [Configuring Custom Hooks](#사용자-정의-훅-구성하기)
-- [Configuring Custom Hooks](#사용자-정의-훅-구성하기)
 - [Onwards To A More Realistic Example](#좀-더-현실적인-예시를-위해)
 - [Building a Custom Http Hook](#사용자-정의-Http-훅-빌드하기)
 - [Using the Custom Http Hook](#사용자-정의-Http-훅-사용하기)
