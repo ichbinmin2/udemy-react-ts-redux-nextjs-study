@@ -51,9 +51,7 @@ const BasicForm = (props) => {
   const formSubmitssionHandler = (e) => {
     e.preventDefault();
 
-    if (
-      !formIsValid
-    ) {
+    if (!formIsValid) {
       return;
     }
 
