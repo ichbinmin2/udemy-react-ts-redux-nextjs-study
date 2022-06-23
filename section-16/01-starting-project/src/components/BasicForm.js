@@ -1,5 +1,8 @@
 import useInput from "../hooks/use-input";
 
+const isNotEmpty = (value) => value.trim() !== "";
+const isEmail = (value) => value.includes("@") && isNotEmpty;
+
 const BasicForm = (props) => {
   // First Name
   const {
@@ -9,7 +12,7 @@ const BasicForm = (props) => {
     valueChangeHandler: firstNameChangeHandler,
     inputBlurHandler: firstNameInputBlurHandler,
     reset: resetFirstName,
-  } = useInput((value) => value.trim() !== "");
+  } = useInput(isNotEmpty);
 
   // Last Name
   const {
@@ -19,7 +22,7 @@ const BasicForm = (props) => {
     valueChangeHandler: lastNameChangeHandler,
     inputBlurHandler: lastNameInputBlurHandler,
     reset: resetLastName,
-  } = useInput((value) => value.trim() !== "");
+  } = useInput(isNotEmpty);
 
   // email
   const {
@@ -29,7 +32,7 @@ const BasicForm = (props) => {
     valueChangeHandler: emailChangeHandler,
     inputBlurHandler: emailInputBlurHandler,
     reset: resetEmail,
-  } = useInput((value) => value.trim() !== "" && value.includes("@"));
+  } = useInput(isEmail);
 
   // input 창 유효성에 따른 버튼 활성화/비활성화
   let formIsValid = false;
@@ -48,16 +51,16 @@ const BasicForm = (props) => {
   const formSubmitssionHandler = (e) => {
     e.preventDefault();
 
-    if (!enteredFirstNameIsValid || !enteredLastNameIsValid) {
+    if (
+      !formIsValid
+    ) {
       return;
     }
 
     // first name reset
     resetFirstName();
-
     // last name reset
     resetLastName();
-
     // email reset
     resetEmail();
   };
@@ -104,10 +107,8 @@ const BasicForm = (props) => {
             onBlur={lastNameInputBlurHandler}
           />
 
-          {lastNameInputHasError ? (
+          {lastNameInputHasError && (
             <p className="error-text">Last Name 이 비어있습니다.</p>
-          ) : (
-            ""
           )}
         </div>
       </div>
@@ -120,10 +121,8 @@ const BasicForm = (props) => {
           onChange={emailChangeHandler}
           onBlur={emailInputBlurHandler}
         />
-        {emailInputHasError ? (
+        {emailInputHasError && (
           <p className="error-text">E-Mail 주소가 다릅니다.</p>
-        ) : (
-          ""
         )}
       </div>
       <div className="form-actions">

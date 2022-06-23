@@ -14,6 +14,7 @@
 - [Adding A Custom Input Hook](#사용자-지정-입력-훅-추가하기)
 - [Re-Using The Custom Hook](#사용자-정의-훅-재사용하기)
 - [A Challenge For You!](#당신을-위한-도전)
+- [Applying Our Hook & Knowledge To A New Form](#우리의-훅와-지식을-새로운-형태에-적용하기)
 
 </br>
 
@@ -1483,6 +1484,26 @@ const emailInputClasses = emailInputHasError // true 이면,
 
 ## 당신을 위한 도전
 
+- 지금까지 배운 내용을 바탕으로 `SimpleInput` 컴포넌트 대신, `BasicForm` 컴포넌트를 이용해서 이전처럼 커스텀 훅을 이용한 유효성 검증에 도전해볼 것이다.
+
+```js
+// import SimpleInput from "./components/SimpleInput";
+import BasicForm from "./components/BasicForm";
+
+function App() {
+  return (
+    <div className="app">
+      {/* <SimpleInput /> */}
+      <BasicForm />
+    </div>
+  );
+}
+
+export default App;
+```
+
+- 가장 먼저, `App` 컴포넌트 내부에 `SimpleInput` 컴포넌트 대신 `BasicForm` 컴포넌트로 대체한다.
+
 #### BasicForm.js
 
 **before**
@@ -1566,7 +1587,11 @@ const BasicForm = (props) => {
   const formSubmitssionHandler = (e) => {
     e.preventDefault();
 
-    if (!enteredFirstNameIsValid || !enteredLastNameIsValid) {
+    if (
+      !enteredFirstNameIsValid ||
+      !enteredLastNameIsValid ||
+      !enteredEmailIsValid
+    ) {
       return;
     }
 
@@ -1646,5 +1671,97 @@ const BasicForm = (props) => {
 
 export default BasicForm;
 ```
+
+</br>
+
+## 우리의 훅와 지식을 새로운 형태에 적용하기
+
+### 추가적으로 수정한 부분
+
+- `useInput`에 전달하는 함수 로직 따로 전역 변수로 빼기.
+
+```js
+const isNotEmpty = (value) => value.trim() !== "";
+const isEmail = (value) => value.includes("@") && isNotEmpty;
+
+// Name
+const {
+  value: enteredLastName,
+  isValid: enteredLastNameIsValid,
+  hasError: lastNameInputHasError,
+  valueChangeHandler: lastNameChangeHandler,
+  inputBlurHandler: lastNameInputBlurHandler,
+  reset: resetLastName,
+} = useInput(isNotEmpty);
+
+// email
+const {
+  value: enteredEmail,
+  isValid: enteredEmailIsValid,
+  hasError: emailInputHasError,
+  valueChangeHandler: emailChangeHandler,
+  inputBlurHandler: emailInputBlurHandler,
+  reset: resetEmail,
+} = useInput(isEmail);
+```
+
+- 삼항 연산자가 아니라 `&&`로 로직 간결하게 줄이기
+
+```js
+// {
+//   firstNameInputHasError ? (
+//     <p className="error-text">First Name 이 비어있습니다.</p>
+//   ) : (
+//     ""
+//   );
+// }
+
+{
+  firstNameInputHasError && (
+    <p className="error-text">First Name 이 비어있습니다.</p>
+  );
+}
+```
+
+- 각각의 유효성 값으로 검사하기 보다는 변수 `formIsValid` 값 하나로 검사할 수 있다. `formIsValid`를 이용해서 버튼을 비활성화 했기 때문에 버튼을 비활성화한 상태에서는 애초에 폼을 제출할 수 없기 때문이다.
+
+```js
+let formIsValid = false;
+
+if (
+  enteredFirstNameIsValid &&
+  enteredLastNameIsValid &&
+  enteredEmailIsValid
+) {
+  formIsValid = true;
+} else {
+  formIsValid = false;
+}
+...
+
+const formSubmitssionHandler = (e) => {
+  e.preventDefault();
+
+  if (
+    // !enteredFirstNameIsValid ||
+    // !enteredLastNameIsValid ||
+    // !enteredEmailIsValid
+    !formIsValid
+  ) {
+    return;
+  }
+
+  // first name reset
+  resetFirstName();
+  // last name reset
+  resetLastName();
+  // email reset
+  resetEmail();
+};
+```
+
+- 저장하고 확인해보면, `SimpleInput`과 동일한 방식으로 작동하는 걸 알 수 있다.
+
+![ezgif com-gif-maker - 2022-06-23T184410 080](https://user-images.githubusercontent.com/53133662/175269769-c8b5fb91-e86b-47f7-8664-008478432db3.gif)
 
 </br>
