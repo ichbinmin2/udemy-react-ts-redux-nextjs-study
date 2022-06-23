@@ -13,6 +13,7 @@
 - [Time to Practice: Forms](#폼-연습하기)
 - [Adding A Custom Input Hook](#사용자-지정-입력-훅-추가하기)
 - [Re-Using The Custom Hook](#사용자-정의-훅-재사용하기)
+- [A Challenge For You!](#당신을-위한-도전)
 
 </br>
 
@@ -1477,5 +1478,173 @@ const emailInputClasses = emailInputHasError // true 이면,
 ### 정리
 
 - 저장하고 확인해보면 이전과 동일하게 작동되고 있음을 알 수 있다. 둘다 이전과 동일하게 작동하고 있지만 현재의 코드와 비교하여 알수 있는 것은 현재의 코드가 훨씬 간결하고 중복된 코드가 적어졌다는 사실이다.
+
+</br>
+
+## 당신을 위한 도전
+
+#### BasicForm.js
+
+**before**
+
+```js
+const BasicForm = (props) => {
+  return (
+    <form>
+      <div className="control-group">
+        <div className="form-control">
+          <label htmlFor="name">First Name</label>
+          <input type="text" id="name" />
+        </div>
+        <div className="form-control">
+          <label htmlFor="name">Last Name</label>
+          <input type="text" id="name" />
+        </div>
+      </div>
+      <div className="form-control">
+        <label htmlFor="name">E-Mail Address</label>
+        <input type="text" id="name" />
+      </div>
+      <div className="form-actions">
+        <button>Submit</button>
+      </div>
+    </form>
+  );
+};
+
+export default BasicForm;
+```
+
+**after**
+
+```js
+import useInput from "../hooks/use-input";
+
+const BasicForm = (props) => {
+  // First Name
+  const {
+    value: enteredFirstName,
+    isValid: enteredFirstNameIsValid,
+    hasError: firstNameInputHasError,
+    valueChangeHandler: firstNameChangeHandler,
+    inputBlurHandler: firstNameInputBlurHandler,
+    reset: resetFirstName,
+  } = useInput((value) => value.trim() !== "");
+
+  // Last Name
+  const {
+    value: enteredLastName,
+    isValid: enteredLastNameIsValid,
+    hasError: lastNameInputHasError,
+    valueChangeHandler: lastNameChangeHandler,
+    inputBlurHandler: lastNameInputBlurHandler,
+    reset: resetLastName,
+  } = useInput((value) => value.trim() !== "");
+
+  // email
+  const {
+    value: enteredEmail,
+    isValid: enteredEmailIsValid,
+    hasError: emailInputHasError,
+    valueChangeHandler: emailChangeHandler,
+    inputBlurHandler: emailInputBlurHandler,
+    reset: resetEmail,
+  } = useInput((value) => value.trim() !== "" && value.includes("@"));
+
+  let formIsValid = false;
+
+  if (
+    enteredFirstNameIsValid &&
+    enteredLastNameIsValid &&
+    enteredEmailIsValid
+  ) {
+    formIsValid = true;
+  } else {
+    formIsValid = false;
+  }
+
+  const formSubmitssionHandler = (e) => {
+    e.preventDefault();
+
+    if (!enteredFirstNameIsValid || !enteredLastNameIsValid) {
+      return;
+    }
+
+    resetFirstName();
+    resetLastName();
+    resetEmail();
+  };
+
+  const firstNameInputClasses = firstNameInputHasError
+    ? "form-control invalid"
+    : "form-control";
+
+  const lastNameInputClasses = lastNameInputHasError
+    ? "form-control invalid"
+    : "form-control";
+
+  const emailInputClasses = emailInputHasError
+    ? "form-control invalid"
+    : "form-control";
+
+  return (
+    <form onSubmit={formSubmitssionHandler}>
+      <div className="control-group">
+        <div className={firstNameInputClasses}>
+          <label htmlFor="name">First Name</label>
+          <input
+            type="text"
+            id="name"
+            value={enteredFirstName}
+            onChange={firstNameChangeHandler}
+            onBlur={firstNameInputBlurHandler}
+          />
+          {firstNameInputHasError ? (
+            <p className="error-text">First Name 이 비어있습니다.</p>
+          ) : (
+            ""
+          )}
+        </div>
+        <div className={lastNameInputClasses}>
+          <label htmlFor="name">Last Name</label>
+          <input
+            type="text"
+            id="name"
+            value={enteredLastName}
+            onChange={lastNameChangeHandler}
+            onBlur={lastNameInputBlurHandler}
+          />
+
+          {lastNameInputHasError ? (
+            <p className="error-text">Last Name 이 비어있습니다.</p>
+          ) : (
+            ""
+          )}
+        </div>
+      </div>
+      <div className={emailInputClasses}>
+        <label htmlFor="name">E-Mail Address</label>
+        <input
+          type="text"
+          id="email"
+          value={enteredEmail}
+          onChange={emailChangeHandler}
+          onBlur={emailInputBlurHandler}
+        />
+        {emailInputHasError ? (
+          <p className="error-text">E-Mail 주소가 다릅니다.</p>
+        ) : (
+          ""
+        )}
+      </div>
+      <div className="form-actions">
+        <button disabled={!formIsValid}>Submit</button>
+      </div>
+    </form>
+  );
+};
+
+export default BasicForm;
+```
 
 </br>
