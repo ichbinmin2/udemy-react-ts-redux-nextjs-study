@@ -12,6 +12,7 @@
 - [Managing The Overall Form Validity](#전체-양식-유효성-관리하기)
 - [Time to Practice: Forms](#폼-연습하기)
 - [Adding A Custom Input Hook](#사용자-지정-입력-훅-추가하기)
+- [Re-Using The Custom Hook](#사용자-정의-훅-재사용하기)
 
 </br>
 
@@ -1394,3 +1395,87 @@ const nameInputClasses = nameInputHasError // true 이면,
 - 저장하고 새로고침하면, name input 창은 이전과 같은 방식으로 작동하고, 전체 폼에 대한 유효성 검증 역시 전과 동일한 것을 알 수 있다.
 
   </br>
+
+## 사용자 정의 훅 재사용하기
+
+- `name`에 Input에 대해서 `use-input` 커스텀 훅을 이용한 것처럼, 동일하게 복사해서 해당 `useInput` 커스텀 훅을 가져오고, `name`에 적용한 것처럼 커스텀 훅에서 반환한 값들의 이름을 `email` 전용으로 수정해준다.
+
+```js
+// name
+const {
+  value: enteredName,
+  isValid: enteredNameIsValid,
+  hasError: nameInputHasError,
+  valueChangeHandler: nameChangeHandler,
+  inputBlurHandler: nameBlurHandler,
+  reset: resetNameInput,
+} = useInput((value) => value.trim() !== "");
+
+// e-mail
+const {
+  value: enteredEmail,
+  isValid: enteredEmailIsValid,
+  hasError: emailInputHasError,
+  valueChangeHandler: eamilChangeHandler,
+  inputBlurHandler: eamilBlurHandler,
+  reset: resetEmailInput,
+} = useInput((value) => value.trim() !== "" && value.includes("@"));
+```
+
+- 그리고 더이상 사용하지 않는 `useState`로 작성했던 값과 해당 컴포넌트 내에서만 사용했던 전용 함수들을 모두 지워준다.
+
+```js
+// const [enteredEmail, setEnteredEmail] = useState("");
+// const [enteredEmailTouched, setEnteredEmailTouched] = useState(false);
+
+// const enteredEmailIsValid =
+//   enteredEmail.trim() !== "" && enteredEmail.includes("@");
+// const emailInputIsInvalid = !enteredEmailIsValid && enteredEmailTouched;
+```
+
+- 폼을 제출할 때에 유효성을 검증하고, input 창을 리셋해주는 `formSubmitssionHandler` 함수에도 useState를 사용해서 리셋해주었던 부분을 지우고, 커스텀 훅의 리셋 함수인 `resetEmailInput`(`reset`)을 호출해 준다.
+
+```js
+const formSubmitssionHandler = (event) => {
+  event.preventDefault();
+
+  if (!enteredNameIsValid || !enteredEmailIsValid) {
+    return;
+  }
+
+  resetNameInput();
+
+  // setEnteredEmail("");
+  // setEnteredEmailTouched(false);
+  resetEmailInput();
+};
+```
+
+- `useInput` 커스텀 훅에서 사용하는 `hasError` 변수를 기반으로 삼항연산자를 사용한 class 설정 또한 커스텀 훅에서 가져온 `emailInputHasError`으로 수정해준다.
+
+```js
+const emailInputClasses = emailInputHasError // true 이면,
+  ? "form-control invalid" // 경고 css
+  : "form-control";
+```
+
+- `email`을 입력하는 input 태그에 포인터 해주었던 함수도 `useInput` 커스텀 훅의 함수들로 대체해준다. 아래의 삼항연산자를 이용한 부분도 `emailInputHasError`로 수정해준다.
+
+```js
+<input
+  type="email"
+  id="email"
+  onChange={eamilChangeHandler}
+  onBlur={eamilBlurHandler}
+  value={enteredEmail}
+/>;
+{
+  emailInputHasError && <p className="error-text">Email must not be empty.</p>;
+}
+```
+
+### 정리
+
+- 저장하고 확인해보면 이전과 동일하게 작동되고 있음을 알 수 있다. 둘다 이전과 동일하게 작동하고 있지만 현재의 코드와 비교하여 알수 있는 것은 현재의 코드가 훨씬 간결하고 중복된 코드가 적어졌다는 사실이다.
+
+</br>
