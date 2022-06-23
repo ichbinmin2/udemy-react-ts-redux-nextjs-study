@@ -15,6 +15,7 @@
 - [Re-Using The Custom Hook](#사용자-정의-훅-재사용하기)
 - [A Challenge For You!](#당신을-위한-도전)
 - [Applying Our Hook & Knowledge To A New Form](#우리의-훅와-지식을-새로운-형태에-적용하기)
+- [Summary](#요약)
 
 </br>
 
@@ -1763,5 +1764,13 @@ const formSubmitssionHandler = (e) => {
 - 저장하고 확인해보면, `SimpleInput`과 동일한 방식으로 작동하는 걸 알 수 있다.
 
 ![ezgif com-gif-maker - 2022-06-23T184410 080](https://user-images.githubusercontent.com/53133662/175269769-c8b5fb91-e86b-47f7-8664-008478432db3.gif)
+
+</br>
+
+## 요약
+
+### Reference
+
+- [A Custom Hook for Managing Forms in React](https://academind.com/tutorials/reactjs-a-custom-useform-hook)
 
 </br>
