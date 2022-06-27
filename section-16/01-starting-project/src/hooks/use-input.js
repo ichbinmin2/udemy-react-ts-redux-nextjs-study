@@ -1,4 +1,4 @@
-import { useState, useReducer } from "react";
+import { useReducer } from "react";
 
 const initialInputState = {
   value: "",
@@ -49,7 +49,6 @@ const useInput = (validateValue) => {
 
   return {
     // value: enteredValue,
-    // isValid: valueIsValid,
     value: initialInputState.value,
     isValid: valueIsValid,
     hasError: hasError,

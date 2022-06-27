@@ -1778,4 +1778,247 @@ const formSubmitssionHandler = (e) => {
 
 ## 보너스 강의 useReducer 사용하기
 
+- 이전에 useReducer에 대해서 학습했을 때를 기억해보자. useReducer는 상태(state)값들이 많고 업데이트 로직이 많이 복잡할 때 사용한다는 것 말이다. 그리고 개별적으로 관리되며, 서로 연관되어있는 상태(state)에 대해서도 useReducer를 사용하면 좋다.
+
+### `useInput` 커스텀 훅 내부의 input 상태(state)를 useReducer로 관리하기
+
+- 지금까지 작성한 `useInput` 커스텀 훅의 로직들을 보면, 상태(state) 값들이 다양하지도 않고, 업데이트 로직이 딱히 복잡한 것은 아니다. 그래도 그간 공부해온 `useReducer`를 연습하기 위해서 `useInput` 내부에서 `useState` 대신 `useReducer`를 한 번 사용해볼 것이다.
+
+```js
+const [enteredValue, setEnteredValue] = useState("");
+const [isTouched, setIsTouched] = useState(false);
+```
+
+- 위의 두가지 상태(state)를 `useReucer`로 관리하려면 어떻게 해야 할까? 먼저 `useReducer`를 import 부터 해오자.
+
+```js
+import { useReducer } from "react";
+```
+
+- `useReducer` 를 호출하기 전에 먼저 리듀서 전용 함수를 만든다. 이름은 `inputStateReducer` 이다.
+
+```js
+const inputStateReducer = (state, action) => {};
+```
+
+- 이전에 배웠다시피 리듀서 함수는 두 개의 매개변수를 받는다. 리액트에서 자동으로 전달되는 이전 상태에 대한 state 와 마찬가지로 리액트에 의해 자동으로 전달되는 action 이다. 이 action은 코드에 디스패치 되어서 최종적으로는 새로운 상태를 반환하게 된다.
+
+```js
+const inputStateReducer = (state, action) => {
+  return {
+    value: "",
+    isTouched: false,
+  };
+};
+
+...
+// const [enteredValue, setEnteredValue] = useState("");
+// const [isTouched, setIsTouched] = useState(false);
+```
+
+- 새로운 상태를 return 할 때 우리는 코드를 바꾸지 않는 한 그대로 반환되게 하는 기본적인 상태 값을 설정하여 반환할 것이다. 우리가 `useState`로 관리해주었던 두개의 상태(state) 값인 `enteredValue`와 `isTouched`의 초기 값을 이전과 동일하게 설정해준다.
+
+```js
+useReducer();
+```
+
+- `useInput` 내부에서 `useReducer`를 호출해주고,
+
+```js
+useReducer(inputStateReducer);
+```
+
+- 리듀서 함수인 `inputStateReducer`를 첫 번째 인자로 전달해준다. 그리고, `useInput` 함수 바깥에 `initialInputState` 라는 상수를 생성해주고,
+
+```js
+const initialInputState = {
+  value: "",
+  isTouched: false,
+};
+```
+
+- 리듀서 함수 `inputStateReducer` 에서 최종적으로 반환했던 초기 상태 객체 값을 할당해준다. 객체 값을 상수로 할당했으니, 굳이 리듀서 함수에서 같은 객체 값을 반환할 필요는 없을 것이다. 그러니, 객체 대신 `inputStateReducer` 상수를 반환하도록 한다.
+
+```js
+const inputStateReducer = (state, action) => {
+  return inputStateReducer;
+};
+```
+
+- `useReducer`의 두 번째 인자로 `initialInputState` 상수를 추가한다.
+
+```js
+useReducer(inputStateReducer, initialInputState);
+```
+
+- `useState`처럼 `useReducer` 함수도 정확히 두 요소를 가진 배열로 반환할 수 있도록 배열 구조 분해 할당으로 처리한다.
+
+```js
+const [inputState, dispatch] = useReducer(inputStateReducer, initialInputState);
+```
+
+- 여기서 첫번째 요소인 `inputState`는 리듀서 함수에 의해 결정되는 상태(state)여야 하며, 두 번째 요소인 `dispatch`는 디스패치 함수로, 리듀서 함수에서 실행할 함수에 대한 요소이다. 이제 값을 검증할 때 `enteredValue` 상태 값 대신, `inputState.value`로 대체해서 사용할 수 있게 되었다.
+
+> `inputState` 에서 `value`로 접근할 수 있는 이유는, `inputState`의 구조는 `initialInputState`와 동일하기에 `inputState`도 마찬가지로 `value`라는 속성을 갖게 되기 때문이다. 물론, `value`처럼 `isTouched`도 `inputState.isTouched`로 접근할 수 있다.
+
+- 이제 `useState`로 사용하던 로직들을 전부 변경해준다.
+
+```js
+// const valueIsValid = validateValue(enteredValue);
+// const hasError = !valueIsValid && isTouched;
+
+const valueIsValid = validateValue(inputState.value);
+const hasError = !valueIsValid && inputState.isTouched;
+```
+
+### 이벤트 함수 내부에서 디스패치 실행하기
+
+```js
+const valueChangeHandler = (event) => {
+  setEnteredValue(event.target.value);
+};
+```
+
+- `valueChangeHandler` 이벤트 함수 내부에 있는 `setState` 업데이트 함수를 지우고,
+
+```js
+const valueChangeHandler = (event) => {
+  // setEnteredValue(event.target.value);
+  dispatch();
+};
+```
+
+- `dispatch` 함수를 호출해서 리듀서에게 실행할 작업을 디스패치 하도록 한다. 보통은 객체 내부에 `type` 속성으로 작업을 정해주기 때문에, `type` 속성을 적고, 내부에 "INPUT" 이라는 값을 지정한다.
+
+```js
+const valueChangeHandler = (event) => {
+  dispatch({ type: "INPUT" });
+};
+```
+
+- 그리고 이 객체 안에 두 번째 속성을 추가한다. `value` 속성을 추가하고, 내부에 `event.target.value`를 값으로 할당해준다.
+
+```js
+const valueChangeHandler = (event) => {
+  dispatch({ type: "INPUT", value: event.target.value });
+};
+```
+
+- 또 다른 이벤트 함수도 수정해보자.
+
+```js
+const inputBlurHandler = () => {
+  // setIsTouched(true);
+  dispatch({ type: "BLUR" });
+};
+
+const reset = () => {
+  // setEnteredValue("");
+  // setIsTouched(false);
+  dispatch({ type: "RESET" });
+};
+```
+
+-`inputBlurHandler` 에서는 `value` 에 대해서는 설정해줄 필요가 없으니 `type : "BLUR"`만 추가하고, `reset` 함수 역시 `type : "RESET"` 이 담긴 객체를 `dispatch` 함수에 전달한다.
+
+```js
+return {
+  // value: enteredValue,
+  // isValid: valueIsValid,
+  value: initialInputState.value,
+  isValid: valueIsValid,
+  hasError: hasError,
+  valueChangeHandler: valueChangeHandler,
+  inputBlurHandler: inputBlurHandler,
+  reset: reset,
+};
+```
+
+- 마지막으로 `useInput`이 반환하는 값 중에 `value`를 `enteredValue`가 아닌, `initialInputState.value`로 수정해준다.
+
+### 전달받은 type에 따른 작업의 내용을 리듀서 함수에서 정해주기
+
+- 이제 우리가 `dispatch`로 전달한 세 가지 type("INPUT", "BLUR", "RESET")에 대한 각각의 작업 내용을 리듀서 함수 내부에서 설정해주면 된다.
+
+```js
+const inputStateReducer = (state, action) => {
+  if (action.type === "INPUT") {
+  }
+  if (action.type === "BLUR") {
+  }
+  if (action.type === "RESET") {
+  }
+  return inputStateReducer;
+};
+```
+
+- `action.type`이 "INPUT" 일 때는 최종적으로 새로운 상태 객체에서 value의 값을 `action.value`로 정해주도록 한다.
+
+```js
+const inputStateReducer = (state, action) => {
+  if (action.type === "INPUT") {
+    return {};
+  }
+  if (action.type === "BLUR") {
+  }
+  if (action.type === "RESET") {
+  }
+  return inputStateReducer;
+};
+```
+
+- 그리고 새로운 상태 객체에서 `value`의 속성과 값을 지정한다. 이는 `value` 라는 속성이 "INPUT" 타입일 때 `event.target.value`로 넘겨 받은 값이 있기 때문에 가능한 것이다. `isTouched`는 키를 입력을 마칠 때에만 true 이어야 하기 때문에, 초기 상태(false)인 `state.isTouched` 를 그대로 넘겨준다.
+
+```js
+const inputStateReducer = (state, action) => {
+  if (action.type === "INPUT") {
+    return { value: action.value, isTouched: state.isTouched };
+  }
+  if (action.type === "BLUR") {
+    return {};
+  }
+  if (action.type === "RESET") {
+  }
+  return inputStateReducer;
+};
+```
+
+- `action.type`이 "BLUR" 일 경우에는 어떨까? 사용자가 input 창을 클릭하고 포커스를 잃었을 때에만 작동하게 된다. 역시 새로운 상태 객체를 반환히고, `isTouched`에 true 값을 전달한다. 이는 `value` 와는 관련이 없기 때문에, 초기 상태인 `state.value` 를 그대로 넘겨준다.
+
+```js
+const inputStateReducer = (state, action) => {
+  if (action.type === "INPUT") {
+    return { value: action.value, isTouched: state.isTouched };
+  }
+  if (action.type === "BLUR") {
+    return { isTouched: true, value: state.value };
+  }
+  if (action.type === "RESET") {
+    return {};
+  }
+  return inputStateReducer;
+};
+```
+
+- `actin.type`이 "RESET"일 때에는 말 그대로 값을 초기화해주는 퍼포먼스를 보여야 한다. `isTouched`를 다시 초기 상태 값인 false로 설정하고, value 역시 초기 상태인 빈 문자열 "" 으로 설정하고 객체로 담아서 반환할 수 있도록 해준다.
+
+```js
+const inputStateReducer = (state, action) => {
+  if (action.type === "INPUT") {
+    return { value: action.value, isTouched: state.isTouched };
+  }
+  if (action.type === "BLUR") {
+    return { isTouched: true, value: state.value };
+  }
+  if (action.type === "RESET") {
+    return { isTouched: false, value: "" };
+  }
+  return inputStateReducer;
+};
+```
+
+- 다시 저장하고, 새로고침을 해보면 이전과 동일한 방식으로 작동하고 있음을 확인할 수 있다.
+
+![ezgif com-gif-maker - 2022-06-23T184410 080](https://user-images.githubusercontent.com/53133662/175269769-c8b5fb91-e86b-47f7-8664-008478432db3.gif)
+
 </br>
