@@ -25,6 +25,7 @@
 - [Sending Http Requests (e.g Connecting to a Database)](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-14/section14.md)
 - [Building Custom React Hooks](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-15/section15.md)
 - [Working with Forms & User Input](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-16/section16.md)
+- [Practice Project : Adding Http & Forms To The Food Order App](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-17/section17.md)
 
 ## Next.js
 
