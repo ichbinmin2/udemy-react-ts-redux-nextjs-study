@@ -4,6 +4,7 @@
 
 - [Moving "Meals" Data To The Backend](#Meals-데이터를-백엔드로-이동하기)
 - [Fetching Meals via Http](#Http를-통해-Meal-데이터-가져오기)
+- [Handling the Loading State](#로딩-State-다루기)
 
 </br>
 
@@ -306,4 +307,75 @@ useEffect(() => {
 
 - 비어있는 의존성 배열이 신경 쓰일테지만, 현재 `useEffect` 함수 내부에서 실행되는 로직들은 전부 의존성이 없고, 외부 컴포넌트에 특정된 데이터를 쓰고 있지도 않으니, 처음 로딩 될 때만 데이터를 받아오도록 즉 실행할 수 있도록 빈 배열로 두는 것이 맞기에 걱정할 필요가 없다는 걸 기억하자.
 
-- </br>
+</br>
+
+## 로딩 State 다루기
+
+- `isLoding` 상태(state) 만들고, 초기값을 true로 설정하기.
+
+```js
+const [isLoding, setIsLoading] = useState(true);
+```
+
+- 데이터를 받아오고 있는 `useEffect` 내부의 `fetchMeals` 함수에서 모든 데이터 로딩이 끝나면 `setIsLoading` 상태 업데이트 함수를 사용해서 false로 업데이트하기.
+
+```js
+useEffect(() => {
+  const fetchMeals = async () => {
+    const response = await fetch(
+      "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
+    ).then();
+    const responseData = await response.json();
+
+    const loadedMeals = [];
+
+    for (const key in responseData) {
+      loadedMeals.push();
+    }
+
+    setMeals(loadedMeals);
+    setIsLoading(false);
+  };
+
+  fetchMeals();
+}, []);
+```
+
+- `isLoding` 상태 값을 이용하여 로딩 중임을 알리는 마크업 코드를 `mealsList` 컴포넌트 위에 작성.
+
+```js
+if (isLoding) {
+  return (
+    <section className={classes.MealsLoading}>
+      <p>Loding...</p>
+    </section>
+  );
+}
+
+const mealsList = meals.map((item) => (
+  <MealItem
+    key={item.id}
+    id={item.id}
+    name={item.name}
+    description={item.description}
+    price={item.price}
+  />
+));
+```
+
+- 로딩 중임을 알리는 `<section>` 에 스타일을 입힌다.
+
+```css
+.MealsLoading {
+  text-align: center;
+  color: white;
+}
+```
+
+- 저장하고 확인해보면,
+
+![ezgif com-gif-maker - 2022-06-29T182010 608](https://user-images.githubusercontent.com/53133662/176401188-d7777858-e029-49df-bff7-b622d08079eb.gif)
+
+- 새로고침을 할 때마다 "Loding..." 텍스트가 잠깐 보였다가 사라지는 걸 볼 수 있다. (파이어베이스가 빠른 백엔드를 가지고 있기 때문에 아주 잠시 동안만 깜빡인다.)
+
+</br>
