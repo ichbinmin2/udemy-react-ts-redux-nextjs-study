@@ -5,6 +5,7 @@
 - [Moving "Meals" Data To The Backend](#Meals-데이터를-백엔드로-이동하기)
 - [Fetching Meals via Http](#Http를-통해-Meal-데이터-가져오기)
 - [Handling the Loading State](#로딩-State-다루기)
+- [Handling Errors](#오류-처리하기)
 
 </br>
 
@@ -93,23 +94,21 @@ useEffect(async () => {
 ```js
 useEffect(() => {
   const fetchMeals = async () => {
-    await fetch(
-      "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    await fetch("https://react-http2-xxxxxxxxx.firebaseio.com/meals.json");
   };
 
   fetchMeals();
 }, []);
 ```
 
-- 새로운 함수(`fetchMeals`)를 만들고 이 안에서 `async/await` 키워드를 사용하여 비동기적으로 프로미스를 반환하도록 하는 것이다. 이러한 방식을 통해서 해당 함수는 여전히 실행되고, `useEffect` 함수 전체에서는 이제 promise를 반환하지 않고서도 우리는 `async/await` 키워드를 사용할 수 있게 된다. 이것은 모두 약간의 회피?방법이라고 말할 수 있을 것이다.
+- 새로운 함수(`fetchMeals`)를 만들고 이 안에서 `async/await` 키워드를 사용하여 비동기적으로 프로미스를 반환하도록 하는 것이다. 그렇게 되면 `.then()`은 필요가 없으니 이 부분은 삭제해준다. 이러한 방식을 통해서 해당 함수는 여전히 실행되고, `useEffect` 함수 전체에서는 이제 promise를 반환하지 않고서도 우리는 `async/await` 키워드를 사용할 수 있게 된다. 이것은 모두 약간의 회피?방법이라고 말할 수 있을 것이다.
 
 ```js
 useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
   };
 
   fetchMeals();
@@ -123,7 +122,7 @@ useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
     const responseData = await response.json();
   };
 
@@ -146,7 +145,7 @@ useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
     const responseData = await response.json();
   };
 
@@ -176,7 +175,7 @@ useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
     const responseData = await response.json();
 
     const loadedMeals = [];
@@ -193,7 +192,7 @@ useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
     const responseData = await response.json();
 
     const loadedMeals = [];
@@ -285,7 +284,7 @@ useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
     const responseData = await response.json();
 
     const loadedMeals = [];
@@ -324,7 +323,7 @@ useEffect(() => {
   const fetchMeals = async () => {
     const response = await fetch(
       "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
-    ).then();
+    );
     const responseData = await response.json();
 
     const loadedMeals = [];
@@ -377,5 +376,317 @@ const mealsList = meals.map((item) => (
 ![ezgif com-gif-maker - 2022-06-29T182010 608](https://user-images.githubusercontent.com/53133662/176401188-d7777858-e029-49df-bff7-b622d08079eb.gif)
 
 - 새로고침을 할 때마다 "Loding..." 텍스트가 잠깐 보였다가 사라지는 걸 볼 수 있다. (파이어베이스가 빠른 백엔드를 가지고 있기 때문에 아주 잠시 동안만 깜빡인다.)
+
+</br>
+
+## 오류 처리하기
+
+- error를 처리하는 방법을 학습하기 위해서 오류를 한 번 시뮬레이션 해볼 것이다. 아래는 우리가 데이터를 성공적으로 받아오도록 만들었던 `useEffect` 로직이다.
+
+```js
+useEffect(() => {
+  const fetchMeals = async () => {
+    const response = await fetch(
+      "https://react-http2-xxxxxxxxx.firebaseio.com/meals.json"
+    );
+    const responseData = await response.json();
+
+    const loadedMeals = [];
+
+    for (const key in responseData) {
+      loadedMeals.push();
+    }
+
+    setMeals(loadedMeals);
+    setIsLoading(false);
+  };
+
+  fetchMeals();
+}, []);
+```
+
+- 파이어베이스에서 요구하는 형식인 `.json`을 주소에서 삭제하고 저장한 뒤 확인해보면,
+
+```js
+useEffect(() => {
+  const fetchMeals = async () => {
+    const response = await fetch(
+      "https://react-http2-xxxxxxxxx.firebaseio.com/meals"
+    );
+    const responseData = await response.json();
+
+    const loadedMeals = [];
+
+    for (const key in responseData) {
+      loadedMeals.push();
+    }
+
+    setMeals(loadedMeals);
+    setIsLoading(false);
+  };
+
+  fetchMeals();
+}, []);
+```
+
+![ezgif com-gif-maker - 2022-06-29T182608 692](https://user-images.githubusercontent.com/53133662/176402455-153b3f1a-c7f5-4f67-89ad-c442c0774ad4.gif)
+
+- 데이터를 로딩하는 데 실패하게 된다. 앱에서는 "Loding..." 이라는 로딩 중일 때 화면에 출력되는 텍스트만 확인할 수 있다. 보통은 콘솔에서 이 데이터를 가져오는데 실패했다는 메세지를 보여주겠지만 사용자들은 콘솔을 사용해서 에러 메세지를 확인할리 만무하다. 그렇다면 우리는 어떻게 해야할까? 어떻게 사용자들에게 에러를 알려줄 수 있는 것일까?
+
+### 오류를 표시하는 방법
+
+- error를 표시하는 방법에는 여러가지가 있다. 즉, 우리가 선택하기 나름이라는 것이다. 이번에는 "Loding..." 처럼 메세지로 에러 메세지를 표시하려고 한다. 따라서 우리가 필요한 것은 에러가 발생할 때마다 업데이트되어 사용할 수 있는 상태(state) 값이다.
+
+```js
+const [httpError, setHttpError] = useState(null);
+```
+
+- `httpError` 상태를 생성하고, 초기 값을 비워두거나 아예 `null`로 설정해서 처음에 값을 갖지 않는다는 목적을 더 분명히 해두는 것도 좋을 것이다. 이제 데이터를 가져오는데 실패했을 때의 오류를 설정하자.
+
+```js
+useEffect(() => {
+  const fetchMeals = async () => {
+    const response = await fetch(
+      "https://react-http2-xxxxxxxxx.firebaseio.com/meals"
+    );
+
+    if (!response.ok) {
+    }
+
+    const responseData = await response.json();
+
+    const loadedMeals = [];
+
+    for (const key in responseData) {
+      loadedMeals.push();
+    }
+
+    setMeals(loadedMeals);
+    setIsLoading(false);
+  };
+
+  fetchMeals();
+}, []);
+```
+
+- 이 경우, 우선 실패 여부를 확인해야 하기 때문에, `if` 문을 작성하고 내부에 `!response.ok` 라는 조건을 넣는다. `ok`가 truthy 인 경우를 말하기 때문에 느낌표를 넣어서 falsy로 만들고, `response`가 `ok` 되지 않았을 때 즉, 데이터를 받아오는데 실패했을 때를 가정하고 로직을 작성한다.
+
+```js
+if (!response.ok) {
+  throw new Error("Something went wrong!");
+}
+```
+
+> throw new Error()는 줄이 실행되지 않는다는 것을 의미한다.
+
+- 만약 `!response.ok`라면(데이터를 받아오는데 실패했다면) `throw new Error()`를 작성해서 새로운 오류를 생성하고 이 에러에 일반적인 오류 메세지("Something went wrong!")를 할당한다. 이제 이 만들어진 새로운 `error`를 가지고 핸들링을 해야한다.
+
+- 우리는 여기서 `fetch` 로직을 랩핑 하기 위해 별도의 함수(`fetchMeals`)를 사용하는 것에 대한 또 다른 장점을 알 수 있다. `fetchMeals` 함수는 요청을 보낼 때 문제가 생기면 에러 메세지를 발생시킬 것이다. 따라서 `fetchMeals`로 이동해서 무언가를 추가해야만 한다.
+
+```js
+useEffect(() => {
+  const fetchMeals = async () => {
+    const response = await fetch(
+      "https://react-http2-xxxxxxxxx.firebaseio.com/meals"
+    );
+
+    if (!response.ok) {
+      throw new Error("Something went wrong!");
+    }
+
+    const responseData = await response.json();
+    const loadedMeals = [];
+
+    for (const key in responseData) {
+      loadedMeals.push();
+    }
+
+    setMeals(loadedMeals);
+    setIsLoading(false);
+  };
+
+  try {
+  } catch {}
+
+  fetchMeals();
+}, []);
+```
+
+- `fetchMeals()` 함수를 호출하는 줄은 `useEffect` 안에 있지만 ` fetchMeals` 함수의 외부에 있다. 그리고 이것을 우리는 `try/catch`로 래핑할 수 있게 된다.
+
+> `try/catch` 는 try(시도하기)해서 catch(잡기)한다는 의미이다.
+
+```js
+try {
+  fetchMeals();
+} catch {}
+```
+
+- `try`(시도하기) 로직 안에서 `fetchMeals` 함수를 호출하고, `fetchMeals` 함수 내부에서 오류가 발생한다면 `catch`(잡기) 블록 안에서 무언가를 처리하도록 한다.
+
+```js
+try {
+  fetchMeals();
+} catch {
+  setIsLoading(false);
+}
+```
+
+- `catch` 블록 안에서 `setIsLoading(false)` 로 처리한다. `fetchMeals()` 함수를 `try`(시도) 했는데, 오류가 발생한다면 로딩을 멈추고(`setIsLoading(false)`), 뭔가의 에러 메세지를 처리하도록 해야되기 때문이다.
+
+```js
+try {
+  fetchMeals();
+} catch (error) {
+  setIsLoading(false);
+  setHttpError(error.message);
+}
+```
+
+- 에러를 설정하기 위해 `setHttpError`를 호출하고 우리가 `catch`(잡은)한 오류 메세지(`error.message`)를 보여주도록 한다. 그럼 `try/catch`를 사용하여 이 `error`에 접근할 수 있게 되며 `httpError` 상태(state)에 우리가 이를 통해서 잡게 된 `error`에 대해 설정할 수 있게 되는 것이다. 더 정확하게는 `error.message`에 접근하고 설정할 수 있다는 뜻이다.
+
+```js
+if (!response.ok) {
+  throw new Error("Something went wrong!");
+}
+```
+
+- 우리는 `catch`를 통해서 `error` 객체를 얻게 되었고, 이 `error` 객체는 디폴트로 `message` 속성을 가지게 된다. `throw new Error()`를 통해서 `error`를 생성하고 생성자에 문자열("Something went wrong!")을 입력하면 생성된 `error` 객체의 `message` 속성에 해당 문자열이 저장될 것이다.
+
+```js
+if (isLoding) {
+  return (
+    <section className={classes.MealsLoading}>
+      <p>Loding...</p>
+    </section>
+  );
+}
+
+if (httpError) {
+  return (
+    <section>
+      <p></p>
+    </section>
+  );
+}
+```
+
+- 이제 `httpError` 상태를 설정해야 한다. if 문을 통해서 `httpError` 상태 값이 비워져 있지 않다면 즉, 우리가 `throw new Error()`로 저장한 "Something went wrong!"가 `httpError` 상태 안에 들어있다면 분명 에러가 발생헀을 경우일 것이고 이에 대한 로직을 작성해야 할 것이다.
+
+```js
+if (httpError) {
+  return (
+    <section>
+      <p>{httpError}</p>
+    </section>
+  );
+}
+```
+
+- `httpError` 에 저장된 메세지를 출력하도록 `<p>` 태그 안에 `httpError` 상태를 넣어두고,
+
+```js
+if (httpError) {
+  return (
+    <section className={classes.MealsError}>
+      <p>{httpError}</p>
+    </section>
+  );
+}
+```
+
+- 에러 상태임을 알리도록 `<section>` 에 스타일을 입힌다.
+
+```css
+.MealsError {
+  text-align: center;
+  color: red;
+}
+```
+
+- 저장하고, 다시 새로고침을 해보면 여전히 "Loding..." 만 표시되고 있는 걸 알 수 있다. 왜 그럴까?
+
+```js
+try {
+  fetchMeals().catch();
+} catch {
+  setIsLoading(false);
+}
+```
+
+- 이런 부분을 잡아내는 것은 꽤나 까다로울 수 있다. 이에 관한 이유를 이해하기 위해서는 우리가 `try/catch`를 사용하고 있지만 `fetchMeals` 는 `async` 함수 라는 사실을 기억해야 할 것이다.
+
+### `fetchMeals` 는 `async` 함수이다.
+
+```js
+useEffect(() => {
+  const fetchMeals = async () => {
+    const response = await fetch(
+      "https://react-http2-xxxxxxxxx.firebaseio.com/meals"
+    );
+
+    if (!response.ok) {
+      throw new Error("Something went wrong!");
+    }
+
+    const responseData = await response.json();
+    const loadedMeals = [];
+
+    for (const key in responseData) {
+      loadedMeals.push();
+    }
+
+    setMeals(loadedMeals);
+    setIsLoading(false);
+  };
+
+  try {
+    fetchMeals().catch();
+  } catch {
+    setIsLoading(false);
+  }
+}, []);
+```
+
+- `fetchMeals` 는 `async` 함수이다. 이것이 무슨 뜻이냐 하면, 언제나 이 함수는 promise를 반환한다는 것이다. promise 대신 error를 가져오는 경우 그 오류로 인해 해당 promise가 거부하게 되고, 따라서 우리의 `try/catch`를 사용해서 그것을 래핑할 수 없게 되는 것이다. 그렇다면 우리는 어떻게 해결해야 할까? 방법은 간단하다.
+
+```js
+try {
+  fetchMeals().catch(() => {});
+} catch {
+  setIsLoading(false);
+  setHttpError(error.message);
+}
+```
+
+- 바로 `try/catch`로 래핑한 것을 별도의 함수에 입력하는 것이다. promise에 `catch` 메서드에 추가하는 것이다. `fetchMeals()`가 promise를 반환하므로 `then()`을 추가해서 성공할 수 있었는데, 이는 promise가 성공적으로 이행했을 때를 가정해서 사용해야 한다. 아무튼 `fetchMeals()`에 `catch` 메서드를 추가하여, erorr를 다룰 수 있게 되었다. 그리고 이 error는 promise 내부에서 발생한다.
+
+```js
+fetchMeals().catch((error) => {});
+```
+
+- 따라서 `try/catch`를 사용하는 대신 우리가 얻는 error에 대해 `catch()`를 적용할 수 있을 것이다.
+
+```js
+fetchMeals().catch((error) => {
+  setIsLoading(false);
+  setHttpError(error.message);
+});
+```
+
+- 그리고 `try/catch` 블록(`catch{}`) 안에서 호출하던 `setIsLoading`와 `setHttpError` 상태 로직도 `catch()` 안으로 옮기도록 한다.
+
+```js
+fetchMeals().catch((error) => {
+  setIsLoading(false);
+  setHttpError(error.message);
+});
+```
+
+- 이것이 promise 내부의 error를 다룰 수 있는, 그리고 promise 만이 가능한 방법이다. 이제 다시 저장하고 로딩해보면,
+
+![ezgif com-gif-maker - 2022-06-29T211212 035](https://user-images.githubusercontent.com/53133662/176433313-5a9cc6d5-2253-448d-aef1-f8fe0e81af29.gif)
+
+- 잠깐 동안만 로딩이 표시되고 error 메세지 "Failed to fetch" 가 표시되는 걸 확인할 수 있다.
 
 </br>
