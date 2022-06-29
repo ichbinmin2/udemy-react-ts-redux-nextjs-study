@@ -31,17 +31,15 @@ import { useEffect, useState } from "react";
 // ];
 
 const AvailableMeals = () => {
-  const [meal, setMeal] = useState([]);
+  const [meals, setMeals] = useState([]);
 
   useEffect(() => {
-    const fetchMaels = async () => {
+    const fetchMeals = async () => {
       const response = await fetch(
         "https://react-http2-e19ad-default-rtdb.firebaseio.com/meals.json"
       ).then();
-
       const responseData = await response.json();
 
-      // 객체로 받아오기 때문에 배열화 시켜야 함.
       const loadedMeals = [];
 
       for (const key in responseData) {
@@ -52,15 +50,13 @@ const AvailableMeals = () => {
           price: responseData[key].price,
         });
       }
-      // console.log(loadedMeals);
-      setMeal(loadedMeals);
+
+      setMeals(loadedMeals);
     };
 
-    fetchMaels();
+    fetchMeals();
   }, []);
-
-  console.log("meal", meal);
-  const mealsList = meal.map((item) => (
+  const mealsList = meals.map((item) => (
     <MealItem
       key={item.id}
       id={item.id}
