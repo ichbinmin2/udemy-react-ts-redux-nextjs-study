@@ -1217,7 +1217,7 @@ const useInput = (validateValue) => {
 };
 ```
 
-- `useInput` 커스텀 훅의 내부인 `valueIsValid` 라는 변수의 값으로 할당한 `validateValue()`가 호출 되었을 때 비로소 인라인 함수가 실행된다는 의미이다. 그리고 `enteredValue` 상태(state)는 해당 커스텀 훅에서 다루는 상태이기 때문에 `validateValue()` 가 호출되었을 때 `value` 가 되어 실행된다.
+- `useInput` 커스텀 훅의 내부인 `valueIsValid` 라는 상수의 값으로 할당한 `validateValue()`가 호출 되었을 때 비로소 인라인 함수가 실행된다는 의미이다. 그리고 `enteredValue` 상태(state)는 해당 커스텀 훅에서 다루는 상태이기 때문에 `validateValue()` 가 호출되었을 때 `value` 가 되어 실행된다.
 
   > 여기서 의미하는 `value` 는 `useInput((value) => value.trim() !== "")` 에서 인라인 함수가 전달받아 처리하는 `value`를 의미하는 것이다.
 

@@ -1224,13 +1224,13 @@ const sortedList = useMemo(() => {
 const listItems = useMemo(() => [5, 3, 1, 10, 9], []);
 ```
 
-- `useMemo` 함수로 래핑한 배열 값을 변수 `listItems`에 저장하고,
+- `useMemo` 함수로 래핑한 배열 값을 상수 `listItems`에 저장하고,
 
 ```js
 <DemoList title={listTitle} items={listItems} />
 ```
 
-- 아까 배열이 있던 위치에 그 변수를 포인터 시킨다. 이렇게 함으로써 불필요한 재정렬을 막을 수 있을 것이다.
+- 아까 배열이 있던 위치에 그 상수를 포인터 시킨다. 이렇게 함으로써 불필요한 재정렬을 막을 수 있을 것이다.
 
 ![ezgif com-gif-maker (67)](https://user-images.githubusercontent.com/53133662/170870978-aec54a83-51a6-4e8b-8c69-59f876cf5236.gif)
 

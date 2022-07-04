@@ -6,6 +6,7 @@
 - [Fetching Meals via Http](#Http를-통해-Meal-데이터-가져오기)
 - [Handling the Loading State](#로딩-State-다루기)
 - [Handling Errors](#오류-처리하기)
+- [Adding A Checkout Form](#결제-양식-추가하기)
 
 </br>
 
@@ -115,7 +116,7 @@ useEffect(() => {
 }, []);
 ```
 
-- 그 다음에는 `fetchMeals` 함수 내부에서 `fetch()` 로 가져온 데이터를 `response` 변수 안에 넣어준다.
+- 그 다음에는 `fetchMeals` 함수 내부에서 `fetch()` 로 가져온 데이터를 `response` 상수 안에 넣어준다.
 
 ```js
 useEffect(() => {
@@ -688,5 +689,9 @@ fetchMeals().catch((error) => {
 ![ezgif com-gif-maker - 2022-06-29T211212 035](https://user-images.githubusercontent.com/53133662/176433313-5a9cc6d5-2253-448d-aef1-f8fe0e81af29.gif)
 
 - 잠깐 동안만 로딩이 표시되고 error 메세지 "Failed to fetch" 가 표시되는 걸 확인할 수 있다.
+
+</br>
+
+## 결제 양식 추가하기
 
 </br>
