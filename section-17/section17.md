@@ -8,6 +8,7 @@
 - [Handling Errors](#오류-처리하기)
 - [Adding A Checkout Form](#결제-양식-추가하기)
 - [Reading Form Values](#양식-값-읽기)
+- [Adding Form Validation](#양식-유효성-검사-추가하기)
 
 </br>
 
