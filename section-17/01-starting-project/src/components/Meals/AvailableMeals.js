@@ -41,7 +41,6 @@ const AvailableMeals = () => {
         `https://${process.env.REACT_APP_FIREBASE_DATABASE}.firebaseio.com/meals.json`
       );
 
-      console.log(response);
       if (!response.ok) {
         throw new Error("Something went wrong!");
       }

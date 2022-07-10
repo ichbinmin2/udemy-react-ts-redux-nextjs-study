@@ -7,6 +7,7 @@
 - [Handling the Loading State](#로딩-State-다루기)
 - [Handling Errors](#오류-처리하기)
 - [Adding A Checkout Form](#결제-양식-추가하기)
+- [Reading Form Values](#양식-값-읽기)
 
 </br>
 
