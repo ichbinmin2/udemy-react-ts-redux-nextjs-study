@@ -694,4 +694,209 @@ fetchMeals().catch((error) => {
 
 ## 결제 양식 추가하기
 
-</br>
+- Cart 에 아이템 몇개를 추가하게 되면 이제 주문을 해야할 것이다. 주문을 하려면 Order 버튼을 누르도록 했지만, 현재 order 버튼은 아무런 기능을 수행하고 있지 않다.
+
+![스크린샷 2022-07-10 오후 5 36 01](https://user-images.githubusercontent.com/53133662/178137576-132cc0fb-92e7-4514-ad16-d5d07f0d63c4.png)
+
+- 이제 이 아무런 기능을 수행하고 있지 않은 order 버튼을 이용해서 사용자가 주소와 이름을 입력할 수 있는 양식을 표시하고자 한다. 그리고 그 양식에 대한 입력을 확인해서 해당 주문을 백엔드로 보낼 것이다.
+
+### order 버튼을 이용한 사용자 양식 추가하기
+
+- 먼저 Cart 컴포넌트의 코드로 돌아가보자.
+
+```js
+<Modal onClose={props.onClose}>
+  {cartItems}
+  <div className={classes.total}>
+    <span>Total Amount</span>
+    <span>{totalAmount}</span>
+  </div>
+  <div>
+    <button className=['button--alt'] onClick={props.onClose}>
+      Close
+    </button>
+    {hasItems && <button className={classes.button}>Order</button>}
+  </div>
+```
+
+- 현재 Modal 컴포넌트를 렌더링해주고 있는 Cart 컴포넌트이다. 우리는 일단 Oder 버튼을 사용자가 누르면, 사용자가 입력을 할 수 있는 양식 폼을 추가하도록 할 것이다. 그 전에 새로운 컴포넌트 하나를 추가해보자.
+
+### Checkout.js
+
+```js
+const Checkout = (props) => {
+  return (
+    <form onSubmit={confirmHandler}>
+      <div className={classes.control}>
+        <label htmlFor="name">Your name</label>
+        <input type="text" id="name" />
+      </div>
+      <div className={classes.control}>
+        <label htmlFor="street">Street</label>
+        <input type="text" id="street" />
+      </div>
+      <div className={classes.control}>
+        <label htmlFor="postal">Postal Code</label>
+        <input type="text" id="postal" />
+      </div>
+      <div className={classes.control}>
+        <label htmlFor="city">City</label>
+        <input type="text" id="city" />
+      </div>
+      <button type="button">Cancel</button>
+      <button>Confirm</button>
+    </form>
+  );
+};
+```
+
+- `<form>` 태그 안에 각각의 사용자 입력값을 받을 input 창을 만들고, 이것을 다 마치면 보낼 수 있는 버튼을 추가한다. 그리고 다시 Cart 컴포넌트로 돌아와, 해당 Checkout 컴포넌트를 import 하여 가져온다.
+
+```js
+import Checkout from "./Checkout";
+```
+
+- 그리고 Total Amount 아래에 해당 컴포넌트를 렌더링 한다.
+
+```js
+return (
+  <Modal onClose={props.onClose}>
+    {cartItems}
+    <div className={classes.total}>
+      <span>Total Amount</span>
+      <span>{totalAmount}</span>
+    </div>
+    <Checkout />
+    <div>
+      <button className=['button--alt'] onClick={props.onClose}>
+        Close
+      </button>
+      {hasItems && <button className={classes.button}>Order</button>}
+    </div>
+  </Modal>
+);
+```
+
+- Cart 컴포넌트 모달에 Checkout 컴포넌트의 폼 양식이 제대로 표기되는 걸 확인할 수 있다. 그러나 아직 폼이 Order 버튼을 누르기 전부터 드러나고 있으므로 이 부분을 해결해야 한다.
+
+### order 버튼으로 사용자 양식 드러내기
+
+- 먼저 order 버튼이 될 때만 결제 양식이 표시되도록 하기 위해서는 상태(state) 값이 필요하다.
+
+```js
+const [isCheckout, setIsCheckout] = useState(false);
+```
+
+- `isCheckout` 상태의 기본값은 false로 설정해주고, `onClick` 트리거 함수를 하나 만들어서 버튼이 클릭 될 때마다 해당 `isCheckout`가 업데이트될 수 있도록 해준다.
+
+```js
+const orderHandler = () => {
+  setIsCheckout(true);
+};
+```
+
+- 이제 우리가 설정한 이 `isCheckout` 상태(state)를 이용해서 조건부로 Checkout 컴포넌트(사용자 양식 폼)를 렌더링해줄 것이다.
+
+```js
+return (
+  <Modal onClose={props.onClose}>
+    {cartItems}
+    <div className={classes.total}>
+      <span>Total Amount</span>
+      <span>{totalAmount}</span>
+    </div>
+    {isCheckout && <Checkout />}
+    <div>
+      <button className=['button--alt'] onClick={props.onClose}>
+        Close
+      </button>
+      {hasItems && <button className={classes.button}>Order</button>}
+    </div>
+  </Modal>
+);
+```
+
+- `isCheckout` 가 truthy 라면 Checkout 컴포넌트를 렌더링해줄 수 있도록 설정했다. 그리고 Order 버튼을 클릭했을 때 사용자 양식 폼(Chekcout 컴포넌트)이 가시화되고, 이전의 Close나 Order 버튼은 더이상 나타나지 않도록 해주면 더 좋을 것이다.
+
+```js
+const modalActions = (
+  <div className={classes.actions}>
+    <button className={classes["button--alt"]} onClick={props.onClose}>
+      Close
+    </button>
+    {hasItems && (
+      <button onClick={orderHandler} className={classes.button}>
+        Order
+      </button>
+    )}
+  </div>
+);
+```
+
+- 아래에서 버튼을 담당하고 있는 태그들을 모조리 긁어와, 변수 `modalActions`에 할당한다. 그리고,
+
+```js
+return (
+  <Modal onClose={props.onClose}>
+    {cartItems}
+    <div className={classes.total}>
+      <span>Total Amount</span>
+      <span>{totalAmount}</span>
+    </div>
+    {isCheckout && <Checkout onCancel={props.onClose} />}
+    {!isCheckout && modalActions}
+  </Modal>
+);
+```
+
+- `isCheckout` 상태(state)가 false가 되어 있을 때만 해당 버튼들을 담은 변수 `modalActions`가 렌더링되도록 연산했다.
+
+### 양식에 새로운 버튼 추가하기
+
+- Checkout 컴포넌트의 사용자 양식에 Confirm 버튼 뿐만 아니라, 새로운 버튼을 추가해보고자 한다. 바로 Cancle 이라는 버튼이다. 이때 중요한 것인 `type="button"`을 입력하여, 이 버튼이 양식을 제출하지 않아야만 한다. 그러니까, Confirm 버튼만 양식 폼을 제출하도록 제어해야 한다는 뜻이다.
+
+```js
+const modalActions = (
+  <div className={classes.actions}>
+    <button className={classes["button--alt"]} onClick={props.onClose}>
+      Close
+    </button>
+    {hasItems && (
+      <button onClick={orderHandler} className={classes.button}>
+        Order
+      </button>
+    )}
+  </div>
+);
+```
+
+- Cart 컴포넌트의 Cancel 버튼을 클릭하면 모달이 닫히는 것처럼 결국에는 Cart 컴포넌트에 적용한 작업과 동일한 작업을 해주면 된다.
+
+```js
+<Modal onClose={props.onClose}>
+  {cartItems}
+  <div className={classes.total}>
+    <span>Total Amount</span>
+    <span>{totalAmount}</span>
+  </div>
+  {isCheckout && <Checkout onCancel={props.onClose} />}
+  {!isCheckout && modalActions}
+</Modal>
+```
+
+- 일단 Checkout 컴포넌트에 `props`로 `onClose` 트리거 이벤트 함수를 `onCancel` 라는 이름으로 내려주고, Checkout 컴포넌트로 이동하여,
+
+```js
+<button type="button" onClick={props.onCancel}>
+  Cancel
+</button>
+<button>Confirm</button>
+```
+
+- Cancel 버튼의 `onClick` 이벤트로 해당 트리거 함수를 포인터해준다. 저장하고 확인해보면,
+
+![ezgif com-gif-maker - 2022-07-10T182232 161](https://user-images.githubusercontent.com/53133662/178138923-e6797755-b543-4dc6-a23e-26d931b144d1.gif)
+
+- Order 버튼을 누르면 사용자 폼이 나타나고, 사용자 폼의 cancel 버튼을 누르면 모달이 정상적으로 닫히는 것을 확인할 수 있다.
+
+  </br>
