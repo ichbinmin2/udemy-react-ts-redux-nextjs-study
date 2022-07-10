@@ -726,7 +726,7 @@ fetchMeals().catch((error) => {
 ```js
 const Checkout = (props) => {
   return (
-    <form onSubmit={confirmHandler}>
+    <form>
       <div className={classes.control}>
         <label htmlFor="name">Your name</label>
         <input type="text" id="name" />
@@ -898,5 +898,23 @@ const modalActions = (
 ![ezgif com-gif-maker - 2022-07-10T182232 161](https://user-images.githubusercontent.com/53133662/178138923-e6797755-b543-4dc6-a23e-26d931b144d1.gif)
 
 - Order 버튼을 누르면 사용자 폼이 나타나고, 사용자 폼의 cancel 버튼을 누르면 모달이 정상적으로 닫히는 것을 확인할 수 있다.
+
+### 사용자 양식 폼 제출하기
+
+- 이제 Confirm 버튼을 클릭하면 양식을 제출할 수 있도록 작업해줄 것이다. 그 전에 사용자 폼에서 사용자의 입력을 검증하고, 오류 역시 표시하고자 한다. 물론 이것이 유효한 양식인 경우에 백엔드 즉 파이어베이스로 제출하려고 한다. 먼저, 제출을 하기 위한 트리거 함수를 작성해보자.
+
+```js
+const confirmHandler = (event) => {
+  event.preventDefault();
+};
+```
+
+- 사용자 양식 form을 submit을 할 때 HTTP 요청을 전달할 브라우저 디폴트를 막기 위해 ` event.preventDefault()`를 미리 작성해준다. 이렇게 작성해주면, 이 새로고침을 발생시키는 요청은 전송되지 않을 것이다.
+
+```js
+<form onSubmit={confirmHandler}>...</form>
+```
+
+- 그리고 양식을 제출할 수 있도록 form 태그에 `onSubmit`으로 해당 함수를 포인터해준다.
 
   </br>
