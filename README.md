@@ -26,6 +26,7 @@
 - [Building Custom React Hooks](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-15/section15.md)
 - [Working with Forms & User Input](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-16/section16.md)
 - [Practice Project : Adding Http & Forms To The Food Order App](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-17/section17.md)
+- [Diving into Redux (An Alternative To The Context API)](https://github.com/ichbinmin2/udemy-react-ts-redux-nextjs-study/blob/main/section-18/section18.md)
 
 ## Next.js
 
