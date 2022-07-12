@@ -10,6 +10,7 @@
 - [Reading Form Values](#양식-값-읽기)
 - [Adding Form Validation](#양식-유효성-검사-추가하기)
 - [Submitting & Sending Cart Data](#장바구니-데이터-제출-및-전송하기)
+- [Adding Better User Feedback](#더-나은-사용자-피드백-추가하기)
 
 </br>
 
