@@ -21,22 +21,22 @@ const Checkout = (props) => {
   const confirmHandler = (event) => {
     event.preventDefault();
     const enteredName = nameInput.current.value;
-    const enteredStreet = nameInput.current.value;
-    const enteredPostalCode = nameInput.current.value;
-    const enteredCity = nameInput.current.value;
+    const enteredStreet = streetInput.current.value;
+    const enteredPostalCode = postalCodeInput.current.value;
+    const enteredCity = cityInput.current.value;
 
     // 유효성 검사. true
     const enteredNameIsValid = !isEmpty(enteredName);
     const enteredStreetIsValid = !isEmpty(enteredStreet);
-    const enteredPostalCodeIsValid = !isEmpty(enteredPostalCode);
-    const enteredCityIsValid = !isNotFiveChars(enteredCity);
+    const enteredPostalCodeIsValid = !isNotFiveChars(enteredPostalCode);
+    const enteredCityIsValid = !isEmpty(enteredCity);
 
     // 새로운 객체로 반환
     setFormInputsValidity({
       name: enteredNameIsValid,
       street: enteredStreetIsValid,
-      city: enteredPostalCodeIsValid,
-      postalCode: enteredCityIsValid,
+      postalCode: enteredPostalCodeIsValid,
+      city: enteredCityIsValid,
     });
 
     const formIsValid =
@@ -51,6 +51,12 @@ const Checkout = (props) => {
     }
 
     // submit the cart data
+    props.onConfirm({
+      name: enteredName,
+      street: enteredStreet,
+      postalCode: enteredPostalCode,
+      city: enteredCity,
+    });
   };
 
   const nameControlClasses = `${classes.control} ${
